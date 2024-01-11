@@ -49,8 +49,8 @@ public static final XboxController controllerOne = (XboxController)Controls.getC
         controlMode = ControlMode.TELEOPERATED;
     }
 
-  @Override
-  public void teleopPeriodic() {}
+@Override
+public void teleopPeriodic() {}
 
     @Override
     public void disabledInit() {
