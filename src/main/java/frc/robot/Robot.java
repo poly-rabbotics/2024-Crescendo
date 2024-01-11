@@ -6,7 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.Systems.*;
+import frc.robot.systems.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -16,7 +16,7 @@ import frc.robot.Systems.*;
  */
 public class Robot extends TimedRobot {
 
-  public static final controllerOne = (XboxController)Controls.getControllerByPort(0);
+  public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
 
   /**
    * This function is run when the robot is first started up and should be used for any
