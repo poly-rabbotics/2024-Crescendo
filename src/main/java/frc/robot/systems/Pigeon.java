@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.ctre.phoenix.sensors.Pigeon2;
+import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -73,7 +73,7 @@ public class Pigeon extends SmartPrintable {
      * Gets Yaw.
      */
     public static Angle getYaw() {
-        return new Angle().setDegrees(instance.pigeon.getYaw() % 360.0);
+        return new Angle().setDegrees(instance.pigeon.getYaw().getValueAsDouble() % 360.0);
     }
 
     /**
@@ -81,7 +81,7 @@ public class Pigeon extends SmartPrintable {
      */
     public static Angle getPitch() {
         // Pitch and roll are flipped due to mounting orientation.
-        return new Angle().setDegrees(instance.pigeon.getRoll());
+        return new Angle().setDegrees(instance.pigeon.getRoll().getValueAsDouble());
     }
 
     /**
@@ -89,7 +89,7 @@ public class Pigeon extends SmartPrintable {
      */
     public static Angle getRoll() {
         // Pitch and roll are flipped due to mounting orientation.
-        return new Angle().setDegrees(instance.pigeon.getPitch());
+        return new Angle().setDegrees(instance.pigeon.getPitch().getValueAsDouble());
     }
     
     @Override
@@ -153,18 +153,18 @@ public class Pigeon extends SmartPrintable {
             clock = Clock.systemDefaultZone();
             recordedInstant = clock.instant();
             
-            previousYaw = new Angle().setDegrees(pigeon.pigeon.getYaw());
-            previousRoll = new Angle().setDegrees(pigeon.pigeon.getPitch()); // Roll and Pitch are swapped cause of the way its mounted.
-            previousPitch = new Angle().setDegrees(pigeon.pigeon.getRoll());
+            previousYaw = new Angle().setDegrees(pigeon.pigeon.getYaw().getValueAsDouble());
+            previousRoll = new Angle().setDegrees(pigeon.pigeon.getPitch().getValueAsDouble()); // Roll and Pitch are swapped cause of the way its mounted.
+            previousPitch = new Angle().setDegrees(pigeon.pigeon.getRoll().getValueAsDouble());
         }
 
         @Override
         public void run() {
             Instant previousInstant = recordedInstant;
 
-            Angle yaw = new Angle().setDegrees(pigeon.pigeon.getYaw());
-            Angle roll = new Angle().setDegrees(pigeon.pigeon.getPitch()); // Roll and Pitch are swapped cause of the way its mounted.
-            Angle pitch = new Angle().setDegrees(pigeon.pigeon.getRoll());             
+            Angle yaw = new Angle().setDegrees(pigeon.pigeon.getYaw().getValueAsDouble());
+            Angle roll = new Angle().setDegrees(pigeon.pigeon.getPitch().getValueAsDouble()); // Roll and Pitch are swapped cause of the way its mounted.
+            Angle pitch = new Angle().setDegrees(pigeon.pigeon.getRoll().getValueAsDouble());             
 
             recordedInstant = clock.instant();
             

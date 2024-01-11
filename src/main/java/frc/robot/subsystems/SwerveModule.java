@@ -8,12 +8,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.ctre.phoenix.sensors.CANCoder;
-import com.ctre.phoenix.sensors.SensorInitializationStrategy;
-import com.ctre.phoenix.sensors.SensorTimeBase;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -50,7 +46,7 @@ public class SwerveModule extends SmartPrintable {
 
     private final CANSparkMax rotationMotor;  // The motor responsible for rotating the module.
     private final CANSparkMax movementMotor;  // The motor responsible for creating movement in the module.
-    private final CANCoder angularEncoder;    // Cancoder responsible for tracking the angle of the module.
+    private final CANcoder angularEncoder;    // Cancoder responsible for tracking the angle of the module.
 
     private final RelativeEncoder rotationEncoder; // Relative encoder for tracking rotational movement.
     private final RelativeEncoder movementEncoder; // Relative encoder for tracking translational movement.
@@ -128,7 +124,7 @@ public class SwerveModule extends SmartPrintable {
         
         @Override
         public void run() {
-            double currentPosition = (angularEncoder.getPosition() + canCoderOffset.radians()) % Angle.TAU;
+            double currentPosition = (angularEncoder.getPosition().getValueAsDouble() + canCoderOffset.radians()) % Angle.TAU;
 
             // Lock the parent module's desired state for reading.
             SwerveModuleState parentState = parentModule.desiredState.lock();
@@ -161,7 +157,7 @@ public class SwerveModule extends SmartPrintable {
             double calculation = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
             rotationMotor.set(calculation);
 
-            position.angle = new Rotation2d(angularEncoder.getPosition());
+            position.angle = new Rotation2d(angularEncoder.getPosition().getValueAsDouble());
             position.distanceMeters = movementEncoder.getPosition() * CONVERSION_FACTOR_MOVEMENT;
         }
     }
@@ -178,32 +174,32 @@ public class SwerveModule extends SmartPrintable {
         this.physicalPosition = RelativePosition.fromTranslation(physicalPosition);
         this.canCoderOffset = canCoderOffset.clone();
 
-        rotationMotor = new CANSparkMax(rotationalMotorID, MotorType.kBrushless);
+        rotationMotor = new CANSparkMax(rotationalMotorID, CANSparkMax.MotorType.kBrushless);
         rotationMotor.setInverted(true);
         rotationMotor.setSmartCurrentLimit(30);
         
-        movementMotor = new CANSparkMax(movementMotorID, MotorType.kBrushless);
+        movementMotor = new CANSparkMax(movementMotorID, CANSparkMax.MotorType.kBrushless);
         movementMotor.setInverted(false);
-        movementMotor.setIdleMode(IdleMode.kBrake);
+        movementMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         movementMotor.setSmartCurrentLimit(40);
 
-        angularEncoder = new CANCoder(canCoderID);
-        angularEncoder.configFactoryDefault();
+        angularEncoder = new CANcoder(canCoderID);
+        //angularEncoder.configFactoryDefault(); // TODO: factory reset
 
         // Magic and forbidden config from the code orange wizards. Makes the 
         // encoder initialize to absolute.
-        angularEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        angularEncoder.configFeedbackCoefficient(
-            // Since the default coefficiant used for degrees is not 
-            // particularly intuitive we just grab it and run a deg -> rad
-            // conversion on it.
-            Math.toRadians(angularEncoder.configGetFeedbackCoefficient()), 
-            "rad", 
-            SensorTimeBase.PerSecond
-        );
+        //angularEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+        //angularEncoder.configFeedbackCoefficient(
+        //    // Since the default coefficiant used for degrees is not 
+        //    // particularly intuitive we just grab it and run a deg -> rad
+        //    // conversion on it.
+        //    Math.toRadians(angularEncoder.configGetFeedbackCoefficient()), 
+        //    "rad", 
+        //    SensorTimeBase.PerSecond
+        //);
 
         rotationEncoder = rotationMotor.getEncoder();
-        rotationEncoder.setPosition(angularEncoder.getPosition());
+        rotationEncoder.setPosition(angularEncoder.getPosition().getValueAsDouble());
         rotationEncoder.setPositionConversionFactor(CONVERSION_FACTOR_ROTATION);
         rotationEncoder.setVelocityConversionFactor(CONVERSION_FACTOR_ROTATION_VELOCITY);
 
@@ -221,7 +217,7 @@ public class SwerveModule extends SmartPrintable {
 
         position = new SwerveModulePosition(
             movementEncoder.getPosition() * CONVERSION_FACTOR_MOVEMENT, 
-            new Rotation2d(angularEncoder.getPosition())
+            new Rotation2d(angularEncoder.getPosition().getValueAsDouble())
         );
 
         accelerationLimit = new SlewRateLimiter(1.5);
@@ -347,10 +343,10 @@ public class SwerveModule extends SmartPrintable {
 
     @Override
     public void print() {
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position", Math.toDegrees(angularEncoder.getPosition()));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position mod 360", Math.toDegrees(angularEncoder.getPosition() % Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off", Math.toDegrees(angularEncoder.getPosition() + canCoderOffset.radians()));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition() + canCoderOffset.radians()) % Angle.TAU));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position", Math.toDegrees(angularEncoder.getPosition().getValueAsDouble()));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position mod 360", Math.toDegrees(angularEncoder.getPosition().getValueAsDouble() % Angle.TAU));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off", Math.toDegrees(angularEncoder.getPosition().getValueAsDouble() + canCoderOffset.radians()));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition().getValueAsDouble() + canCoderOffset.radians()) % Angle.TAU));
         SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position (Distance) ", movementEncoder.getPosition());
         SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Speed", movementMotor.get());
     }
