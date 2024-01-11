@@ -15,34 +15,63 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends TimedRobot {
+    public enum ControlMode {
+        DISABLED,
+        AUTONOMOUS,
+        TELEOPERATED,
+        SAFETY
+    }
 
-  public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
+    public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
+    private static Robot instance;
+    private ControlMode controlMode = ControlMode.DISABLED;
 
-  /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
-   */
-  @Override
-  public void robotInit() {}
+    /**
+     * Exists only to enable static methods to gain access to non static data,
+     * OOP fans be damned I just made your class a singleton.
+     */
+    public Robot() {
+        super();
+        instance = this;
+    }
 
-  @Override
-  public void robotPeriodic() {}
+    public static ControlMode getControlMode() {
+        return instance.controlMode;
+    }
 
-  @Override
-  public void autonomousInit() {}
+    /**
+     * This function is run when the robot is first started up and should be used for any
+     * initialization code.
+     */
+    @Override
+    public void robotInit() {
+        controlMode = ControlMode.DISABLED;
+    }
 
-  @Override
-  public void autonomousPeriodic() {}
+    @Override
+    public void robotPeriodic() {}
 
-  @Override
-  public void teleopInit() {}
+    @Override
+    public void autonomousInit() {
+        controlMode = ControlMode.AUTONOMOUS;
+    }
 
-  @Override
-  public void teleopPeriodic() {}
+    @Override
+    public void autonomousPeriodic() {}
 
-  @Override
-  public void disabledInit() {}
+    @Override
+    public void teleopInit() {
+        controlMode = ControlMode.TELEOPERATED;
+    }
 
-  @Override
-  public void disabledPeriodic() {}
+    @Override
+    public void teleopPeriodic() {}
+
+    @Override
+    public void disabledInit() {
+        controlMode = ControlMode.DISABLED;
+    }
+
+    @Override
+    public void disabledPeriodic() {}
 }
