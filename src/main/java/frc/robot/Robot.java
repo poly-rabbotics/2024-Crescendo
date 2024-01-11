@@ -22,22 +22,7 @@ public class Robot extends TimedRobot {
         SAFETY
     }
 
-    public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
-    private static Robot instance;
-    private ControlMode controlMode = ControlMode.DISABLED;
-
-    /**
-     * Exists only to enable static methods to gain access to non static data,
-     * OOP fans be damned I just made your class a singleton.
-     */
-    public Robot() {
-        super();
-        instance = this;
-    }
-
-    public static ControlMode getControlMode() {
-        return instance.controlMode;
-    }
+public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -64,8 +49,8 @@ public class Robot extends TimedRobot {
         controlMode = ControlMode.TELEOPERATED;
     }
 
-    @Override
-    public void teleopPeriodic() {}
+@Override
+public void teleopPeriodic() {}
 
     @Override
     public void disabledInit() {
