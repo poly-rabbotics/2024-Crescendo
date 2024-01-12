@@ -4,10 +4,10 @@
 
 package frc.robot;
 
+import frc.robot.systems.*;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import frc.robot.Robot.ControlMode;
-import frc.robot.systems.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -67,8 +67,11 @@ public class Robot extends TimedRobot {
         controlMode = ControlMode.TELEOPERATED;
     }
 
-@Override
-public void teleopPeriodic() {}
+    @Override
+    public void teleopPeriodic() {
+        Shooter.run(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
+        //Intake.run(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
+    }
 
     @Override
     public void disabledInit() {
