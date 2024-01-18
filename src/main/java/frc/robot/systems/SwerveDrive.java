@@ -353,26 +353,28 @@ public class SwerveDrive extends SmartPrintable {
         boolean holdPos = false;
 
         switch (instance.mode) {
-            case HEADLESS:
+            case HEADLESS: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         instance.translationSpeedX,
-                        -instance.translationSpeedY,
+                        instance.translationSpeedY,
                         instance.rotationSpeed, 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
                 );
                 break;
+            }
 
-            case RELATIVE: 
+            case RELATIVE: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
                     new ChassisSpeeds(
                         instance.translationSpeedX,
-                        -instance.translationSpeedY,
+                        instance.translationSpeedY,
                         instance.rotationSpeed
                     )
                 ); 
                 break;
+            }
 
             case ROCK: {
                 assert moduleStates.length == instance.modules.length;
@@ -389,6 +391,18 @@ public class SwerveDrive extends SmartPrintable {
 
                 break;
             } 
+
+            case AIMBOT: {
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        instance.translationSpeedY,
+                        Aimbot.calculateTurn(), 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+                break;
+            }
 
             // This branch should never be reached as the enum used should never
             // have more than the above possible values.

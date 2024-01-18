@@ -59,7 +59,7 @@ public class SwerveModule extends SmartPrintable {
     private final Angle canCoderOffset;
 
     private SlewRateLimiter accelerationLimit;
-    private WriteLock<SwerveModuleState> desiredState;
+    private SwerveModuleState desiredState;
 
     // Set to NaN if not in rock mode, NaN does not equal itself by definition
     // (see some IEEE standard or something) and so this is how rock mode is 
@@ -128,13 +128,7 @@ public class SwerveModule extends SmartPrintable {
             double angularPosition = angularEncoder.getPosition().getValue() * Angle.TAU;
             double currentPosition = (angularPosition + canCoderOffset.radians()) % Angle.TAU;
 
-            // Lock the parent module's desired state for reading.
-            SwerveModuleState parentState = parentModule.desiredState.lock();
-            SwerveModuleState state = SwerveModuleState.optimize(parentState, new Rotation2d(currentPosition));
-
-            // Unlock to allow writing again. NOTE: the `parentState` variable
-            // MAY NOT BE USED beyond this point.
-            parentModule.desiredState.unlock();
+            SwerveModuleState state = SwerveModuleState.optimize(parentModule.desiredState, new Rotation2d(currentPosition));
 
             /*
              * There are two important reasons to run `SwerveModuleState.optomize()`. The first is obvious, make swerve
@@ -225,7 +219,7 @@ public class SwerveModule extends SmartPrintable {
         );
 
         accelerationLimit = new SlewRateLimiter(1.5);
-        desiredState = new WriteLock<>(new SwerveModuleState());
+        desiredState = new SwerveModuleState();
         moduleRunner = new SwerveModuleRunner(this);
 
         runnerThread = Executors.newSingleThreadScheduledExecutor();
@@ -237,9 +231,7 @@ public class SwerveModule extends SmartPrintable {
      * repeatedly to continue PID calculations.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
-        SwerveModuleState state = this.desiredState.lock();
-        state = desiredState;
-        this.desiredState.unlock(state);
+        this.desiredState = desiredState;
     }
 
     /**

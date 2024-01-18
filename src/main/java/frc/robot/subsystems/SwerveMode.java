@@ -20,5 +20,10 @@ public enum SwerveMode {
     /**
      * Rock mode, resists movement and holds position.
      */
-    ROCK
+    ROCK,
+
+    /**
+     * Uses rotation or the drive, but not translation, to aim for the driver.
+     */
+    AIMBOT,
 }

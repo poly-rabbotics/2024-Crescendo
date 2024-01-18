@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Robot.ControlMode;
+import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
 /**
@@ -50,10 +53,15 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         controlMode = ControlMode.DISABLED;
     }
-
+    
     @Override
-    public void robotPeriodic() {}
-
+    public void robotPeriodic() {
+        LEDLights.run();
+        
+        SmartDashboard.putBoolean("LL Valid Target?", Limelight.hasValidTarget());
+        SmartDashboard.putNumber("LL Target April Tag ID", Limelight.aprilTagTargetId());
+    }
+    
     @Override
     public void autonomousInit() {
         controlMode = ControlMode.AUTONOMOUS;
@@ -65,10 +73,45 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         controlMode = ControlMode.TELEOPERATED;
+        SwerveDrive.setMode(SwerveMode.HEADLESS);
     }
 
-@Override
-public void teleopPeriodic() {}
+    @Override
+    public void teleopPeriodic() {
+        // Left stick changes between headless and relative control modes.
+        if (controllerOne.getLeftStickButtonReleased()) {
+            SwerveDrive.setMode(
+                SwerveDrive.getMode() == SwerveMode.HEADLESS 
+                    ? SwerveMode.RELATIVE 
+                    : SwerveMode.HEADLESS
+            );
+        }
+        
+        SwerveDrive.conditionalTempTranslationCurve(
+            Controls.cardinalLock(Controls::defaultCurveTwoDimensional), 
+            controllerOne.getXButton()
+        ); // Lock to cardinal directions.
+        SwerveDrive.conditionalTempTranslationCurve(
+            (x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 3.0,
+            controllerOne.getRightBumper()
+        ); // Half translation speed.
+        SwerveDrive.conditionalTempTranslationCurve(
+            Controls.cardinalLock((x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 2.0),
+            controllerOne.getRightBumper() && controllerOne.getXButton()
+        ); // Half translation speed.
+        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getLeftTriggerAxis() > 0.5);
+        SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
+        SwerveDrive.run(
+            controllerOne.getLeftX(),
+            -controllerOne.getLeftY(),
+            controllerOne.getRightX()
+        );
+
+        double rumble = controllerOne.getLeftBumper() 
+            ? SwerveDrive.getAverageMotorTemp() / 80.0
+            : SwerveDrive.getAveragePercentRatedCurrent();
+        controllerOne.setRumble(RumbleType.kBothRumble, rumble);
+    }
 
     @Override
     public void disabledInit() {
