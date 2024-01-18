@@ -15,15 +15,18 @@ public class Shooter extends SmartPrintable {
     
     private static final Shooter instance = new Shooter();
 
-    private static final int SHOOTER_MOTOR_ID = 6;
+    private static final int LEFT_MOTOR_ID = 6;
+    private static final int RIGHT_MOTOR_ID = 5;
     private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
 
     private static double velocity = 105; //Velocity in RPM
     private static ShooterState currentState = ShooterState.IDLE;
 
-    private static TalonFX shooterMotor;
+    private static TalonFX leftMotor;
+    private static TalonFX rightMotor;
     private static Slot0Configs slot0Configs;
-    private static VelocityVoltage request;
+    private static VelocityVoltage requestLeft;
+    private static VelocityVoltage requestRight;
     
     private static final double P_0 = 0.5;
     private static final double I_0 = 0;
@@ -34,15 +37,18 @@ public class Shooter extends SmartPrintable {
         super();
 
         slot0Configs = new Slot0Configs();
-        shooterMotor = new TalonFX(SHOOTER_MOTOR_ID);
+        leftMotor = new TalonFX(LEFT_MOTOR_ID);
+        rightMotor = new TalonFX(RIGHT_MOTOR_ID);
 
         slot0Configs.kP = P_0;
         slot0Configs.kI = I_0;
         slot0Configs.kD = D_0;
         slot0Configs.kS = S_0;
 
-        shooterMotor.getConfigurator().apply(slot0Configs);
-        request = new VelocityVoltage(0).withSlot(0);
+        leftMotor.getConfigurator().apply(slot0Configs);
+        rightMotor.getConfigurator().apply(slot0Configs);
+        requestLeft = new VelocityVoltage(0).withSlot(0);
+        requestRight = new VelocityVoltage(0).withSlot(0);
     }
 
     /**
@@ -57,9 +63,9 @@ public class Shooter extends SmartPrintable {
         }
 
         if(currentState.equals(ShooterState.RUNNING)) {
-            shooterMotor.setControl(request.withVelocity(velocity));
+            leftMotor.setControl(requestLeft.withVelocity(velocity));
         } else {
-            shooterMotor.set(0);
+            leftMotor.set(0);
         }
     }
 
@@ -86,9 +92,11 @@ public class Shooter extends SmartPrintable {
 
         
         if(currentState.equals(ShooterState.RUNNING)) {
-            shooterMotor.setControl(request.withVelocity(velocity));
+            leftMotor.setControl(requestLeft.withVelocity(-(velocity*0.75)));
+            rightMotor.setControl(requestRight.withVelocity(velocity));
         } else {
-            shooterMotor.set(0);
+            leftMotor.set(0);
+            rightMotor.set(0);
         }
     }
 
@@ -103,7 +111,7 @@ public class Shooter extends SmartPrintable {
     public void print() {
         SmartDashboard.putString("Shooter State", currentState.toString());
         SmartDashboard.putNumber("Target Velocity", velocity);
-        SmartDashboard.putNumber("Motor Speed", shooterMotor.getVelocity().getValue());
-        SmartDashboard.putNumber("Output Power", shooterMotor.get());
+        SmartDashboard.putNumber("Motor Speed", leftMotor.getVelocity().getValue());
+        SmartDashboard.putNumber("Output Power", leftMotor.get());
     }
 }
