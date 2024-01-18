@@ -111,6 +111,9 @@ public class Robot extends TimedRobot {
             ? SwerveDrive.getAverageMotorTemp() / 80.0
             : SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
+
+        Shooter.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
+        //Intake.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
     }
 
     @Override
