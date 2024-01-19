@@ -411,8 +411,7 @@ public class SwerveDrive extends SmartPrintable {
                         Aimbot.isCentered()
                             ? Aimbot.calculateMovement()
                             : 0.0,
-                        Aimbot.calculateTurn(), 
-                        new Rotation2d(Pigeon.getYaw().radians())
+                        Aimbot.calculateTurn()
                     )
                 );
                 break;
