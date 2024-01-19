@@ -6,6 +6,9 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class Limelight {
     private static Limelight instance = new Limelight();
+     
+    private static final int LIMELIGHT_PIPELINE_APRILTAGS = 0; // Target all april tags
+    private static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
 
     private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
     private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 0.0, 0.0); // inches
@@ -105,6 +108,14 @@ public class Limelight {
             this.roll = roll;
             this.pitch = pitch;
         }
+    }
+
+    /**
+     * Sets the pipeline of the Limelight, should be performed with a pipeline
+     * number constant form this class. 
+     */
+    public static void setPipeline(int pipeline) {
+        pipeline(pipeline);
     }
 
     /**
@@ -217,6 +228,13 @@ public class Limelight {
      */
     private static NetworkTable table() {
         return NetworkTableInstance.getDefault().getTable("limelight");
+    }
+
+    /**
+     * Sets the Limelight's active pipeline
+     */
+    private static void pipeline(int pipeline) {
+        table().getEntry("pipeline").setNumber(pipeline);
     }
 
     /**
