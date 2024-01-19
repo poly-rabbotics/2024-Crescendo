@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.SmartPrintable;
 import frc.robot.subsystems.Angle;
-import frc.robot.subsystems.WriteLock;
 
 /*
  * Manages the robot's pigeon.
@@ -28,17 +27,17 @@ public class Pigeon extends SmartPrintable {
     private final Pigeon2 pigeon;
     private final ScheduledExecutorService changeRateThread;
     
-    private WriteLock<OrientationalChange> changePerSecond;
+    private OrientationalChange changePerSecond;
 
     private Pigeon(int canID) {
         super();
         pigeon = new Pigeon2(canID);
 
-        changePerSecond = new WriteLock<>(new OrientationalChange(
+        changePerSecond = new OrientationalChange(
             new Angle().setDegrees(0.0),
             new Angle().setDegrees(0.0),
             new Angle().setDegrees(0.0)
-        ));
+        );
 
         /* 
          * Starts the thread so that it calls 'run()' every 40 ms (25hz). This
@@ -63,10 +62,7 @@ public class Pigeon extends SmartPrintable {
      * Gets the change per second in the orientation of the Pigeon.
      */
     public static OrientationalChange getChangePerSecond() {
-        OrientationalChange change = instance.changePerSecond.lock();
-        OrientationalChange ownedChange = change.clone();
-        instance.changePerSecond.unlock();
-        return ownedChange;
+        return instance.changePerSecond;
     }
 
     /**
@@ -180,9 +176,7 @@ public class Pigeon extends SmartPrintable {
                 .sub(previousPitch)
                 .div(differenceSeconds);
 
-            pigeon.changePerSecond.lock();
-            OrientationalChange change = new OrientationalChange(changeYaw, changeRoll, changePitch);
-            pigeon.changePerSecond.unlock(change);
+            instance.changePerSecond = new OrientationalChange(changeYaw, changeRoll, changePitch);
 
             previousYaw = yaw;
             previousRoll = roll;
