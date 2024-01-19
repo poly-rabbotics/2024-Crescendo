@@ -71,7 +71,8 @@ public class Robot extends TimedRobot {
             Controls.cardinalLock((x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 2.0),
             controllerOne.getRightBumper() && controllerOne.getXButton()
         ); // Half translation speed.
-        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getLeftTriggerAxis() > 0.5);
+        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT_ROTATION, controllerOne.getLeftTriggerAxis() > 0.5);
+        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.run(
             controllerOne.getLeftX(),

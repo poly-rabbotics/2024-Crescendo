@@ -392,11 +392,25 @@ public class SwerveDrive extends SmartPrintable {
                 break;
             } 
 
-            case AIMBOT: {
+            case AIMBOT_ROTATION: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         instance.translationSpeedX,
                         instance.translationSpeedY,
+                        Aimbot.calculateTurn(), 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+                break;
+            }
+
+            case AIMBOT: {
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        Aimbot.isCentered()
+                            ? Aimbot.calculateMovement()
+                            : 0.0,
                         Aimbot.calculateTurn(), 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )

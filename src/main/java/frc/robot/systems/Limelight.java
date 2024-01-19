@@ -11,8 +11,8 @@ public class Limelight {
     private static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
 
     private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
-    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 0.0, 0.0); // inches
-    private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // inches
+    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 0.0, 0.0); // meters
+    private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // meters
 
     // Red scoring target tags.
     private static final int APRIL_TAG_ID_RED_SPEAKER_CENTER = 4;
@@ -201,9 +201,9 @@ public class Limelight {
     /**
      * Estimates the distance between the Limelight and its target. This 
      * distance is the distance as seen from a top down point of view. Returns
-     * a value in inches or NaN on error.
+     * a value in meters or NaN on error.
      */
-    private static double estimateTargetDistance() {
+    public static double estimateTargetDistance() {
         int tagId = aprilTagTargetId();
         Angle targetVarticalAngleOffset = targetPitchOffset();
 

@@ -25,5 +25,11 @@ public enum SwerveMode {
     /**
      * Uses rotation or the drive, but not translation, to aim for the driver.
      */
+    AIMBOT_ROTATION,
+
+    /**
+     * Uses functions of the `Aimbot` class to both center the target and then
+     * aproach it using swerve, taking over both the y-axis and turning.
+     */
     AIMBOT,
 }
