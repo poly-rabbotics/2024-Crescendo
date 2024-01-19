@@ -6,7 +6,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Aimbot {
-    private static final double TURN_P = 1;
+    private static final double TURN_P = 1.4;
     private static final double TURN_I = 0.0;
     private static final double TURN_D = 0.0;
 
@@ -19,7 +19,7 @@ public class Aimbot {
             return 0.0;
         }
 
-        double turn = turnPID.calculate(pos.radians(), 0.0);
+        double turn = -turnPID.calculate(pos.radians(), 0.0);
         SmartDashboard.putNumber("Aimbot Turn PID Output", turn);
         return turn;
     }
