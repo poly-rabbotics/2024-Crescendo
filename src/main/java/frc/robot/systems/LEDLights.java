@@ -37,6 +37,10 @@ public class LEDLights {
             if (SwerveDrive.getDisplayMode() == SwerveMode.ROCK) {
                 // If in rock mode make wyvern scary >:D
                 setPattern = new FadeIn(new Color(1.0, 0.0, 0.0), 1.0);
+            } else if (SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT) {
+                setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 1.0);
+            } else if (SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT_ROTATION) {
+                setPattern = new FadeIn(new Color(0.0, 0.4, 1.0), 1.0);
             }
         }
 
