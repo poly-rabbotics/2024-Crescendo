@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Robot.ControlMode;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -19,40 +18,14 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends TimedRobot {
-    public enum ControlMode {
-        DISABLED,
-        AUTONOMOUS,
-        TELEOPERATED,
-        SAFETY
-    }
-
     public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
-
-    private static Robot instance;
-    
-    private ControlMode controlMode = ControlMode.DISABLED;
-
-    /**
-     * Exists only to enable static methods to gain access to non static data,
-     * OOP fans be damned I just made your class a singleton.
-     */
-    public Robot() {
-        super();
-        instance = this;
-    }
-
-    public static ControlMode getControlMode() {
-        return instance.controlMode;
-    }
 
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     @Override
-    public void robotInit() {
-        controlMode = ControlMode.DISABLED;
-    }
+    public void robotInit() {}
     
     @Override
     public void robotPeriodic() {
@@ -63,16 +36,13 @@ public class Robot extends TimedRobot {
     }
     
     @Override
-    public void autonomousInit() {
-        controlMode = ControlMode.AUTONOMOUS;
-    }
+    public void autonomousInit() {}
 
     @Override
     public void autonomousPeriodic() {}
 
     @Override
     public void teleopInit() {
-        controlMode = ControlMode.TELEOPERATED;
         SwerveDrive.setMode(SwerveMode.HEADLESS);
     }
 
@@ -117,9 +87,7 @@ public class Robot extends TimedRobot {
     }
 
     @Override
-    public void disabledInit() {
-        controlMode = ControlMode.DISABLED;
-    }
+    public void disabledInit() {}
 
     @Override
     public void disabledPeriodic() {}

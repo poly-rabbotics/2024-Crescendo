@@ -1,8 +1,7 @@
 package frc.robot.systems;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.Robot;
-import frc.robot.Robot.ControlMode;
 import frc.robot.patterns.Rainbow;
 import frc.robot.patterns.FadeIn;
 import frc.robot.patterns.FadeIntoPattern;
@@ -28,11 +27,11 @@ public class LEDLights {
     public static void run() {
         LightPattern setPattern = null;
 
-        if (Robot.getControlMode() == ControlMode.DISABLED) {
+        if (DriverStation.isDisabled()) {
             // Rainbow if disabled.
             //setPattern = new Rainbow();
             setPattern = new FadeIntoPattern(new Rainbow(), 0.15);
-        } else if (Robot.getControlMode() == ControlMode.AUTONOMOUS) {
+        } else if (DriverStation.isAutonomous()) {
             setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 1.0);
         } else {
             if (SwerveDrive.getDisplayMode() == SwerveMode.ROCK) {
