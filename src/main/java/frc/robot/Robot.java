@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.LinearActuator;
+import frc.robot.subsystems.LinearServo;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -18,7 +20,10 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends TimedRobot {
-    public static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
+    private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
+    private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
+    private static final LinearActuator linearActuator = new LinearActuator(0, 100, 0.001, 0.0, 0.0);
+    private static final LinearServo linearServo = new LinearServo(0);
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -84,6 +89,9 @@ public class Robot extends TimedRobot {
             ? SwerveDrive.getAverageMotorTemp() / 80.0
             : SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
+
+        linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
+        linearServo.setPosition(controllerTwo.getLeftTriggerAxis());
 
         Shooter.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
         //Intake.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
