@@ -57,4 +57,9 @@ public class LinearActuator extends SmartPrintable {
     public void print() {
         SmartDashboard.putNumber("Linear Actuator (on ID " + motor.getDeviceId() + ") distance", motor.getEncoder().getPosition());
     }
+
+    public void jankRun(double setPoint) {
+
+        motor.set(-setPoint);
+    }
 }
