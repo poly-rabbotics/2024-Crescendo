@@ -36,7 +36,7 @@ public class Hands extends SmartPrinter {
     private Hands() {
         super();
 
-        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 0, 0.01, 0.0, 0.0);
+        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, -108, 0.01, 0.0, 0.0);
         //linearServo = new LinearServo(LINEAR_SERVO_ID);
         loader = new Loader(LOADER_ID);
 
@@ -48,9 +48,8 @@ public class Hands extends SmartPrinter {
         shooter.run(shoot);
         loader.run(runLoader);
 
-        /* linearActuator.setPosition(actuatorPos);
-        linearActuator.run(); */
-        linearActuator.jankRun(actuatorPos);
+        linearActuator.setPosition(actuatorPos);
+        linearActuator.run();
         SmartDashboard.putNumber("Loader position", loader.getEncoderPosition());
 
     }

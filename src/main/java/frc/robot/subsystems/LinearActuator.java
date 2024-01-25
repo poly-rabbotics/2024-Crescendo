@@ -39,7 +39,7 @@ public class LinearActuator extends SmartPrintable {
      * Sets the set point of the `LinearActuator`.
      */
     public void setPosition(double setPoint) {
-        controller.setSetpoint(setPoint);
+        controller.setSetpoint(setPoint * actuationDistance);
     }
 
     /**
