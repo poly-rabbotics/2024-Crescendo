@@ -95,7 +95,9 @@ public class Robot extends TimedRobot {
         /* linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
         linearServo.setPosition(controllerTwo.getLeftTriggerAxis()); */
 
-        Hands.run(false, false, controllerOne.getRightTriggerAxis() >= 0.3, controllerOne.getAButtonPressed(), controllerOne.getLeftTriggerAxis());
+        //Hands.run(false, false, controllerOne.getRightTriggerAxis() >= 0.3, controllerOne.getAButtonPressed(), controllerOne.getLeftTriggerAxis());
+    
+        Intake.run(controllerOne.getXButton(), controllerOne.getYButton());
     }
 
     @Override
