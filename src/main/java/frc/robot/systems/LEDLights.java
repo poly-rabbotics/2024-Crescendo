@@ -12,7 +12,7 @@ import frc.robot.subsystems.SwerveMode;
 public class LEDLights {
     // Public since it may be usefule for pattern instantiation.
     public static final int LED_LENGTH = 108;
-    private static final int LED_PORT = 1;
+    private static final int LED_PORT = 9; // TODO: correct
 
     private static final LEDLights instance = new LEDLights();
 
