@@ -13,6 +13,8 @@ public class LinearActuator extends SmartPrintable {
     private final CANSparkMax motor;
     private final PIDController controller;
 
+    private double calculation = 0.0;
+
     /**
      * Creates a new `LinearActuator` given a motor controller ID.
      * 
@@ -22,9 +24,12 @@ public class LinearActuator extends SmartPrintable {
      */
     public LinearActuator(int canSparkId, double actuationDistance, double p, double i, double d) {
         super();
+
         motor = new CANSparkMax(canSparkId, MotorType.kBrushless);
         controller = new PIDController(p, i, d);
         this.actuationDistance = actuationDistance;
+
+        motor.setInverted(true);
     }
 
     /**
@@ -50,16 +55,14 @@ public class LinearActuator extends SmartPrintable {
         double position = motor.getEncoder().getPosition();
         double calculation = controller.calculate(position);
 
+        this.calculation = calculation;
         motor.set(calculation);
     }
 
     @Override
     public void print() {
         SmartDashboard.putNumber("Linear Actuator (on ID " + motor.getDeviceId() + ") distance", motor.getEncoder().getPosition());
-    }
-
-    public void jankRun(double setPoint) {
-
-        motor.set(-setPoint);
+        SmartDashboard.putNumber("Lineaer Actuator (on ID " + motor.getDeviceId() + ") PID output", calculation);
+        SmartDashboard.putNumber("Linear Actuator (on ID" + motor.getDeviceId() + ") Tempurature", motor.getMotorTemperature());
     }
 }
