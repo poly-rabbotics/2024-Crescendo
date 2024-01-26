@@ -1,84 +1,34 @@
 package frc.robot.systems;
 
+import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import com.ctre.phoenix6.hardware.TalonFX;
+
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.SmartPrintable;
 
-
-
 public class Intake extends SmartPrintable {
+    private static final int INNER_MOTOR_PWM_CHANNEL = 1;
+    private static final int OUTER_MOTOR_CAN_ID = 62;
 
-    public enum IntakeState {
-        IDLE, INTAKING, OUTTAKING
-    }
-    
+    private final CANSparkMax outerMotor = new CANSparkMax(OUTER_MOTOR_CAN_ID, MotorType.kBrushless);
+    private final VictorSP innerMotor = new VictorSP(INNER_MOTOR_PWM_CHANNEL);
+
     private static final Intake instance = new Intake();
 
-    private static IntakeState currentState = IntakeState.IDLE;
-
-    private static TalonFX intakeMotor;
-
-    private static double intakeSpeed = 0.9; //intakeSpeed in RPM
-    private static boolean stopped = true;
-
-    
     private Intake() {
-        intakeMotor = new TalonFX(7);
+        super();
     }
 
-    public static void run(boolean intake, boolean outtake) {
-        if(intake) {
-            currentState = IntakeState.INTAKING;
-        } else if(outtake) {
-            currentState = IntakeState.OUTTAKING;
-        } else {
-            currentState = IntakeState.IDLE;
-        }
-
-        if(currentState.equals(IntakeState.INTAKING)) {
-            intakeMotor.set(intakeSpeed);
-        } else if(currentState.equals(IntakeState.OUTTAKING)) {
-            intakeMotor.set(-intakeSpeed);
-        } else {
-            intakeMotor.set(0);
-        }
+    public static void run(double innerSpeed, double outerSpeed) {
+        instance.outerMotor.set(outerSpeed);
+        instance.innerMotor.set(innerSpeed);
     }
 
-    /**
-     * More rudamentary method that allows for adjustment of the intake speed
-     * @param runIntake Hold the button to run the intake
-     */
-    public static void runTest(boolean up, boolean down, boolean resume, boolean stop) {
-
-        if(up) {
-            intakeSpeed += 0.1;
-        } else if(down) {
-            intakeSpeed -= 0.1;
-        }
-
-        if(resume) {
-            stopped = false;
-        } else if(stop) {
-            stopped = true;
-        }
-
-        
-        if(!stopped) intakeMotor.set(intakeSpeed);
-        else intakeMotor.set(0);
-
-    }
-
-    /**
-     * Returns the current state of the intake
-     * @return The current state of the intake
-     */
-    public static IntakeState getState() {
-        return currentState;
-    }
-
+    @Override
     public void print() {
-        SmartDashboard.putNumber("Target Speed", intakeSpeed);
-        SmartDashboard.putNumber("Motor Speed", intakeMotor.get());
+        SmartDashboard.putNumber("Intake Inner Motor Speed", innerMotor.get());
+        SmartDashboard.putNumber("Intake Outer Motor Speed", outerMotor.get());
     }
 }

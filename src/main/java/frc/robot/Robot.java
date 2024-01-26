@@ -34,6 +34,7 @@ public class Robot extends TimedRobot {
     
     @Override
     public void robotPeriodic() {
+        SmartPrinter.print();
         LEDLights.run();
         
         SmartDashboard.putBoolean("LL Valid Target?", Limelight.hasValidTarget());
@@ -92,6 +93,8 @@ public class Robot extends TimedRobot {
 
         linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
         linearServo.setPosition(controllerTwo.getLeftTriggerAxis());
+
+        Intake.run(controllerTwo.getLeftY(), controllerTwo.getRightY());
 
         Shooter.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
         //Intake.runTest(controllerOne.getYButtonPressed(), controllerOne.getXButtonPressed(), controllerOne.getAButtonPressed(), controllerOne.getBButtonPressed());
