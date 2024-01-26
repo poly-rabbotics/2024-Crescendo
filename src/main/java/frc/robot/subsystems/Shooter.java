@@ -1,4 +1,4 @@
-package frc.robot.systems;
+package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -12,11 +12,7 @@ public class Shooter extends SmartPrintable {
     public enum ShooterState {
         IDLE, RUNNING
     }
-    
-    private static final Shooter instance = new Shooter();
 
-    private static final int LEFT_MOTOR_ID = 6;
-    private static final int RIGHT_MOTOR_ID = 5;
     private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
 
     private static double velocity = 105; //Velocity in RPM
@@ -28,17 +24,17 @@ public class Shooter extends SmartPrintable {
     private static VelocityVoltage requestLeft;
     private static VelocityVoltage requestRight;
     
-    private static final double P_0 = 0.5;
-    private static final double I_0 = 0;
+    private static final double P_0 = 0.65;
+    private static final double I_0 = 0.01;
     private static final double D_0 = 0;
     private static final double S_0 = 0.05;
 
-    private Shooter() {
+    public Shooter(int leftMotorID, int rightMotorID) {
         super();
 
         slot0Configs = new Slot0Configs();
-        leftMotor = new TalonFX(LEFT_MOTOR_ID);
-        rightMotor = new TalonFX(RIGHT_MOTOR_ID);
+        leftMotor = new TalonFX(leftMotorID);
+        rightMotor = new TalonFX(rightMotorID);
 
         slot0Configs.kP = P_0;
         slot0Configs.kI = I_0;
@@ -55,7 +51,7 @@ public class Shooter extends SmartPrintable {
      * Runs the shooter. What, did you expect it to make you a sandwich?
      * @param runShooter Hold the button to run the shooter
      */
-    public static void run(boolean runShooter) {
+    public void run(boolean runShooter) {
         if(runShooter) {
             currentState = ShooterState.RUNNING;
         } else {
@@ -64,8 +60,10 @@ public class Shooter extends SmartPrintable {
 
         if(currentState.equals(ShooterState.RUNNING)) {
             leftMotor.setControl(requestLeft.withVelocity(velocity));
+            rightMotor.setControl(requestRight.withVelocity(-velocity));
         } else {
             leftMotor.set(0);
+            rightMotor.set(0);
         }
     }
 
@@ -76,7 +74,7 @@ public class Shooter extends SmartPrintable {
      * @param resume Toggles the shooter on
      * @param stop Toggles the shooter off
      */
-    public static void runTest(boolean dPadUp, boolean dPadDown, boolean resume, boolean stop) {
+    public void runTest(boolean dPadUp, boolean dPadDown, boolean resume, boolean stop) {
 
         if(dPadUp) {
             velocity += 5;
@@ -104,7 +102,7 @@ public class Shooter extends SmartPrintable {
      * Gets the current state of the shooter
      * @return The current state of the shooter
      */
-    public static ShooterState getState() {
+    public ShooterState getState() {
         return currentState;
     }
 

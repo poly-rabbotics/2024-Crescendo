@@ -39,7 +39,7 @@ public class LinearActuator extends SmartPrintable {
      * Sets the set point of the `LinearActuator`.
      */
     public void setPosition(double setPoint) {
-        controller.setSetpoint(setPoint);
+        controller.setSetpoint(setPoint * actuationDistance);
     }
 
     /**
@@ -56,5 +56,10 @@ public class LinearActuator extends SmartPrintable {
     @Override
     public void print() {
         SmartDashboard.putNumber("Linear Actuator (on ID " + motor.getDeviceId() + ") distance", motor.getEncoder().getPosition());
+    }
+
+    public void jankRun(double setPoint) {
+
+        motor.set(-setPoint);
     }
 }
