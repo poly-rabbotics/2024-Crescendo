@@ -21,7 +21,7 @@ import frc.robot.subsystems.Angle;
  * Manages the robot's pigeon.
  */
 public class Pigeon extends SmartPrintable {
-    private static final int PIGEON_CAN_ID = 20;
+    private static final int PIGEON_CAN_ID = 0;
     private static final Pigeon instance = new Pigeon(PIGEON_CAN_ID);
 
     private final Pigeon2 pigeon;
