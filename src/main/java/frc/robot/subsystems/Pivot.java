@@ -20,7 +20,7 @@ public class Pivot {
     private static final double SOURCE_INTAKE_ANGLE = 0;
     private static final double GROUND_INTAKE_ANGLE = 0;
     private static final double SHOOTING_ANGLE = 0;
-    private static final double AMP_SCORING_ANGLE = 0;
+    private static final double AMP_SCORING_ANGLE = 90;
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
 

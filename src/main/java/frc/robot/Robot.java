@@ -97,17 +97,14 @@ public class Robot extends TimedRobot {
             SwerveDrive.zeroPositions();
         }
 
-        //linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
-        //linearServo.setPosition(controllerTwo.getLeftTriggerAxis());
-
         Hands.run(
-            controllerTwo.getAButton(), 
-            controllerTwo.getBButton(), 
-            controllerTwo.getRightTriggerAxis() >= 0.3, 
-            controllerTwo.getYButtonPressed(), 
-            controllerTwo.getLeftTriggerAxis(),
-            controllerTwo.getLeftY(),
-            controllerTwo.getLeftX()
+            controllerTwo.getAButton(),                 // Intake
+            controllerTwo.getBButton(),                 // Outtake
+            controllerTwo.getRightTriggerAxis() >= 0.3, // Shoot
+            controllerTwo.getYButtonPressed(),          // Run Loader
+            controllerTwo.getLeftTriggerAxis(),         // Linear Actuator
+            controllerTwo.getLeftY(),                   // Manual Shooter input
+            controllerTwo.getLeftX()                    // Manual Pivot input
         );
     }
 
