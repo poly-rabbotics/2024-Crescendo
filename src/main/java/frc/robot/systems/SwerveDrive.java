@@ -30,7 +30,7 @@ public class SwerveDrive extends SmartPrintable {
     private static final int MODULE_ROTATION_CAN_IDS[] = { 5,   6,   7,   8  };
     private static final int MODULE_CANCODER_CAN_IDS[] = { 9,   10,  11,  12 };
     
-    private static final double CHASSIS_SIDE_LENGTH = 0.61;
+    private static final double CHASSIS_SIDE_LENGTH = 0.58;
 
     private static final Angle MODULE_CANCODER_OFFSETS[] = {
         new Angle().setDegrees(-132.62695 + 90.0), 
