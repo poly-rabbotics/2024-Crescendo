@@ -7,9 +7,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.subsystems.LinearActuator;
-import frc.robot.subsystems.LinearServo;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -28,22 +25,23 @@ public class Robot extends TimedRobot {
      * initialization code.
      */
     @Override
-    public void robotInit() {}
+    public void robotInit() {
+        Pigeon.setFeildZero();
+    }
     
     @Override
     public void robotPeriodic() {
         SmartPrinter.print();
         LEDLights.run();
+        SwerveDrive.updateOdometry();
 
         //SmartDashboard.putBoolean("LL Valid Target?", Limelight.hasValidTarget());
         //SmartDashboard.putNumber("LL Target April Tag ID", Limelight.aprilTagTargetId());
-
-        SmartPrinter.print();
     }
     
     @Override
     public void autonomousInit() {
-        //Pigeon.setFeildZero();
+        Pigeon.setFeildZero();
     }
 
     @Override
@@ -58,7 +56,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         // Left stick changes between headless and relative control modes.
-        /* if (controllerOne.getLeftStickButtonReleased()) {
+        if (controllerOne.getLeftStickButtonReleased()) {
             SwerveDrive.setMode(
                 SwerveDrive.getMode() == SwerveMode.HEADLESS 
                     ? SwerveMode.RELATIVE 
@@ -82,22 +80,26 @@ public class Robot extends TimedRobot {
         SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.run(
-            controllerOne.getLeftX(),
-            -controllerOne.getLeftY(),
+            -controllerOne.getLeftX(),
+            controllerOne.getLeftY(),
             controllerOne.getRightX()
         );
 
         double rumble = controllerOne.getLeftBumper() 
             ? SwerveDrive.getAverageMotorTemp() / 80.0
             : SwerveDrive.getAveragePercentRatedCurrent();
-        controllerOne.setRumble(RumbleType.kBothRumble, rumble); */
+        controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
-        /* linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
-        linearServo.setPosition(controllerTwo.getLeftTriggerAxis()); */
+        if (controllerOne.getAButtonReleased()) {
+            SwerveDrive.zeroPositions();
+        }
+
+        //linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
+        //linearServo.setPosition(controllerTwo.getLeftTriggerAxis());
 
         //Hands.run(false, false, controllerOne.getRightTriggerAxis() >= 0.3, controllerOne.getAButtonPressed(), controllerOne.getLeftTriggerAxis());
     
-        Intake.run(controllerOne.getXButton(), controllerOne.getYButton());
+        Intake.run(controllerTwo.getAButton(), controllerTwo.getBButton());
     }
 
     @Override

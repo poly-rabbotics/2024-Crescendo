@@ -4,17 +4,13 @@
 
 package frc.robot.subsystems;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -30,7 +26,7 @@ public class SwerveModule extends SmartPrintable {
     private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                         // Rotations to radians.
     private static final double CONVERSION_FACTOR_MOVEMENT = 6.75;                                            // Rotations to meters.
     private static final double CONVERSION_FACTOR_ROTATION_VELOCITY = CONVERSION_FACTOR_ROTATION * (1 / 60);  // RPM to radians per second.
-    private static final double CONVERSION_FACTOR_MOVEMENT_VELOCITY = CONVERSION_FACTOR_MOVEMENT * (1 / 60);  // RPM to meters per second.
+    private static final double CONVERSION_FACTOR_MOVEMENT_VELOCITY = -CONVERSION_FACTOR_MOVEMENT * (1 / 60);  // RPM to meters per second.
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
 
     private static final double PID_P = 0.5;
@@ -41,9 +37,9 @@ public class SwerveModule extends SmartPrintable {
     private static final double ROCK_PID_I = 0.0;
     private static final double ROCK_PID_D = 0.0;
 
-    private final SwerveModulePosition position;
-    private final SwerveModuleRunner moduleRunner;
-    private final ScheduledExecutorService runnerThread;
+    private static final double VELOCITY_CONTROL_PID_P = 0.05;
+    private static final double VELOCITY_CONTROL_PID_I = 0.00;
+    private static final double VELOCITY_CONTROL_PID_D = 0.00;
 
     private final CANSparkMax rotationMotor;  // The motor responsible for rotating the module.
     private final CANSparkMax movementMotor;  // The motor responsible for creating movement in the module.
@@ -58,15 +54,13 @@ public class SwerveModule extends SmartPrintable {
     private final RelativePosition physicalPosition;
     private final Angle canCoderOffset;
 
-    private SlewRateLimiter accelerationLimit;
     private SwerveModuleState desiredState;
+    private SwerveModulePosition position;
 
     // Set to NaN if not in rock mode, NaN does not equal itself by definition
     // (see some IEEE standard or something) and so this is how rock mode is 
-    // checked. Max speed works the same way.
+    // checked.
     private double rockPos = Double.NaN;
-    private double maxSpeed = Double.NaN;
-    private double accelerationRate = Double.NaN;
 
     private enum RelativePosition {
         FRONT_RIGHT (  1.0,  1.0 ),
@@ -116,46 +110,36 @@ public class SwerveModule extends SmartPrintable {
         }
     }
 
-    private class SwerveModuleRunner implements Runnable {
-        private SwerveModule parentModule;
+    public void run() {
+        double angularPosition = angularEncoder.getPosition().getValue() * Angle.TAU;
+        double currentPosition = (angularPosition + canCoderOffset.radians()) % Angle.TAU;
 
-        public SwerveModuleRunner(SwerveModule parentModule) {
-            this.parentModule = parentModule;
+        SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(currentPosition));
+    
+        if (rockPos != rockPos) {
+            //movementMotor
+            //    .getPIDController()
+            //    .setReference(
+            //        state.speedMetersPerSecond / CONVERSION_FACTOR_MOVEMENT_VELOCITY, 
+            //        CANSparkBase.ControlType.kVelocity
+            //    );
+            movementMotor.set(state.speedMetersPerSecond);
+        } else {
+            movementMotor.set(rockController.calculate(getDistanceTraveled(), rockPos));
         }
-        
-        @Override
-        public void run() {
-            double angularPosition = angularEncoder.getPosition().getValue() * Angle.TAU;
-            double currentPosition = (angularPosition + canCoderOffset.radians()) % Angle.TAU;
 
-            SwerveModuleState state = SwerveModuleState.optimize(parentModule.desiredState, new Rotation2d(currentPosition));
+        double calculation = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
+        rotationMotor.set(calculation);
 
-            /*
-             * There are two important reasons to run `SwerveModuleState.optomize()`. The first is obvious, make swerve
-             * more efficient. The other is to make a value-wise copy of the module state to avoid race conditions, as the 
-             * method creates a new `SwerveModuleState` each time. See this link for source:
-             * https://github.wpilib.org/allwpilib/docs/release/java/src-html/edu/wpi/first/math/kinematics/SwerveModuleState.html#line.74
-             */
-        
-            if (rockPos != rockPos) {
-                var desiredSpeed = Math.abs(state.speedMetersPerSecond) > maxSpeed 
-                    ? Math.signum(state.speedMetersPerSecond) * maxSpeed 
-                    : state.speedMetersPerSecond;
-                movementMotor.set(
-                    accelerationRate == accelerationRate
-                        ? accelerationLimit.calculate(desiredSpeed)
-                        : desiredSpeed
-                );
-            } else {
-                movementMotor.set(rockController.calculate(getDistanceTraveled(), rockPos));
-            }
-
-            double calculation = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
-            rotationMotor.set(calculation);
-
-            position.angle = new Rotation2d(angularPosition);
-            position.distanceMeters = movementEncoder.getPosition() * CONVERSION_FACTOR_MOVEMENT;
-        }
+        position.angle = new Rotation2d(angularPosition);
+        position.distanceMeters = movementEncoder.getPosition();
+    }
+    
+    public void updatePosition() {
+        position = new SwerveModulePosition(
+            movementEncoder.getPosition(), 
+            new Rotation2d(angularEncoder.getPosition().getValue() * Angle.TAU)
+        );
     }
 
     public SwerveModule(
@@ -180,21 +164,7 @@ public class SwerveModule extends SmartPrintable {
         movementMotor.setSmartCurrentLimit(40);
 
         angularEncoder = new CANcoder(canCoderID);
-        angularEncoder.getConfigurator().apply(new CANcoderConfiguration()); // Factory reset
-
-        //angularEncoder.configFactoryDefault();
-
-        // Magic and forbidden config from the code orange wizards. Makes the 
-        // encoder initialize to absolute.
-        //angularEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        //angularEncoder.configFeedbackCoefficient(
-        //    // Since the default coefficiant used for degrees is not 
-        //    // particularly intuitive we just grab it and run a deg -> rad
-        //    // conversion on it.
-        //    Math.toRadians(angularEncoder.configGetFeedbackCoefficient()), 
-        //    "rad", 
-        //    SensorTimeBase.PerSecond
-        //);
+        angularEncoder.getConfigurator().apply(new CANcoderConfiguration());
 
         rotationEncoder = rotationMotor.getEncoder();
         rotationEncoder.setPosition(angularEncoder.getPosition().getValue() * Angle.TAU);
@@ -204,7 +174,11 @@ public class SwerveModule extends SmartPrintable {
         movementEncoder = movementMotor.getEncoder();
         movementEncoder.setPosition(0.0);
         movementEncoder.setPositionConversionFactor(CONVERSION_FACTOR_MOVEMENT);
-        movementEncoder.setVelocityConversionFactor(CONVERSION_FACTOR_MOVEMENT_VELOCITY);
+        //movementEncoder.setVelocityConversionFactor(CONVERSION_FACTOR_MOVEMENT_VELOCITY);
+
+        movementMotor.getPIDController().setP(VELOCITY_CONTROL_PID_P);
+        movementMotor.getPIDController().setI(VELOCITY_CONTROL_PID_I);
+        movementMotor.getPIDController().setD(VELOCITY_CONTROL_PID_D);
         
         rotationController = new PIDController(PID_P, PID_I, PID_D);
         rotationController.enableContinuousInput(0.0, Angle.TAU);
@@ -214,16 +188,11 @@ public class SwerveModule extends SmartPrintable {
         rockController.setTolerance(1);
 
         position = new SwerveModulePosition(
-            movementEncoder.getPosition() * CONVERSION_FACTOR_MOVEMENT, 
+            movementEncoder.getPosition(), 
             new Rotation2d(angularEncoder.getPosition().getValue() * Angle.TAU)
         );
 
-        accelerationLimit = new SlewRateLimiter(1.5);
         desiredState = new SwerveModuleState();
-        moduleRunner = new SwerveModuleRunner(this);
-
-        runnerThread = Executors.newSingleThreadScheduledExecutor();
-        runnerThread.scheduleAtFixedRate(moduleRunner, 0, 20, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -250,38 +219,6 @@ public class SwerveModule extends SmartPrintable {
      */
     public boolean inRockMode() {
         return rockPos == rockPos;
-    }
-
-    /**
-     * Sets this module's maximum movement speed. Use NaN for no limit.
-     */
-    public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed = maxSpeed;
-    }
-
-    /**
-     * Gets this module's maximum movement speed
-     */
-    public double getMaxSpeed() {
-        return maxSpeed;
-    }
-
-    /**
-     * Sets whether or not to limit the acceleration of the module.
-     */
-    public void setAccelerationRate(double accelerationRate) {
-        if (accelerationRate != this.accelerationRate && accelerationRate == accelerationRate) {
-            accelerationLimit = new SlewRateLimiter(accelerationRate);
-        }
-
-        this.accelerationRate = accelerationRate;
-    }
-
-    /**
-     * Gets whether or not the drive is limiting its acceleration.
-     */
-    public double getAccelerationRate() {
-        return accelerationRate;
     }
 
     /**
@@ -345,10 +282,12 @@ public class SwerveModule extends SmartPrintable {
         SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()) % Angle.TAU));
         SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position (Distance) ", movementEncoder.getPosition());
         SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Speed", movementMotor.get());
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Velocity", movementEncoder.getVelocity());
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Desired Velocity", desiredState.speedMetersPerSecond);
     }
 
     /**
-     * Gets the angle of the module. 
+     * Gets the position of the module. 
      */
     public SwerveModulePosition getPosition() {
         return position;

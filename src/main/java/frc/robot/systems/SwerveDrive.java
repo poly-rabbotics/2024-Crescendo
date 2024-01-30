@@ -7,6 +7,7 @@ package frc.robot.systems;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
@@ -29,13 +30,13 @@ public class SwerveDrive extends SmartPrintable {
     private static final int MODULE_ROTATION_CAN_IDS[] = { 5,   6,   7,   8  };
     private static final int MODULE_CANCODER_CAN_IDS[] = { 9,   10,  11,  12 };
     
-    private static final double CHASSIS_SIDE_LENGTH = 0.6;
+    private static final double CHASSIS_SIDE_LENGTH = 0.61;
 
     private static final Angle MODULE_CANCODER_OFFSETS[] = {
-        new Angle().setDegrees(-252.24607237 + 90.0), 
-        new Angle().setDegrees(-224.033203125 + 270.0), 
-        new Angle().setDegrees(-11.425719246268272 + 270.0), 
-        new Angle().setDegrees(-179.56050113588573 + 90.0) 
+        new Angle().setDegrees(-132.62695 + 90.0), 
+        new Angle().setDegrees(-12.3046875 + 90.0), 
+        new Angle().setDegrees(147.216799 + 90.0), 
+        new Angle().setDegrees(196.9628906 + 90.0) 
     };
 
     private static final Angle MODULE_ROCK_MODE_POSITIONS[] = { 
@@ -281,22 +282,6 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
-     * Sets whether or not to limit the acceleration of the drive.
-     */
-    public static void setAccelerationRate(double accelerationRate) {
-        for (SwerveModule module : instance.modules) {
-            module.setAccelerationRate(accelerationRate);
-        }
-    }
-
-    /**
-     * Gets the acceleration rate limit of the drive.
-     */
-    public static double getAccelerationRate() {
-        return instance.modules[0].getAccelerationRate();
-    }
-
-    /**
      * Runs swerve, behavior changes based on the drive's mode. This will reset
      * temporary modes on completion.
      * @param translationX The X axis of the directional control, between 1 and -1
@@ -420,14 +405,13 @@ public class SwerveDrive extends SmartPrintable {
             // This branch should never be reached as the enum used should never
             // have more than the above possible values.
             default: assert false;
-        } 
+        }
 
         for (int i = 0; i < instance.modules.length; i++) {
             instance.modules[i].setDesiredState(moduleStates[i]);
             instance.modules[i].setRockMode(holdPos);
+            instance.modules[i].run();
         }
-
-        instance.odometry.update(new Rotation2d(Pigeon.getYaw().radians()), instance.positions);
         
         // Reset temporary states
         
@@ -450,12 +434,15 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
-     * Sets the max speed of all modules, use NaN for no limit.
+     * Updates module positions and drive odometry.
      */
-    public static void setMaxSpeed(double maxSpeed) {
-        for (SwerveModule module : instance.modules) {
-            module.setMaxSpeed(maxSpeed);
+    public static void updateOdometry() {
+        for (int i = 0; i < instance.modules.length; i++) {
+            instance.modules[i].updatePosition();
+            instance.positions[i] = instance.modules[i].getPosition();
         }
+
+        instance.odometry.update(new Rotation2d(Pigeon.getYaw().radians()), instance.positions);
     }
 
     /**
@@ -528,8 +515,10 @@ public class SwerveDrive extends SmartPrintable {
      * Zeros all movement encoder positions.
      */
     public static void zeroPositions() {
-        for (SwerveModule module : instance.modules) {
-            module.zeroPositions();
+        for (int i = 0; i < instance.modules.length; i++) {
+            instance.modules[i].zeroPositions();
+            instance.positions[i] = instance.modules[i].getPosition();
         }
+        instance.odometry.resetPosition(new Rotation2d(Pigeon.getYaw().radians()), instance.positions, new Pose2d(0.0, 0.0, new Rotation2d(0.0)));
     }
 }
