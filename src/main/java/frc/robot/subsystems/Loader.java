@@ -1,12 +1,11 @@
 package frc.robot.subsystems;
 
-import frc.robot.systems.SmartPrinter;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.systems.SmartPrinter;
 
 public class Loader extends SmartPrinter {
 

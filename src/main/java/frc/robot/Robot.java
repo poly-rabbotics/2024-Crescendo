@@ -4,9 +4,11 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -19,6 +21,7 @@ import frc.robot.systems.*;
 public class Robot extends TimedRobot {
     private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
     private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
+    private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -97,9 +100,15 @@ public class Robot extends TimedRobot {
         //linearActuator.setPosition(controllerTwo.getRightTriggerAxis());
         //linearServo.setPosition(controllerTwo.getLeftTriggerAxis());
 
-        //Hands.run(false, false, controllerOne.getRightTriggerAxis() >= 0.3, controllerOne.getAButtonPressed(), controllerOne.getLeftTriggerAxis());
-    
-        Intake.run(controllerTwo.getAButton(), controllerTwo.getBButton());
+        Hands.run(
+            controllerTwo.getAButton(), 
+            controllerTwo.getBButton(), 
+            controllerTwo.getRightTriggerAxis() >= 0.3, 
+            controllerTwo.getYButtonPressed(), 
+            controllerTwo.getLeftTriggerAxis(),
+            controllerTwo.getLeftY(),
+            controllerTwo.getLeftX()
+        );
     }
 
     @Override
