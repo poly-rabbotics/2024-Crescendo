@@ -76,16 +76,14 @@ public class Pigeon extends SmartPrintable {
      * Gets pitch.
      */
     public static Angle getPitch() {
-        // Pitch and roll are flipped due to mounting orientation.
-        return new Angle().setDegrees(instance.pigeon.getRoll().getValue());
+        return new Angle().setDegrees(instance.pigeon.getPitch().getValue());
     }
 
     /**
      * Gets roll.
      */
     public static Angle getRoll() {
-        // Pitch and roll are flipped due to mounting orientation.
-        return new Angle().setDegrees(instance.pigeon.getPitch().getValue());
+        return new Angle().setDegrees(instance.pigeon.getRoll().getValue());
     }
     
     @Override
@@ -150,8 +148,8 @@ public class Pigeon extends SmartPrintable {
             recordedInstant = clock.instant();
             
             previousYaw = new Angle().setDegrees(pigeon.pigeon.getYaw().getValue());
-            previousRoll = new Angle().setDegrees(pigeon.pigeon.getPitch().getValue()); // Roll and Pitch are swapped cause of the way its mounted.
-            previousPitch = new Angle().setDegrees(pigeon.pigeon.getRoll().getValue());
+            previousRoll = new Angle().setDegrees(pigeon.pigeon.getRoll().getValue());
+            previousPitch = new Angle().setDegrees(pigeon.pigeon.getPitch().getValue());
         }
 
         @Override
@@ -159,8 +157,8 @@ public class Pigeon extends SmartPrintable {
             Instant previousInstant = recordedInstant;
 
             Angle yaw = new Angle().setDegrees(pigeon.pigeon.getYaw().getValue());
-            Angle roll = new Angle().setDegrees(pigeon.pigeon.getPitch().getValue()); // Roll and Pitch are swapped cause of the way its mounted.
-            Angle pitch = new Angle().setDegrees(pigeon.pigeon.getRoll().getValue());             
+            Angle roll = new Angle().setDegrees(pigeon.pigeon.getRoll().getValue());
+            Angle pitch = new Angle().setDegrees(pigeon.pigeon.getPitch().getValue());             
 
             recordedInstant = clock.instant();
             
