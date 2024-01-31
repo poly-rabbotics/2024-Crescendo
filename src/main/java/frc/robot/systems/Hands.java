@@ -26,7 +26,8 @@ public class Hands extends SmartPrintable {
     public enum Setpoint {
         SOURCE_INTAKE,
         GROUND_INTAKE,
-        SHOOTING,
+        STATIC_SHOOTING,
+        DYNAMIC_SHOOTING,
         AMP_SCORING
     }
 
@@ -73,14 +74,14 @@ public class Hands extends SmartPrintable {
 
     }
 
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, double actuatorPos, double manualShooter, double manualPivot) {
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, double actuatorPos, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
         loader.run(runLoader);
         intake.run(intakeIn, intakeOut);
 
         linearActuator.setPosition(actuatorPos);
         linearActuator.run();
 
-        if(manualShooter < 0.2) {
+        if(manualShooter < MANUAL_DEADZONE) {
             shooter.pidControl(shoot);
         } else {
             shooter.manualControl(manualShooter);
@@ -98,7 +99,7 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Shooter Motor Power", shooter.getOutputPower());
         SmartDashboard.putNumber("Shooter Motor Speed", shooter.getSpeed());
 
-        //Loader stuff (stuff implies plural, should it be "things"?)
+        //Loader stuff (stuff implies plural, should it be "thing"?)
         SmartDashboard.putNumber("Loader Position", loader.getEncoderPosition());
 
         //Intake stuff

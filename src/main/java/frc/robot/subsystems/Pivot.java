@@ -9,6 +9,13 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.systems.Hands.Setpoint;
 
+/*
+ * Reminders to myself on what i need to do before testing this:
+ * - Set the motor ID
+ * - Set the encoder offset
+ * - Find setpoint angles
+ * - Add right parameters in Robot.java
+ */
 
 public class Pivot {
     private static final double P_0 = 0.1;
@@ -19,7 +26,7 @@ public class Pivot {
 
     private static final double SOURCE_INTAKE_ANGLE = 0;
     private static final double GROUND_INTAKE_ANGLE = 0;
-    private static final double SHOOTING_ANGLE = 0;
+    private static final double SPEAKER_SHOOTING_ANGLE = 0;
     private static final double AMP_SCORING_ANGLE = 90;
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
@@ -40,13 +47,15 @@ public class Pivot {
         pidController.setFeedbackDevice(absoluteEncoder);
     }
 
-    public void pidControl(boolean sourceIntake, boolean groundIntake, boolean shooting, boolean ampScoring) {
+    public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
         if(sourceIntake) {
             setpoint = Setpoint.SOURCE_INTAKE;
         } else if(groundIntake) {
             setpoint = Setpoint.GROUND_INTAKE;
-        } else if(shooting) {
-            setpoint = Setpoint.SHOOTING;
+        } else if(speakerShooting) {
+            setpoint = Setpoint.STATIC_SHOOTING;
+        } else if(dynamicShooting) {
+            setpoint = Setpoint.DYNAMIC_SHOOTING;
         } else if(ampScoring) {
             setpoint = Setpoint.AMP_SCORING;
         }
@@ -61,8 +70,11 @@ public class Pivot {
             case AMP_SCORING:
                 pidController.setReference(AMP_SCORING_ANGLE, ControlType.kPosition, 0);
                 break;
-            case SHOOTING:
-                pidController.setReference(SHOOTING_ANGLE, ControlType.kPosition, 0);
+            case STATIC_SHOOTING:
+                pidController.setReference(SPEAKER_SHOOTING_ANGLE, ControlType.kPosition, 0);
+                break;
+            case DYNAMIC_SHOOTING:
+                //insert Evan's black magic fuckery here
                 break;
         }
     }
