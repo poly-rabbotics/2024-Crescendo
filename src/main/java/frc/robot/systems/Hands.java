@@ -50,7 +50,7 @@ public class Hands extends SmartPrintable {
     private static final int INNER_INTAKE_MOTOR_PWM_CHANNEL = 1;
     private static final int OUTER_INTAKE_MOTOR_CAN_ID = 62;
 
-    private static final int PIVOT_MOTOR_ID = 0;
+    private static final int PIVOT_MOTOR_ID = 13;
 
     private static final double MANUAL_DEADZONE = 0.2;
 
@@ -78,14 +78,19 @@ public class Hands extends SmartPrintable {
         loader.run(runLoader);
         intake.run(intakeIn, intakeOut);
 
+        if(intakeIn || intakeOut) {
+            
+            shooter.manualControl(intakeIn ? -0.2 : -0.2);
+        } else {
+            if(manualShooter < MANUAL_DEADZONE) {
+                shooter.pidControl(shoot);
+            } else {
+                shooter.manualControl(manualShooter);
+            }
+        }
+
         linearActuator.setPosition(actuatorPos);
         linearActuator.run();
-
-        if(manualShooter < MANUAL_DEADZONE) {
-            shooter.pidControl(shoot);
-        } else {
-            shooter.manualControl(manualShooter);
-        }
 
         pivot.manualControl(manualPivot * 0.5);
 
@@ -110,5 +115,6 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Pivot Position", pivot.getEncoderPosition());
         SmartDashboard.putNumber("Pivot Motor Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
+        SmartDashboard.putNumber("Pivot Position (Raw)", pivot.getRawPosition());
     }
 }

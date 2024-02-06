@@ -105,11 +105,11 @@ public class Robot extends TimedRobot {
             controllerTwo.getLeftTriggerAxis(),         // Linear Actuator
             controllerTwo.getLeftY(),                   // Manual Shooter input
             controllerTwo.getLeftX(),                   // Manual Pivot input
-            false,                         // Source Intake
-            false,                         // Ground Intake
-            false,                      // Speaker Shooting
-            false,                      // Dynamic Shooting
-            false                            // Amp Scoring
+            controlPanel.getRawButton(2),        // Source Intake
+            controlPanel.getRawButton(1),        // Ground Intake
+            controlPanel.getRawButton(4),        // Speaker Shooting
+            controlPanel.getRawButton(5),        // Dynamic Shooting
+            controlPanel.getRawButton(3)         // Amp Scoring
         );
     }
 
