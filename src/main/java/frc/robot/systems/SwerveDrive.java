@@ -32,11 +32,19 @@ public class SwerveDrive extends SmartPrintable {
     
     private static final double CHASSIS_SIDE_LENGTH = 0.58;
 
-    private static final Angle MODULE_CANCODER_OFFSETS[] = {
+    /* private static final Angle MODULE_CANCODER_OFFSETS[] = {
         new Angle().setDegrees(-132.62695 + 90.0), 
         new Angle().setDegrees(-12.3046875 + 90.0), 
         new Angle().setDegrees(147.216799 + 90.0), 
         new Angle().setDegrees(196.9628906 + 90.0) 
+    }; */
+
+    // Wyvern
+    private static final Angle MODULE_CANCODER_OFFSETS[] = {
+        new Angle().setDegrees(-252.24607237 + 90.0), 
+        new Angle().setDegrees(-224.033203125 + 270.0), 
+        new Angle().setDegrees(-11.425719246268272 + 270.0), 
+        new Angle().setDegrees(-179.56050113588573 + 90.0) 
     };
 
     private static final Angle MODULE_ROCK_MODE_POSITIONS[] = { 

@@ -6,7 +6,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 
@@ -23,10 +22,8 @@ import frc.robot.SmartPrintable;
  * Class for managing and manipulating a swerve module. 
  */
 public class SwerveModule extends SmartPrintable {
-    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                         // Rotations to radians.
-    private static final double CONVERSION_FACTOR_MOVEMENT = 6.75;                                            // Rotations to meters.
-    private static final double CONVERSION_FACTOR_ROTATION_VELOCITY = CONVERSION_FACTOR_ROTATION * (1 / 60);  // RPM to radians per second.
-    private static final double CONVERSION_FACTOR_MOVEMENT_VELOCITY = -CONVERSION_FACTOR_MOVEMENT * (1 / 60);  // RPM to meters per second.
+    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                         // Enc counts to radians.
+    private static final double CONVERSION_FACTOR_MOVEMENT = (1 / 6.75) * 0.1;                                // Rotations to meters.
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
 
     private static final double PID_P = 0.5;
@@ -131,7 +128,7 @@ public class SwerveModule extends SmartPrintable {
         double calculation = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
         rotationMotor.set(calculation);
 
-        position.angle = new Rotation2d(angularPosition);
+        position.angle = new Rotation2d(currentPosition);
         position.distanceMeters = movementEncoder.getPosition();
     }
     
@@ -169,12 +166,10 @@ public class SwerveModule extends SmartPrintable {
         rotationEncoder = rotationMotor.getEncoder();
         rotationEncoder.setPosition(angularEncoder.getPosition().getValue() * Angle.TAU);
         rotationEncoder.setPositionConversionFactor(CONVERSION_FACTOR_ROTATION);
-        rotationEncoder.setVelocityConversionFactor(CONVERSION_FACTOR_ROTATION_VELOCITY);
 
         movementEncoder = movementMotor.getEncoder();
         movementEncoder.setPosition(0.0);
         movementEncoder.setPositionConversionFactor(CONVERSION_FACTOR_MOVEMENT);
-        //movementEncoder.setVelocityConversionFactor(CONVERSION_FACTOR_MOVEMENT_VELOCITY);
 
         movementMotor.getPIDController().setP(VELOCITY_CONTROL_PID_P);
         movementMotor.getPIDController().setI(VELOCITY_CONTROL_PID_I);
