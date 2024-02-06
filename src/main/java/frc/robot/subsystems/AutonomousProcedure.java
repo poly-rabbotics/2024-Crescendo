@@ -7,12 +7,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.SmartPrintable;
 
 public class AutonomousProcedure extends SmartPrintable implements Runnable {
-    private ArrayList<ProcedureStep> procedureSteps;
+    private ArrayList<ProcedureStep> procedureSteps = new ArrayList<ProcedureStep>();
     private int procedureStep = 0;
     private String name = null;
 
     public AutonomousProcedure(String name) {
-        procedureSteps = new ArrayList<ProcedureStep>();
         this.name = name;
     }
 
