@@ -36,8 +36,8 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         SmartPrinter.print();
         LEDLights.run();
-        SwerveDrive.updateOdometry();
         Pigeon.update();
+        SwerveDrive.updateOdometry();
     }
     
     @Override
@@ -50,8 +50,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        //SwerveDrive.setMode(SwerveMode.HEADLESS);
-
+        SwerveDrive.setMode(SwerveMode.HEADLESS);
     }
 
     @Override
