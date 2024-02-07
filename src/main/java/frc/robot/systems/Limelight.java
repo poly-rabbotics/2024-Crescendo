@@ -12,6 +12,7 @@ public class Limelight {
 
     private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
     private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 0.0, 0.0); // meters
+    private static final LimelightPos SHOOTER_POS = instance.new LimelightPos(0.0, 22.0, 0.0);
     private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // meters
 
     // Red scoring target tags.
@@ -43,7 +44,7 @@ public class Limelight {
     private static final int APRIL_TAG_ID_BLUE_SOURCE_FIELD_SIDE = 2;
 
     /**
-     * Indexed by tag ID, given in inches to the center of the tag form field
+     * Indexed by tag ID, given in inches to the center of the tag from field
      * floor.
      */
     private static final double[] APRIL_TAG_HEIGHTS = {
@@ -64,6 +65,29 @@ public class Limelight {
         (3.0 * 12.0) + 11.0 + (1.0 / 2.0) + (APRIL_TAG_SIDE_LENGTH / 2.0), // 14
         (3.0 * 12.0) + 11.0 + (1.0 / 2.0) + (APRIL_TAG_SIDE_LENGTH / 2.0), // 15
         (3.0 * 12.0) + 11.0 + (1.0 / 2.0) + (APRIL_TAG_SIDE_LENGTH / 2.0), // 16  
+    };
+
+    /**
+     * Indexed by tag ID, given in inches to the center of the target from field
+     * floor.
+     */
+    private static final double[] TARGET_HEIGHTS = {
+        0.0,    // 1
+        0.0,    // 2
+        0.0,    // 3
+        79.25,  // 4
+        0.0,    // 5
+        0.0,    // 6
+        79.25,  // 7
+        0.0,    // 8
+        0.0,    // 9
+        0.0,    // 10
+        0.0,    // 11
+        0.0,    // 12
+        0.0,    // 13
+        0.0,    // 14
+        0.0,    // 15
+        0.0,    // 16  
     };
 
 
@@ -108,6 +132,18 @@ public class Limelight {
             this.roll = roll;
             this.pitch = pitch;
         }
+    }
+
+    /**
+     * Calculates an angle for the shooter to fire at.
+     */
+    public static Angle calculateShooterAngle() {
+        double dist = estimateTagDistance() + (SHOOTER_POS.x - LIMELIGHT_MOUNTING_POS.x);
+        double height = tagHeight();
+        double sinTheta = height / dist;
+        double angle = Math.asin(sinTheta);
+
+        return new Angle().setRadians(angle);
     }
 
     /**
@@ -203,7 +239,7 @@ public class Limelight {
      * distance is the distance as seen from a top down point of view. Returns
      * a value in meters or NaN on error.
      */
-    public static double estimateTargetDistance() {
+    public static double estimateTagDistance() {
         int tagId = aprilTagTargetId();
         Angle targetVarticalAngleOffset = targetPitchOffset();
 
@@ -221,6 +257,10 @@ public class Limelight {
         double distance = heightOffset / Math.tan(targetVerticalAngle.radians());
 
         return distance;
+    }
+
+    public static double tagHeight() {
+        return APRIL_TAG_HEIGHTS[aprilTagTargetId()];
     }
 
     /**
