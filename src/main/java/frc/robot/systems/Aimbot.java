@@ -54,7 +54,7 @@ public class Aimbot extends SmartPrintable {
      * this should be verified before hand by the caller.
      */
     public static double calculateMovement() {
-        double distance = Limelight.estimateTargetDistance();
+        double distance = Limelight.estimateTagDistance();
 
         if (distance != distance) {
             return 0.0;
@@ -83,7 +83,7 @@ public class Aimbot extends SmartPrintable {
      * @return
      */
     public static boolean isRanged() {
-        return Math.abs(Limelight.estimateTargetDistance() - instance.desiredDistance) < MOVE_OUTPUT_RANGED;
+        return Math.abs(Limelight.estimateTagDistance() - instance.desiredDistance) < MOVE_OUTPUT_RANGED;
     }
 
     @Override
