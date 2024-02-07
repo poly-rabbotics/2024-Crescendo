@@ -6,9 +6,6 @@ package frc.robot.systems;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
@@ -25,28 +22,24 @@ public class Pigeon extends SmartPrintable {
     private static final Pigeon instance = new Pigeon(PIGEON_CAN_ID);
 
     private final Pigeon2 pigeon;
-    private final ScheduledExecutorService changeRateThread;
+    private final OrientationalChangeCalculator angularChangeCalculator = new OrientationalChangeCalculator(this);
     
-    private OrientationalChange changePerSecond;
+    private OrientationalChange changePerSecond = new OrientationalChange(
+        new Angle().setDegrees(0.0),
+        new Angle().setDegrees(0.0),
+        new Angle().setDegrees(0.0)
+    );
 
     private Pigeon(int canID) {
         super();
         pigeon = new Pigeon2(canID);
+    }
 
-        changePerSecond = new OrientationalChange(
-            new Angle().setDegrees(0.0),
-            new Angle().setDegrees(0.0),
-            new Angle().setDegrees(0.0)
-        );
-
-        /* 
-         * Starts the thread so that it calls 'run()' every 40 ms (25hz). This
-         * automatically updates the changePerSecond feilds at that rate.
-         */
-
-        OrientationalChangeCalculator angularChangeCalculator = new OrientationalChangeCalculator(this);
-        changeRateThread = Executors.newSingleThreadScheduledExecutor();
-        changeRateThread.scheduleAtFixedRate(angularChangeCalculator, 0, 40, TimeUnit.MILLISECONDS);
+    /**
+     * Updates stored values of the Piegon.
+     */
+    public static void update() {
+        instance.angularChangeCalculator.run();
     }
 
     /**

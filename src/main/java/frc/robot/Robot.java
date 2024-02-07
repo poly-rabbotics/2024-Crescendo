@@ -37,9 +37,7 @@ public class Robot extends TimedRobot {
         SmartPrinter.print();
         LEDLights.run();
         SwerveDrive.updateOdometry();
-
-        //SmartDashboard.putBoolean("LL Valid Target?", Limelight.hasValidTarget());
-        //SmartDashboard.putNumber("LL Target April Tag ID", Limelight.aprilTagTargetId());
+        Pigeon.update();
     }
     
     @Override
