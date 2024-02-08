@@ -99,7 +99,7 @@ public class Robot extends TimedRobot {
             controllerTwo.getBButton(),                 // Outtake
             controllerTwo.getRightTriggerAxis() >= 0.3, // Shoot
             controllerTwo.getYButtonPressed(),          // Run Loader
-            controllerTwo.getLeftTriggerAxis(),         // Linear Actuator
+            controlPanel.getRawButton(7),         // Linear Actuator
             controllerTwo.getLeftY(),                   // Manual Shooter input
             controllerTwo.getLeftX(),                   // Manual Pivot input
             controlPanel.getRawButton(2),        // Source Intake
