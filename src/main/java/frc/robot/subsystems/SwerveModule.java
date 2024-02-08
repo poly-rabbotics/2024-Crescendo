@@ -22,8 +22,8 @@ import frc.robot.SmartPrintable;
  * Class for managing and manipulating a swerve module. 
  */
 public class SwerveModule extends SmartPrintable {
-    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                         // Enc counts to radians.
-    private static final double CONVERSION_FACTOR_MOVEMENT = (1 / 6.75) * 0.1;                                // Rotations to meters.
+    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);  // Enc counts to radians.
+    private static final double CONVERSION_FACTOR_MOVEMENT = (1 / 6.75) * 0.1;         // Rotations to meters.
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
 
     private static final double PID_P = 0.5;
@@ -112,21 +112,13 @@ public class SwerveModule extends SmartPrintable {
         double currentPosition = (angularPosition + canCoderOffset.radians()) % Angle.TAU;
 
         SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(currentPosition));
+        double propulsionSpeed = Double.isNaN(rockPos)
+            ? state.speedMetersPerSecond
+            : rockController.calculate(getDistanceTraveled(), rockPos);
+        double rotationSpeed = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
     
-        if (rockPos != rockPos) {
-            //movementMotor
-            //    .getPIDController()
-            //    .setReference(
-            //        state.speedMetersPerSecond / CONVERSION_FACTOR_MOVEMENT_VELOCITY, 
-            //        CANSparkBase.ControlType.kVelocity
-            //    );
-            movementMotor.set(state.speedMetersPerSecond);
-        } else {
-            movementMotor.set(rockController.calculate(getDistanceTraveled(), rockPos));
-        }
-
-        double calculation = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
-        rotationMotor.set(calculation);
+        movementMotor.set(propulsionSpeed);
+        rotationMotor.set(rotationSpeed);
 
         position.angle = new Rotation2d(currentPosition);
         position.distanceMeters = movementEncoder.getPosition();

@@ -36,10 +36,8 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         SmartPrinter.print();
         LEDLights.run();
+        Pigeon.update();
         SwerveDrive.updateOdometry();
-
-        //SmartDashboard.putBoolean("LL Valid Target?", Limelight.hasValidTarget());
-        //SmartDashboard.putNumber("LL Target April Tag ID", Limelight.aprilTagTargetId());
     }
     
     @Override
@@ -52,8 +50,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        //SwerveDrive.setMode(SwerveMode.HEADLESS);
-
+        SwerveDrive.setMode(SwerveMode.HEADLESS);
     }
 
     @Override
@@ -105,11 +102,11 @@ public class Robot extends TimedRobot {
             controllerTwo.getLeftTriggerAxis(),         // Linear Actuator
             controllerTwo.getLeftY(),                   // Manual Shooter input
             controllerTwo.getLeftX(),                   // Manual Pivot input
-            false,                         // Source Intake
-            false,                         // Ground Intake
-            false,                      // Speaker Shooting
-            false,                      // Dynamic Shooting
-            false                            // Amp Scoring
+            controlPanel.getRawButton(2),        // Source Intake
+            controlPanel.getRawButton(1),        // Ground Intake
+            controlPanel.getRawButton(4),        // Speaker Shooting
+            controlPanel.getRawButton(5),        // Dynamic Shooting
+            controlPanel.getRawButton(3)         // Amp Scoring
         );
     }
 
