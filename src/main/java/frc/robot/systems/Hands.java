@@ -74,7 +74,7 @@ public class Hands extends SmartPrintable {
 
     }
 
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean linearActuator, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
         loader.run(runLoader);
         intake.run(intakeIn, intakeOut);
 
@@ -89,7 +89,11 @@ public class Hands extends SmartPrintable {
             }
         }
 
-        linearActuator.setPosition(actuatorPos);
+        if(actuatorPressed)
+            linearActuator.setPosition(1);
+        else
+            linearActuator.setPosition(0);
+
         linearActuator.run();
 
         pivot.manualControl(manualPivot * 0.5);
