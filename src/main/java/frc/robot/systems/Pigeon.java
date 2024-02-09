@@ -22,7 +22,7 @@ public class Pigeon extends SmartPrintable {
     private static final Pigeon instance = new Pigeon(PIGEON_CAN_ID);
 
     private final Pigeon2 pigeon;
-    private final OrientationalChangeCalculator angularChangeCalculator = new OrientationalChangeCalculator(this);
+    private final OrientationalChangeCalculator angularChangeCalculator;
     
     private OrientationalChange changePerSecond = new OrientationalChange(
         new Angle().setDegrees(0.0),
@@ -33,6 +33,7 @@ public class Pigeon extends SmartPrintable {
     private Pigeon(int canID) {
         super();
         pigeon = new Pigeon2(canID);
+        angularChangeCalculator = new OrientationalChangeCalculator(this);
     }
 
     /**
