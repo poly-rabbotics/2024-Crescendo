@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Limelight extends SmartPrintable {
     private static Limelight instance = new Limelight();
      
-    private static final int LIMELIGHT_PIPELINE_APRILTAGS = 0; // Target all april tags
-    private static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
+    public static final int LIMELIGHT_PIPELINE_APRILTAGS = 0; // Target all april tags
+    public static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
 
     private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
     private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 8.0, 0.0); // meters

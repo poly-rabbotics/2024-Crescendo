@@ -30,6 +30,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         Pigeon.setFeildZero();
+        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
     }
     
     @Override
@@ -55,6 +56,20 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
+        if (controllerOne.getLeftBumper()) {
+            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_ZOOM);
+        } else {
+            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
+        }
+
+        if (controllerOne.getStartButtonReleased()) {
+            Pigeon.setFeildZero();
+        }
+
+        if (controllerOne.getBackButtonReleased()) {
+            SwerveDrive.zeroPositions();
+        }
+        
         // Left stick changes between headless and relative control modes.
         if (controllerOne.getLeftStickButtonReleased()) {
             SwerveDrive.setMode(
@@ -85,21 +100,17 @@ public class Robot extends TimedRobot {
             controllerOne.getRightX()
         );
 
-        double rumble = controllerOne.getLeftBumper() 
+        double rumble = controllerOne.getYButton() 
             ? SwerveDrive.getAverageMotorTemp() / 80.0
             : SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
-
-        if (controllerOne.getAButtonReleased()) {
-            SwerveDrive.zeroPositions();
-        }
 
         Hands.run(
             controllerTwo.getAButton(),                 // Intake
             controllerTwo.getBButton(),                 // Outtake
             controllerTwo.getRightTriggerAxis() >= 0.3, // Shoot
             controllerTwo.getYButtonPressed(),          // Run Loader
-            controllerTwo.getLeftTriggerAxis(),         // Linear Actuator
+            controlPanel.getRawButton(7),         // Linear Actuator
             controllerTwo.getLeftY(),                   // Manual Shooter input
             controllerTwo.getLeftX(),                   // Manual Pivot input
             controlPanel.getRawButton(2),        // Source Intake
