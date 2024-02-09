@@ -1,17 +1,19 @@
 package frc.robot.systems;
 
+import frc.robot.SmartPrintable;
 import frc.robot.subsystems.Angle;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-public class Limelight {
+public class Limelight extends SmartPrintable {
     private static Limelight instance = new Limelight();
      
     private static final int LIMELIGHT_PIPELINE_APRILTAGS = 0; // Target all april tags
     private static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
 
     private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
-    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 0.0, 0.0); // meters
+    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 8.0, 0.0); // meters
     private static final LimelightPos SHOOTER_POS = instance.new LimelightPos(0.0, 22.0, 0.0);
     private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // meters
 
@@ -397,6 +399,15 @@ public class Limelight {
      */
     private static double[] tid() {
         return table().getEntry("tid").getDoubleArray(new double[6]);
+    }
+
+    @Override
+    public void print() {
+        var yawOffset = targetYawOffset();
+
+        if (yawOffset != null) {
+            SmartDashboard.putNumber("Limelight Target Yaw Offset Degrees", yawOffset.degrees());
+        }
     }
 
     // Network tables and table entry docs taken from here:
