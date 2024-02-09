@@ -10,7 +10,7 @@ public class Shooter {
 
     private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
 
-    private static double velocity = 105; //Velocity in RPM
+    private static double velocity = 120; //Velocity in RPM
     private static ShooterState currentState = ShooterState.IDLE;
 
     private static TalonFX leftMotor;
