@@ -13,6 +13,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 
 import frc.robot.systems.Hands.Setpoint;
+import frc.robot.systems.Limelight;
 
 /*
  * Reminders to myself on what i need to do before testing this:
@@ -23,16 +24,16 @@ import frc.robot.systems.Hands.Setpoint;
  */
 
 public class Pivot {
-    private static final double P_0 = 0.5;
+    private static final double P_0 = 0.02;
     private static final double I_0 = 0;
-    private static final double D_0 = 0;
+    private static final double D_0 = 0.0003;
 
     private static final double ENCODER_OFFSET = 0;
 
     private static final double SOURCE_INTAKE_ANGLE = 60;
     private static final double GROUND_INTAKE_ANGLE = -60;
-    private static final double SPEAKER_SHOOTING_ANGLE = 30;
-    private static final double AMP_SCORING_ANGLE = 90;
+    private static final double SPEAKER_SHOOTING_ANGLE = 45;
+    private static final double AMP_SCORING_ANGLE = 85;
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
 
@@ -82,7 +83,7 @@ public class Pivot {
                 calc = pidController.calculate(getEncoderPosition(), SPEAKER_SHOOTING_ANGLE);
                 break;
             case DYNAMIC_SHOOTING:
-                //insert Evan's black magic fuckery here
+                calc = pidController.calculate(getEncoderPosition(), Limelight.calculateShooterAngle().degrees());
                 break;
         }
         

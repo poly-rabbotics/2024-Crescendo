@@ -64,7 +64,7 @@ public class Hands extends SmartPrintable {
     private Hands() {
         super();
 
-        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 108, 0.1, 0.0, 0.0);
+        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 26.5, 0.1, 0.0, 0.0);
         //linearServo = new LinearServo(LINEAR_SERVO_ID);
         loader = new Loader(LOADER_ID);
 
@@ -90,13 +90,14 @@ public class Hands extends SmartPrintable {
         }
 
         if(actuatorPressed)
-            linearActuator.setPosition(1);
+            linearActuator.setPosition(0.45);
         else
             linearActuator.setPosition(0);
 
         linearActuator.run();
 
-        pivot.manualControl(manualPivot * 0.5);
+        //pivot.manualControl(manualPivot * 0.5);
+        pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
 
     }
 
