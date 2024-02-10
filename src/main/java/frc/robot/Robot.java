@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
         Hands.run(
-            controlPanel.getRawButton(9),        // Intake
+            controlPanel.getRawButton(9) || controllerOne.getAButton(),        // Intake
             controlPanel.getRawButton(8),        // Outtake
             controlPanel.getRawButton(6),        // Ramp Up
             controlPanel.getRawButton(7),        // Fire
