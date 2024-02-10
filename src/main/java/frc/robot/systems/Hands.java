@@ -96,8 +96,10 @@ public class Hands extends SmartPrintable {
 
         linearActuator.run();
 
-        //pivot.manualControl(manualPivot * 0.5);
-        pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
+        if(manualPivot < MANUAL_DEADZONE)
+            pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
+        else
+            pivot.manualControl(manualPivot * 0.5);
 
     }
 

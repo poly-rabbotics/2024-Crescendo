@@ -19,6 +19,9 @@ public class Intake {
 
         outerMotor = new CANSparkMax(outerMotorCanID, MotorType.kBrushless);
         innerMotor = new VictorSP(innerMotorPWMChannel);
+
+        outerMotor.setSmartCurrentLimit(25);
+        
     }
 
     public void run(boolean intake, boolean outtake) {
