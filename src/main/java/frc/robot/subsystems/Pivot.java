@@ -55,6 +55,20 @@ public class Pivot {
     }
 
     public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
+        /* HOLD OPTION */
+        if(sourceIntake) {
+            setpoint = Setpoint.SOURCE_INTAKE;
+        } else if(speakerShooting) {
+            setpoint = Setpoint.STATIC_SHOOTING;
+        } else if(dynamicShooting) {
+            setpoint = Setpoint.DYNAMIC_SHOOTING;
+        } else if(ampScoring) {
+            setpoint = Setpoint.AMP_SCORING;
+        } else {
+            setpoint = Setpoint.GROUND_INTAKE;
+        }
+        
+        /* TOGGLE OPTION
         if(sourceIntake) {
             setpoint = Setpoint.SOURCE_INTAKE;
         } else if(groundIntake) {
@@ -65,7 +79,7 @@ public class Pivot {
             setpoint = Setpoint.DYNAMIC_SHOOTING;
         } else if(ampScoring) {
             setpoint = Setpoint.AMP_SCORING;
-        }
+        } */
 
         double calc = 0;
 

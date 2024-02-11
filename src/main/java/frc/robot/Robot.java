@@ -106,13 +106,13 @@ public class Robot extends TimedRobot {
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
         Hands.run(
-            controllerTwo.getAButton(),                 // Intake
-            controllerTwo.getBButton(),                 // Outtake
-            controllerTwo.getRightTriggerAxis() >= 0.3, // Shoot
-            controllerTwo.getYButtonPressed(),          // Run Loader
-            controlPanel.getRawButton(7),         // Linear Actuator
-            controllerTwo.getLeftY(),                   // Manual Shooter input
-            controllerTwo.getLeftX(),                   // Manual Pivot input
+            controlPanel.getRawButton(9) || controllerOne.getAButton(),        // Intake
+            controlPanel.getRawButton(8),        // Outtake
+            controlPanel.getRawButton(6),        // Ramp Up
+            controlPanel.getRawButton(7),        // Fire
+            controlPanel.getRawAxis(0) > 0,        // Linear Actuator
+            controllerTwo.getLeftX(),                   // Manual Shooter input
+            controllerTwo.getLeftY(),                   // Manual Pivot input
             controlPanel.getRawButton(2),        // Source Intake
             controlPanel.getRawButton(1),        // Ground Intake
             controlPanel.getRawButton(4),        // Speaker Shooting
