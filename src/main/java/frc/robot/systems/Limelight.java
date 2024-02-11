@@ -407,6 +407,8 @@ public class Limelight extends SmartPrintable {
 
         if (yawOffset != null) {
             SmartDashboard.putNumber("Limelight Target Yaw Offset Degrees", yawOffset.degrees());
+        } else {
+            SmartDashboard.putNumber("Limelight Target Yaw Offset Degrees", Double.NaN);
         }
     }
 
