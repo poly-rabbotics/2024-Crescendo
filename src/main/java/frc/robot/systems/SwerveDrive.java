@@ -54,11 +54,18 @@ public class SwerveDrive extends SmartPrintable {
         new Angle().setRadians(  Angle.TAU / 8  ) 
     };
 
+    // private static final Translation2d MODULE_PHYSICAL_POSITIONS[] = {
+    //     new Translation2d(   CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
+    //     new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
+    //     new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
+    //     new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
+    // };
+
     private static final Translation2d MODULE_PHYSICAL_POSITIONS[] = {
+        new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
         new Translation2d(   CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
         new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
-        new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
-        new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
+        new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
     // Singleton instance.
@@ -78,6 +85,9 @@ public class SwerveDrive extends SmartPrintable {
     private SwerveMode mode = SwerveMode.HEADLESS;
     private SwerveMode inactiveMode = null;
     private SwerveMode displayMode = SwerveMode.HEADLESS;
+
+    private ChassisSpeeds chassisSpeedsOutput = null;
+    private ChassisSpeeds chassisSpeedsCalculated = null;
 
     private double translationSpeedX = 0.0;
     private double translationSpeedY = 0.0;
@@ -450,6 +460,20 @@ public class SwerveDrive extends SmartPrintable {
             instance.positions[i] = instance.modules[i].getPosition();
         }
 
+        instance.chassisSpeedsOutput = instance.kinematics.toChassisSpeeds(
+            instance.modules[0].getDesiredState(),
+            instance.modules[1].getDesiredState(),
+            instance.modules[2].getDesiredState(),
+            instance.modules[3].getDesiredState()
+        );
+
+        instance.chassisSpeedsCalculated = instance.kinematics.toChassisSpeeds(
+            instance.modules[0].getActualState(),
+            instance.modules[1].getActualState(),
+            instance.modules[2].getActualState(),
+            instance.modules[3].getActualState()
+        );
+
         instance.odometry.update(new Rotation2d(Pigeon.getYaw().radians()), instance.positions);
     }
 
@@ -510,6 +534,12 @@ public class SwerveDrive extends SmartPrintable {
         SmartDashboard.putNumber("Swerve Drive Translation Speed X", translationSpeedX);
         SmartDashboard.putNumber("Swerve Drive Translation Speed Y", translationSpeedY);
         SmartDashboard.putNumber("Swerve Drive Rotation Speed", rotationSpeed);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Vx", chassisSpeedsOutput.vxMetersPerSecond);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Vy", chassisSpeedsOutput.vyMetersPerSecond);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Tau", chassisSpeedsOutput.omegaRadiansPerSecond);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vx", chassisSpeedsCalculated.vxMetersPerSecond);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vy", chassisSpeedsCalculated.vyMetersPerSecond);
+        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Tau", chassisSpeedsCalculated.omegaRadiansPerSecond);
     }
 
     /**

@@ -34,10 +34,6 @@ public class SwerveModule extends SmartPrintable {
     private static final double ROCK_PID_I = 0.0;
     private static final double ROCK_PID_D = 0.0;
 
-    private static final double VELOCITY_CONTROL_PID_P = 0.05;
-    private static final double VELOCITY_CONTROL_PID_I = 0.00;
-    private static final double VELOCITY_CONTROL_PID_D = 0.00;
-
     private final CANSparkMax rotationMotor;  // The motor responsible for rotating the module.
     private final CANSparkMax movementMotor;  // The motor responsible for creating movement in the module.
     private final CANcoder angularEncoder;    // Cancoder responsible for tracking the angle of the module.
@@ -52,6 +48,7 @@ public class SwerveModule extends SmartPrintable {
     private final Angle canCoderOffset;
 
     private SwerveModuleState desiredState;
+    private SwerveModuleState actualState;
     private SwerveModulePosition position;
 
     // Set to NaN if not in rock mode, NaN does not equal itself by definition
@@ -108,29 +105,19 @@ public class SwerveModule extends SmartPrintable {
     }
 
     public void run() {
-        double angularPosition = angularEncoder.getPosition().getValue() * Angle.TAU;
-        double currentPosition = (angularPosition + canCoderOffset.radians()) % Angle.TAU;
-
-        SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(currentPosition));
+        SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(getAngle().radians()));
+        double rotationSpeed = rotationController.calculate(getAngle().radians(), (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
         double propulsionSpeed = Double.isNaN(rockPos)
             ? state.speedMetersPerSecond
             : rockController.calculate(getDistanceTraveled(), rockPos);
-        double rotationSpeed = rotationController.calculate(currentPosition, (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
     
         movementMotor.set(propulsionSpeed);
         rotationMotor.set(rotationSpeed);
 
-        position.angle = new Rotation2d(currentPosition);
+        position.angle = new Rotation2d(getAngle().radians());
         position.distanceMeters = movementEncoder.getPosition();
     }
     
-    public void updatePosition() {
-        position = new SwerveModulePosition(
-            movementEncoder.getPosition(), 
-            new Rotation2d(angularEncoder.getPosition().getValue() * Angle.TAU)
-        );
-    }
-
     public SwerveModule(
         int movementMotorID, 
         int rotationalMotorID, 
@@ -163,10 +150,6 @@ public class SwerveModule extends SmartPrintable {
         movementEncoder.setPosition(0.0);
         movementEncoder.setPositionConversionFactor(CONVERSION_FACTOR_MOVEMENT);
 
-        movementMotor.getPIDController().setP(VELOCITY_CONTROL_PID_P);
-        movementMotor.getPIDController().setI(VELOCITY_CONTROL_PID_I);
-        movementMotor.getPIDController().setD(VELOCITY_CONTROL_PID_D);
-        
         rotationController = new PIDController(PID_P, PID_I, PID_D);
         rotationController.enableContinuousInput(0.0, Angle.TAU);
         rotationController.setTolerance(0.01);
@@ -176,10 +159,26 @@ public class SwerveModule extends SmartPrintable {
 
         position = new SwerveModulePosition(
             movementEncoder.getPosition(), 
-            new Rotation2d(angularEncoder.getPosition().getValue() * Angle.TAU)
+            new Rotation2d(getAngle().radians())
         );
 
         desiredState = new SwerveModuleState();
+        actualState = new SwerveModuleState();
+    }
+
+    /**
+     * Updates position and actual state.
+     */
+    public void updatePosition() {
+        actualState = new SwerveModuleState(
+            movementEncoder.getVelocity(),
+            new Rotation2d(getAngle().radians())
+        );
+        
+        position = new SwerveModulePosition(
+            movementEncoder.getPosition(), 
+            new Rotation2d(getAngle().radians())
+        );
     }
 
     /**
@@ -188,6 +187,21 @@ public class SwerveModule extends SmartPrintable {
      */
     public void setDesiredState(SwerveModuleState desiredState) {
         this.desiredState = desiredState;
+    }
+
+    /**
+     * Gets the actual state of this module, as read and calculated from 
+     * encoders.
+     */
+    public SwerveModuleState getActualState() {
+        return actualState;
+    }
+
+    /**
+     * Gets the desired state of this module, as given previously.
+     */
+    public SwerveModuleState getDesiredState() {
+        return desiredState;
     }
 
     /**
@@ -218,6 +232,12 @@ public class SwerveModule extends SmartPrintable {
         return movementEncoder.getPosition();
     }
 
+    public Angle getAngle() {
+        var radians = angularEncoder.getPosition().getValue() * Angle.TAU;
+        var offsetRadians = radians + canCoderOffset.radians();
+        return new Angle().setRadians(offsetRadians % Angle.TAU);
+    }
+    
     /**
      * Gets the reported tempurature of the rotation motor in celsius.
      */
@@ -261,18 +281,6 @@ public class SwerveModule extends SmartPrintable {
         return getAppliedCurrent() / (2.0 * CAN_SPARK_MAX_RATED_AMPS);
     }
 
-    @Override
-    public void print() {
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position mod 360", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU % Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()) % Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position (Distance) ", movementEncoder.getPosition());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Speed", movementMotor.get());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Velocity", movementEncoder.getVelocity());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Desired Velocity", desiredState.speedMetersPerSecond);
-    }
-
     /**
      * Gets the position of the module. 
      */
@@ -285,5 +293,17 @@ public class SwerveModule extends SmartPrintable {
      */
     public void zeroPositions() {
         movementEncoder.setPosition(0.0);
+    }
+
+    @Override
+    public void print() {
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position mod 360", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU % Angle.TAU));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()) % Angle.TAU));
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position (Distance) ", movementEncoder.getPosition());
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Speed", movementMotor.get());
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Velocity", movementEncoder.getVelocity());
+        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Desired Velocity", desiredState.speedMetersPerSecond);
     }
 }
