@@ -113,9 +113,6 @@ public class SwerveModule extends SmartPrintable {
     
         movementMotor.set(propulsionSpeed);
         rotationMotor.set(rotationSpeed);
-
-        position.angle = new Rotation2d(getAngle().radians());
-        position.distanceMeters = movementEncoder.getPosition();
     }
     
     public SwerveModule(
