@@ -11,8 +11,9 @@ import edu.wpi.first.math.controller.PIDController;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
-
+import frc.robot.systems.Hands.ControlMode;
 import frc.robot.systems.Hands.Setpoint;
+import frc.robot.systems.Aimbot;
 import frc.robot.systems.Limelight;
 
 /*
@@ -36,6 +37,9 @@ public class Pivot {
     private static final double AMP_SCORING_ANGLE = 85;
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
+    private ControlMode controlMode = ControlMode.POSITION;
+
+    private double targetPosition = GROUND_INTAKE_ANGLE;
 
     private final CANSparkMax pivotMotor;
     private final PIDController pidController;
@@ -52,6 +56,8 @@ public class Pivot {
             I_0, 
             D_0
         );
+
+        pidController.setTolerance(0.1);
     }
 
     public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
@@ -85,27 +91,42 @@ public class Pivot {
 
         switch(setpoint) {
             case SOURCE_INTAKE:
-                calc = pidController.calculate(getEncoderPosition(), SOURCE_INTAKE_ANGLE);
+                targetPosition = SOURCE_INTAKE_ANGLE;
                 break;
             case GROUND_INTAKE:
-                calc = pidController.calculate(getEncoderPosition(), GROUND_INTAKE_ANGLE);
+                targetPosition = GROUND_INTAKE_ANGLE;
                 break;
             case AMP_SCORING:
-                calc = pidController.calculate(getEncoderPosition(), AMP_SCORING_ANGLE);
+                targetPosition = AMP_SCORING_ANGLE;
                 break;
             case STATIC_SHOOTING:
-                calc = pidController.calculate(getEncoderPosition(), SPEAKER_SHOOTING_ANGLE);
+                targetPosition = SPEAKER_SHOOTING_ANGLE;
                 break;
             case DYNAMIC_SHOOTING:
-                calc = pidController.calculate(getEncoderPosition(), Limelight.calculateShooterAngle().degrees());
+                var angle = Aimbot.calculateShooterAngle();
+                
+                if (angle == null) {
+                    targetPosition = GROUND_INTAKE_ANGLE;
+                } else {
+                    targetPosition = angle.degrees();
+                }
+
                 break;
         }
         
+        calc = pidController.calculate(getEncoderPosition(), targetPosition);
+
         pivotMotor.set(calc);
     }
 
     public void manualControl(double speed) {
-        pivotMotor.set(speed);
+        double calc = 0;
+
+        targetPosition += speed;
+
+        calc = pidController.calculate(getEncoderPosition(), targetPosition);
+
+        pivotMotor.set(calc);
     }
 
     public Setpoint getSetpoint() {
@@ -131,5 +152,13 @@ public class Pivot {
 
     public double getRawPosition() {
         return absoluteEncoder.getPosition();
+    }
+
+    public ControlMode getControlMode() {
+        return controlMode;
+    }
+
+    public void setControlMode(ControlMode mode) {
+        controlMode = mode;
     }
 }

@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         Pigeon.setFeildZero();
-        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
+        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
     }
     
     @Override
@@ -53,6 +53,8 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         SwerveDrive.setMode(SwerveMode.HEADLESS);
     }
+
+    static boolean invertedTurn = false;
 
     @Override
     public void teleopPeriodic() {
@@ -77,6 +79,16 @@ public class Robot extends TimedRobot {
                     ? SwerveMode.RELATIVE 
                     : SwerveMode.HEADLESS
             );
+        }
+
+        if (controllerOne.getRightStickButtonReleased()){       
+            if (!invertedTurn) {
+                SwerveDrive.setRotationCurve((x) -> -x);
+                invertedTurn = true;
+            } else {
+                SwerveDrive.setRotationCurve(Controls::defaultCurve);
+                invertedTurn = false;
+            }
         }
         
         SwerveDrive.conditionalTempTranslationCurve(
@@ -109,10 +121,10 @@ public class Robot extends TimedRobot {
             controlPanel.getRawButton(9) || controllerOne.getAButton(),        // Intake
             controlPanel.getRawButton(8),        // Outtake
             controlPanel.getRawButton(6),        // Ramp Up
-            controlPanel.getRawButton(7),        // Fire
+            controlPanel.getRawButtonPressed(7),        // Fire
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
-            controllerTwo.getLeftX(),                   // Manual Shooter input
-            controllerTwo.getLeftY(),                   // Manual Pivot input
+            controllerTwo.getLeftY(),                   // Manual Shooter input
+            controlPanel.getRawAxis(1),                   // Manual Pivot input
             controlPanel.getRawButton(2),        // Source Intake
             controlPanel.getRawButton(1),        // Ground Intake
             controlPanel.getRawButton(4),        // Speaker Shooting

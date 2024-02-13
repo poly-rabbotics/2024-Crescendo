@@ -11,8 +11,9 @@ public class Limelight extends SmartPrintable {
      
     public static final int LIMELIGHT_PIPELINE_APRILTAGS = 0; // Target all april tags
     public static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
+    public static final int LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS = 2; // Target all april tags, with 3x hardware zoom
 
-    private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(0.0);
+    private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(8.0);
     private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 8.0, 0.0); // meters
     private static final LimelightPos SHOOTER_POS = instance.new LimelightPos(0.0, 22.0, 0.0);
     private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // meters
@@ -136,16 +137,8 @@ public class Limelight extends SmartPrintable {
         }
     }
 
-    /**
-     * Calculates an angle for the shooter to fire at.
-     */
-    public static Angle calculateShooterAngle() {
-        double dist = estimateTagDistance() + (SHOOTER_POS.x - LIMELIGHT_MOUNTING_POS.x);
-        double height = tagHeight();
-        double sinTheta = height / dist;
-        double angle = Math.asin(sinTheta);
-
-        return new Angle().setRadians(angle);
+    private Limelight() {
+        super();
     }
 
     /**
@@ -410,6 +403,8 @@ public class Limelight extends SmartPrintable {
         } else {
             SmartDashboard.putNumber("Limelight Target Yaw Offset Degrees", Double.NaN);
         }
+
+        SmartDashboard.putNumber("Limelight Target Estimated Distance", estimateTagDistance());
     }
 
     // Network tables and table entry docs taken from here:

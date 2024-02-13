@@ -27,9 +27,23 @@ public class Aimbot extends SmartPrintable {
     private double turnCalculation = 0.0;
     private double moveCalculation = 0.0;
     private double desiredDistance = 0.0;
-
+    
     private Aimbot() {
         SmartPrinter.register(this);
+    }
+    
+    public static Angle calculateShooterAngle() {
+        final double a = 0.0031;
+        final double b = -0.6569;
+        final double c = 65.07;
+
+        double x = Limelight.estimateTagDistance();
+
+        if (x > 105.0 || x < 36) {
+            return null;
+        }
+
+        return new Angle().setDegrees(a * x * x + b * x + c);
     }
 
     /**
@@ -90,6 +104,13 @@ public class Aimbot extends SmartPrintable {
     public void print() {
         SmartDashboard.putNumber("Aimbot Move PID Output", moveCalculation);
         SmartDashboard.putNumber("Aimbot Turn PID Output", turnCalculation);
+
+        if (calculateShooterAngle() != null) {
+            SmartDashboard.putNumber("Aimbot Shooter Angle Degrees", calculateShooterAngle().degrees());
+        } else {
+            SmartDashboard.putNumber("Aimbot Shooter Angle Degrees", Double.NaN);
+        }
+        
         SmartDashboard.putBoolean("Aimbot Is Centered?", isCentered());
         SmartDashboard.putBoolean("Aimbot Is Ranged?", isRanged());
     }

@@ -37,6 +37,11 @@ public class Hands extends SmartPrintable {
         MANUAL
     }
 
+    public enum ControlMode {
+        MANUAL,
+        POSITION
+    }
+
     private static Hands instance = new Hands();
 
     private static final int LINEAR_ACTUATOR_ID = 61;
@@ -96,10 +101,16 @@ public class Hands extends SmartPrintable {
 
         linearActuator.run();
 
-        if(manualPivot < MANUAL_DEADZONE)
+        if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
+            pivot.setControlMode(ControlMode.POSITION);
+        } else if(manualPivot > MANUAL_DEADZONE) {
+            pivot.setControlMode(ControlMode.MANUAL);
+        }
+
+        if(pivot.getControlMode().equals(ControlMode.POSITION))
             pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
         else
-            pivot.manualControl(manualPivot * 0.5);
+            pivot.manualControl(manualPivot * 0.2);
 
     }
 
