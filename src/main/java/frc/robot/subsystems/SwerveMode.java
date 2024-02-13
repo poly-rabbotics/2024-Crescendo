@@ -32,4 +32,10 @@ public enum SwerveMode {
      * aproach it using swerve, taking over both the y-axis and turning.
      */
     AIMBOT,
+
+    /**
+     * Follows a set trajectory, as loaded previously from a JSON file, which
+     * should have been exported from PathWeaver.
+     */
+    TRAJECTORY_FOLLOW,
 }
