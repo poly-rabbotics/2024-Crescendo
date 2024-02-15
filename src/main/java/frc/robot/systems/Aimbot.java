@@ -105,8 +105,10 @@ public class Aimbot extends SmartPrintable {
         SmartDashboard.putNumber("Aimbot Move PID Output", moveCalculation);
         SmartDashboard.putNumber("Aimbot Turn PID Output", turnCalculation);
 
-        if (calculateShooterAngle() != null) {
-            SmartDashboard.putNumber("Aimbot Shooter Angle Degrees", calculateShooterAngle().degrees());
+        var calculateShooterAngle = calculateShooterAngle();
+
+        if (calculateShooterAngle != null) {
+            SmartDashboard.putNumber("Aimbot Shooter Angle Degrees", calculateShooterAngle.degrees());
         } else {
             SmartDashboard.putNumber("Aimbot Shooter Angle Degrees", Double.NaN);
         }

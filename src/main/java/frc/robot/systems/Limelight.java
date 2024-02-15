@@ -13,8 +13,8 @@ public class Limelight extends SmartPrintable {
     public static final int LIMELIGHT_PIPELINE_APRILTAGS_ZOOM = 1; // Target all april tags, with 3x hardware zoom
     public static final int LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS = 2; // Target all april tags, with 3x hardware zoom
 
-    private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(8.0);
-    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 8.0, 0.0); // meters
+    private static final Angle LIMELIGHT_MOUNTING_PITCH = new Angle().setDegrees(15.0);
+    private static final LimelightPos LIMELIGHT_MOUNTING_POS = instance.new LimelightPos(0.0, 12.0, 0.0); // meters
     private static final LimelightPos SHOOTER_POS = instance.new LimelightPos(0.0, 22.0, 0.0);
     private static final double APRIL_TAG_SIDE_LENGTH = 8.5; // meters
 
