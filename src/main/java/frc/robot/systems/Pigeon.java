@@ -79,6 +79,30 @@ public class Pigeon extends SmartPrintable {
     public static Angle getRoll() {
         return new Angle().setDegrees(instance.pigeon.getRoll().getValue());
     }
+
+    /**
+     * Gets the X-axis acceleration as a coefficiant to the acceleration of 
+     * gravity.
+     */
+    public static double getAccelerationX() {
+        return instance.pigeon.getAccelerationX().getValueAsDouble();
+    }
+    
+    /**
+     * Gets the Y-axis acceleration as a coefficiant to the acceleration of 
+     * gravity.
+     */
+    public static double getAccelerationY() {
+        return instance.pigeon.getAccelerationY().getValueAsDouble();
+    }
+    
+    /**
+     * Gets the Z-axis acceleration as a coefficiant to the acceleration of 
+     * gravity.
+     */
+    public static double getAccelerationZ() {
+        return instance.pigeon.getAccelerationZ().getValueAsDouble();
+    }
     
     @Override
     public void print() {
@@ -104,7 +128,7 @@ public class Pigeon extends SmartPrintable {
 
         /**
          * Clones all given angles allowing the caller to mutate the passed in
-         * references freely, withoutr modifying this class' state.
+         * references freely, without modifying this class's state.
          */
         private OrientationalChange(Angle yaw, Angle roll, Angle pitch) {
             yawPerSecond = yaw.clone();
