@@ -22,8 +22,8 @@ import frc.robot.SmartPrintable;
  * Class for managing and manipulating a swerve module. 
  */
 public class SwerveModule extends SmartPrintable {
-    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);    // Enc counts to radians.
-    private static final double CONVERSION_FACTOR_MOVEMENT = (1 / 6.75) * 0.1 * 8.0637;  // Rotations to meters.
+    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                 // Enc counts to radians.
+    private static final double CONVERSION_FACTOR_MOVEMENT = (1 / 6.75) * 0.1 * 8.0637 * 0.39333835;  // Rotations to meters.
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
 
     private static final double PID_P = 0.5;
