@@ -8,6 +8,7 @@ import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.SparkAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
 
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -41,6 +42,8 @@ public class Pivot {
 
     private double targetPosition = GROUND_INTAKE_ANGLE;
 
+    private DigitalInput proxSensor;
+
     private final CANSparkMax pivotMotor;
     private final PIDController pidController;
     private final SparkAbsoluteEncoder absoluteEncoder;
@@ -49,6 +52,7 @@ public class Pivot {
         pivotMotor = new CANSparkMax(motorID, MotorType.kBrushless);
         absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
+        proxSensor = new DigitalInput(0);
         pivotMotor.setIdleMode(IdleMode.kBrake);
         
         pidController = new PIDController(
@@ -58,6 +62,10 @@ public class Pivot {
         );
 
         pidController.setTolerance(0.1);
+    }
+
+    public boolean getProxSensorTripped() {
+        return proxSensor.get();
     }
 
     public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
@@ -106,9 +114,9 @@ public class Pivot {
                 var angle = Aimbot.calculateShooterAngle();
                 
                 if (angle == null) {
-                    targetPosition = GROUND_INTAKE_ANGLE;
+                    targetPosition = SPEAKER_SHOOTING_ANGLE;
                 } else {
-                    targetPosition = angle.degrees();
+                    targetPosition = angle.degrees() + (angle.degrees() * -0.0303) + 6.0;
                 }
 
                 break;
