@@ -53,7 +53,7 @@ public class Shooter {
         }
 
         if(currentState.equals(ShooterState.RUNNING)) {
-            leftMotor.setControl(requestLeft.withVelocity(velocity));
+            leftMotor.setControl(requestLeft.withVelocity(-velocity));
             rightMotor.setControl(requestRight.withVelocity(-velocity));
         } else {
             leftMotor.set(0);

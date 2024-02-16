@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
+import frc.robot.subsystems.Shooter;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -23,6 +24,8 @@ public class Robot extends TimedRobot {
     private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
     private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
 
+    private static Shooter shooter;
+
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -31,6 +34,9 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         Pigeon.setFeildZero();
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
+        shooter = new Shooter(0, 1);
+
+
     }
     
     @Override
@@ -56,69 +62,9 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        if (controllerOne.getLeftBumper()) {
-            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_ZOOM);
-        } else {
-            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
-        }
+        //ClimbTest.runClimb1(controllerOne.getLeftY() * 0.5);
 
-        if (controllerOne.getStartButtonReleased()) {
-            Pigeon.setFeildZero();
-        }
-
-        if (controllerOne.getBackButtonReleased()) {
-            SwerveDrive.zeroPositions();
-        }
-        
-        // Left stick changes between headless and relative control modes.
-        if (controllerOne.getLeftStickButtonReleased()) {
-            SwerveDrive.setMode(
-                SwerveDrive.getMode() == SwerveMode.HEADLESS 
-                    ? SwerveMode.RELATIVE 
-                    : SwerveMode.HEADLESS
-            );
-        }
-        
-        SwerveDrive.conditionalTempTranslationCurve(
-            Controls.cardinalLock(Controls::defaultCurveTwoDimensional), 
-            controllerOne.getXButton()
-        ); // Lock to cardinal directions.
-        SwerveDrive.conditionalTempTranslationCurve(
-            (x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 3.0,
-            controllerOne.getRightBumper()
-        ); // Half translation speed.
-        SwerveDrive.conditionalTempTranslationCurve(
-            Controls.cardinalLock((x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 2.0),
-            controllerOne.getRightBumper() && controllerOne.getXButton()
-        ); // Half translation speed.
-        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT_ROTATION, controllerOne.getLeftTriggerAxis() > 0.5);
-        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
-        SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
-        SwerveDrive.run(
-            -controllerOne.getLeftX(),
-            controllerOne.getLeftY(),
-            controllerOne.getRightX()
-        );
-
-        double rumble = controllerOne.getYButton() 
-            ? SwerveDrive.getAverageMotorTemp() / 80.0
-            : SwerveDrive.getAveragePercentRatedCurrent();
-        controllerOne.setRumble(RumbleType.kBothRumble, rumble);
-
-        Hands.run(
-            controlPanel.getRawButton(9) || controllerOne.getAButton(),        // Intake
-            controlPanel.getRawButton(8),        // Outtake
-            controlPanel.getRawButton(6),        // Ramp Up
-            controlPanel.getRawButton(7),        // Fire
-            controlPanel.getRawAxis(0) > 0,        // Linear Actuator
-            controllerTwo.getLeftX(),                   // Manual Shooter input
-            controllerTwo.getLeftY(),                   // Manual Pivot input
-            controlPanel.getRawButton(2),        // Source Intake
-            controlPanel.getRawButton(1),        // Ground Intake
-            controlPanel.getRawButton(4),        // Speaker Shooting
-            controlPanel.getRawButton(5),        // Dynamic Shooting
-            controlPanel.getRawButton(3)         // Amp Scoring
-        );
+        shooter.pidControl(controllerOne.getAButton());
     }
 
     @Override
