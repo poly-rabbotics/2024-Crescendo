@@ -38,4 +38,9 @@ public enum SwerveMode {
      * should have been exported from PathWeaver.
      */
     TRAJECTORY_FOLLOW,
+
+    /**
+     * Like `TRAJECTORY_FOLLOW` but for `SidewalkPaver`.
+     */
+    SIDEWALK_WALK,
 }
