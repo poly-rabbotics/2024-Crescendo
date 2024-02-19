@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import frc.robot.subsystems.Angle;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -80,14 +81,24 @@ public class Robot extends TimedRobot {
             );
         }
 
+        // Invert turn on right stick.
         if (controllerOne.getRightStickButtonReleased()){       
             if (!invertedTurn) {
-                SwerveDrive.setRotationCurve((x) -> -x);
+                SwerveDrive.setRotationCurve((x) -> Controls.defaultCurve(-x));
                 invertedTurn = true;
             } else {
                 SwerveDrive.setRotationCurve(Controls::defaultCurve);
                 invertedTurn = false;
             }
+        }
+
+        double pov = controllerOne.getPOV();
+
+        if (pov != -1 && SwerveDrive.getMode() == SwerveMode.HEADLESS) {
+            SwerveDrive.setMode(SwerveMode.SET_ANGLE);
+            SwerveDrive.setTargetAngle(new Angle().setDegrees((double)pov));
+        } else if (Math.abs(controllerOne.getRightX()) > 0.15 && SwerveDrive.getMode() == SwerveMode.SET_ANGLE) {
+            SwerveDrive.setMode(SwerveMode.HEADLESS);
         }
         
         SwerveDrive.conditionalTempTranslationCurve(

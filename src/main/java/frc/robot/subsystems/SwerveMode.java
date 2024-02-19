@@ -23,6 +23,12 @@ public enum SwerveMode {
     ROCK,
 
     /**
+     * Operates as though in `HEADLESS` but runs rotation off of a setpoint 
+     * rather than by manual speed input.
+     */
+    SET_ANGLE,
+
+    /**
      * Uses rotation or the drive, but not translation, to aim for the driver.
      */
     AIMBOT_ROTATION,

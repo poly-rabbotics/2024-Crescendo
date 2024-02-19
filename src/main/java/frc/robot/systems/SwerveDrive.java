@@ -89,6 +89,10 @@ public class SwerveDrive extends SmartPrintable {
     private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
+    private static final double SET_ANGLE_PID_P = 1.0;
+    private static final double SET_ANGLE_PID_I = 0.0;
+    private static final double SET_ANGLE_PID_D = 0.0;
+
     // Singleton instance.
     private static final SwerveDrive instance = new SwerveDrive();
 
@@ -104,6 +108,9 @@ public class SwerveDrive extends SmartPrintable {
         = new PIDController(TRAJECTORY_STRAFE_Y_PID_P, TRAJECTORY_STRAFE_Y_PID_I, TRAJECTORY_STRAFE_Y_PID_D);
     private final PIDController trajectoryRotateController
         = new PIDController(TRAJECTORY_ROTATE_PID_P, TRAJECTORY_ROTATE_PID_I, TRAJECTORY_ROTATE_PID_D);
+
+    private final PIDController setAngleController
+        = new PIDController(SET_ANGLE_PID_P, SET_ANGLE_PID_I, SET_ANGLE_PID_D);
 
     // Fully mutable state objects
     private StatusedTimer pathTimer = new StatusedTimer();
@@ -121,6 +128,8 @@ public class SwerveDrive extends SmartPrintable {
 
     private ChassisSpeeds chassisSpeedsOutput = null;
     private ChassisSpeeds chassisSpeedsCalculated = null;
+
+    private Angle setAngle = new Angle().setRadians(0.0);
 
     private double translationSpeedX = 0.0;
     private double translationSpeedY = 0.0;
@@ -426,7 +435,22 @@ public class SwerveDrive extends SmartPrintable {
                 }
 
                 break;
-            } 
+            }
+
+            case SET_ANGLE: {
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        instance.translationSpeedY,
+                        instance.setAngleController.calculate(
+                            Pigeon.getYaw().radians(),
+                            instance.setAngle.radians()
+                        ), 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+                break;
+            }
 
             case AIMBOT_ROTATION: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
@@ -684,6 +708,13 @@ public class SwerveDrive extends SmartPrintable {
     public static void resetPathTimer() {
         instance.pathTimer.reset();
         instance.pathTimer.start();
+    }
+
+    /**
+     * Sets the set angle for `SET_ANGLE` drive mode.
+     */
+    public static void setTargetAngle(Angle angle) {
+        instance.setAngle = angle;
     }
     
     /**
