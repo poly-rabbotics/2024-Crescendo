@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 import frc.robot.subsystems.Shooter;
@@ -65,6 +65,7 @@ public class Robot extends TimedRobot {
         //ClimbTest.runClimb1(controllerOne.getLeftY() * 0.5);
 
         shooter.pidControl(controllerOne.getAButton());
+        SmartDashboard.putNumber("Shooter thing", shooter.getVelocity());
     }
 
     @Override
