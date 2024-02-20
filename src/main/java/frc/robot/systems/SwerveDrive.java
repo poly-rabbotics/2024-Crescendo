@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.SmartPrintable;
 import frc.robot.subsystems.Angle;
+import frc.robot.subsystems.StatusedTimer;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.SwerveModule;
 
@@ -74,15 +75,15 @@ public class SwerveDrive extends SmartPrintable {
         new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.0;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.15;
     private static final double TRAJECTORY_STRAFE_X_PID_I = 0.0;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.0;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.0;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.15;
     private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.0;
     private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.0;
 
-    private static final double TRAJECTORY_ROTATE_PID_P = 0.0;
+    private static final double TRAJECTORY_ROTATE_PID_P = 0.75;
     private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
@@ -104,6 +105,7 @@ public class SwerveDrive extends SmartPrintable {
 
     // Fully mutable state objects
     private Trajectory autonomousTrajectory = new Trajectory();
+    private StatusedTimer trajectoryTimer = new StatusedTimer();
     
     private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
     private BiFunction<Double, Double, Double> inactiveTransationCurve = null;
@@ -150,6 +152,8 @@ public class SwerveDrive extends SmartPrintable {
             new Rotation2d(Pigeon.getYaw().radians()), 
             positions
         );
+
+        trajectoryRotateController.enableContinuousInput(0.0, Angle.TAU);
     }
 
     /**
@@ -328,6 +332,14 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
+     * Runs with a static speed of zero for all inputs, meant to be used for
+     * trajectory following.
+     */
+    public static void run() {
+        runUncurved(0.0, 0.0, 0.0);
+    }
+
+    /**
      * Runs swerve, behavior changes based on the drive's mode. This will reset
      * temporary modes on completion.
      * @param translationX The X axis of the directional control, between 1 and -1
@@ -449,20 +461,33 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case TRAJECTORY_FOLLOW: {
-                if (instance.autonomousTrajectory == null) {
-                    // Break early if we have no trajectory.
+                if (instance.autonomousTrajectory == null || instance.autonomousTrajectory.getTotalTimeSeconds() + 0.35 < instance.trajectoryTimer.get()) {
+                    instance.translationSpeedX = 0.0;
+                    instance.translationSpeedY = 0.0;
+                    instance.rotationSpeed = 0.0;
+
+                    moduleStates = instance.kinematics.toSwerveModuleStates(
+                        new ChassisSpeeds(0.0, 0.0, 0.0)
+                    );
+
                     break;
                 }
 
-                State state = instance.autonomousTrajectory.sample(DriverStation.getMatchTime());
+                State state = instance.autonomousTrajectory.sample(instance.trajectoryTimer.get());
                 Pose2d setPosition = state.poseMeters;
                 Pose2d position = instance.odometry.getPoseMeters();
 
                 instance.translationSpeedX
-                    = instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
+                    = instance.trajectoryStrafeXController.calculate(
+                        position.getY(), 
+                        setPosition.getY()
+                    );
                 instance.translationSpeedY
-                    = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
-                instance.rotationSpeed = instance.trajectoryRotateController.calculate(
+                    = instance.trajectoryStrafeYController.calculate(
+                        position.getX(),
+                        -setPosition.getX()
+                    );
+                instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
                 );
@@ -614,13 +639,20 @@ public class SwerveDrive extends SmartPrintable {
      */
     public static void grabPathweaverFile(String filePath) {
         try {
-            Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(filePath);
+            Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("output/" + filePath);
             instance.autonomousTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+            
+            Pose2d initialPosition = instance.autonomousTrajectory.getInitialPose();
+            initialPosition = new Pose2d(
+                -initialPosition.getX(),
+                initialPosition.getY(),
+                initialPosition.getRotation()
+            );
 
             instance.odometry.resetPosition(
                 new Rotation2d(Pigeon.getYaw().radians()),
                 instance.positions,
-                instance.autonomousTrajectory.getInitialPose()
+                initialPosition
             );
         } catch (IOException e) {
             DriverStation.reportError(
@@ -631,10 +663,11 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
-     * Sets the trajectory for the TRAJECTORY_FOLLOW drive mode.
+     * Starts the trajectory timer at zero time elapsed.
      */
-    public static void setTrajectory(Trajectory trajectory) {
-        instance.autonomousTrajectory = trajectory;
+    public static void startTrajectoryTimer() {
+        instance.trajectoryTimer.reset();
+        instance.trajectoryTimer.start();
     }
     
     /**
@@ -659,5 +692,20 @@ public class SwerveDrive extends SmartPrintable {
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vx", chassisSpeedsCalculated.vxMetersPerSecond);
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vy", chassisSpeedsCalculated.vyMetersPerSecond);
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Tau", chassisSpeedsCalculated.omegaRadiansPerSecond);
+        SmartDashboard.putString("Swerve Drive Trajectory", autonomousTrajectory.toString());
+        SmartDashboard.putNumber("Swerve Trajectory Timer Time", trajectoryTimer.get());
+
+        try {
+            var state = autonomousTrajectory.sample(trajectoryTimer.get());
+
+            SmartDashboard.putString("Swerve Drive Trajectory Current State", state.toString());
+            SmartDashboard.putNumber("Swerve Drive Trajectory Position X", state.poseMeters.getX());
+            SmartDashboard.putNumber("Swerve Drive Trajectory Position Y", state.poseMeters.getY());
+            SmartDashboard.putNumber("Swerve Drive Trajectory Rotation Degrees", state.poseMeters.getRotation().getDegrees());
+            SmartDashboard.putNumber("Swerve Drive Trajectory Time", state.timeSeconds);
+            SmartDashboard.putBoolean("Swerve Drive Trajectory Time Finished", instance.autonomousTrajectory.getTotalTimeSeconds() < instance.trajectoryTimer.get());
+        } catch (Exception e) {
+            SmartDashboard.putString("Swerve Drive Trajectory Current State", "No State");
+        }
     }
 }

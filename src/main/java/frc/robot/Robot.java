@@ -4,10 +4,20 @@
 
 package frc.robot;
 
+import java.util.List;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.systems.*;
 
@@ -43,10 +53,15 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         Pigeon.setFeildZero();
+        SwerveDrive.setMode(SwerveMode.TRAJECTORY_FOLLOW);
+        SwerveDrive.grabPathweaverFile("Unnamed.wpilib.json");
+        SwerveDrive.startTrajectoryTimer();
     }
 
     @Override
-    public void autonomousPeriodic() {}
+    public void autonomousPeriodic() {
+        SwerveDrive.run();
+    }
 
     @Override
     public void teleopInit() {
