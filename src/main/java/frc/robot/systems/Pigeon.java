@@ -49,7 +49,7 @@ public class Pigeon extends SmartPrintable {
      * the robot is in at the point this method is called.
      */
     public static void setFeildZero() {
-        instance.pigeon.setYaw(90.0);
+        instance.pigeon.setYaw(0.0);
     }
 
     /**

@@ -123,8 +123,8 @@ public class Robot extends TimedRobot {
         SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.run(
-            -controllerOne.getLeftX(),
-            controllerOne.getLeftY(),
+            controllerOne.getLeftX(),
+            -controllerOne.getLeftY(),
             controllerOne.getRightX()
         );
 
