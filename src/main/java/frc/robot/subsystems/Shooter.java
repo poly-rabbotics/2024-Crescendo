@@ -4,14 +4,17 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 
+import frc.robot.systems.Hands.ControlMode;
 import frc.robot.systems.Hands.ShooterState;
 
 public class Shooter {
 
-    private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
+    private static final int RAMPING_THRESHOLD = 105; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
+    private static final double VELOCITY = 120; //Velocity in RPM
 
-    private static double velocity = 120; //Velocity in RPM
-    private static ShooterState currentState = ShooterState.IDLE;
+    private static double targetVelocity = 0; //Velocity in RPM
+    private static ShooterState shooterState = ShooterState.IDLE;
+    private static ControlMode controlMode = ControlMode.POSITION;
 
     private static TalonFX leftMotor;
     private static TalonFX rightMotor;
@@ -47,43 +50,74 @@ public class Shooter {
      */
     public void pidControl(boolean runShooter) {
         if(runShooter) {
-            currentState = ShooterState.RUNNING;
+            targetVelocity = VELOCITY;
         } else {
-            currentState = ShooterState.IDLE;
+            targetVelocity = 0;
         }
-
-        if(currentState.equals(ShooterState.RUNNING)) {
-            leftMotor.setControl(requestLeft.withVelocity(velocity));
-            rightMotor.setControl(requestRight.withVelocity(-velocity));
-        } else {
-            leftMotor.set(0);
-            rightMotor.set(0);
-        }
+        
+        leftMotor.setControl(requestLeft.withVelocity(targetVelocity));
+        rightMotor.setControl(requestRight.withVelocity(-targetVelocity));
     }
 
+    /**
+     * Manually controls the shooter
+     * @param speed
+     */
     public void manualControl(double speed) {
-        currentState = ShooterState.MANUAL;
         leftMotor.set(speed);
         rightMotor.set(-speed);
     }
 
     /**
-     * Gets the current state of the shooter
-     * @return The current state of the shooter
+     * Sets the control mode of the shooter
+     * @param mode
      */
-    public ShooterState getState() {
-        return currentState;
+    public void setControlMode(ControlMode mode) {
+        controlMode = mode;
     }
 
+    /**
+     * Updates the ShooterState object based on speed of the shooter motor
+     */
+    public void updateShooterState() {
+        if(getVelocity() > RAMPING_THRESHOLD) {
+            shooterState = ShooterState.AT_SPEED;
+        } else if(getVelocity() < 5) {
+            shooterState = ShooterState.RAMPING;
+        } else {
+            shooterState = ShooterState.IDLE;
+        }
+    }
+
+    /**
+     * Returns the current state of the shooter
+     */
+    public ShooterState getShooterState() {
+        return shooterState;
+    }
+
+    public ControlMode getControlMode() {
+        return controlMode;
+    }
+
+    /**
+     * Returns the target velocity of the shooter, in RPM
+     */
+    public double getTargetVelocity() {
+        return targetVelocity;
+    }
+
+    /**
+     * Returns the average velocity of the shooter motors, in RPM
+     */
     public double getVelocity() {
-        return velocity;
+        return (leftMotor.getVelocity().getValue() + rightMotor.getVelocity().getValue()) / 2.0;
     }
 
-    public double getSpeed() {
-        return leftMotor.getVelocity().getValue();
-    }
-
+    /**
+     * Returns the average output power of the shooter motors
+     */
     public double getOutputPower() {
-        return leftMotor.get();
+        return (leftMotor.get() + rightMotor.get()) / 2.0;
     }
 }

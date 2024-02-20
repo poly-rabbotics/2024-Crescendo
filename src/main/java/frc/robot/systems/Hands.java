@@ -33,8 +33,8 @@ public class Hands extends SmartPrintable {
 
     public enum ShooterState {
         IDLE, 
-        RUNNING,
-        MANUAL
+        RAMPING,
+        AT_SPEED
     }
 
     public enum ControlMode {
@@ -80,47 +80,61 @@ public class Hands extends SmartPrintable {
     }
 
     public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
+        
+        //Loader and intake run
         loader.run(runLoader);
         intake.run(intakeIn, intakeOut);
 
-        if(intakeIn || intakeOut) {
-            
-            shooter.manualControl(intakeIn ? -0.2 : -0.2);
-        } else {
-            if(manualShooter < MANUAL_DEADZONE) {
-                shooter.pidControl(shoot);
-            } else {
-                shooter.manualControl(manualShooter);
-            }
+        //Update shooter control mode
+        if(shoot) {
+            shooter.setControlMode(ControlMode.POSITION);
+        } else if(manualShooter > MANUAL_DEADZONE || intakeIn || intakeOut) {
+            shooter.setControlMode(ControlMode.MANUAL);
         }
 
-        if(actuatorPressed)
+        //Actually running the shooter
+        if(shooter.getControlMode().equals(ControlMode.POSITION))
+            shooter.pidControl(shoot);
+        else if(intakeIn || intakeOut) {
+            shooter.manualControl(intakeIn ? 0.4 : -0.4);
+        } else {
+            shooter.manualControl(manualShooter);
+        }
+
+        shooter.updateShooterState();
+
+        //Linear actuator running
+        if(actuatorPressed) {
             linearActuator.setPosition(0.45);
-        else
+        } else {
             linearActuator.setPosition(0);
+        }
 
         linearActuator.run();
 
+        //Update pivot control mode
         if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
             pivot.setControlMode(ControlMode.POSITION);
         } else if(manualPivot > MANUAL_DEADZONE) {
             pivot.setControlMode(ControlMode.MANUAL);
         }
 
-        if(pivot.getControlMode().equals(ControlMode.POSITION))
+        //Pivot running
+        if(pivot.getControlMode().equals(ControlMode.POSITION)) {
             pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
-        else
+        } else  {
             pivot.manualControl(manualPivot * 0.2);
-
+        }
     }
 
     @Override
     public void print() {
         //Shooter stuff
-        SmartDashboard.putString("Shooter State", shooter.getState().toString());
-        SmartDashboard.putNumber("Shooter Velocity", shooter.getVelocity());
+        SmartDashboard.putString("Shooter State", shooter.getShooterState().toString());
+        SmartDashboard.putString("Shooter Control Mode", shooter.getControlMode().toString());
+        SmartDashboard.putNumber("Shooter Target (RPM)", shooter.getTargetVelocity());
         SmartDashboard.putNumber("Shooter Motor Power", shooter.getOutputPower());
-        SmartDashboard.putNumber("Shooter Motor Speed", shooter.getSpeed());
+        SmartDashboard.putNumber("Shooter Velocity (RPM)", shooter.getVelocity());
 
         //Loader stuff (stuff implies plural, should it be "thing"?)
         SmartDashboard.putNumber("Loader Position", loader.getEncoderPosition());

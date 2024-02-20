@@ -31,10 +31,13 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import frc.robot.SmartPrintable;
+
 import frc.robot.subsystems.Angle;
+import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.StatusedTimer;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.SwerveModule;
+import frc.robot.subsystems.SidewalkPaver.PathPosition;
 
 /*
  * Manages the swerve drive train.
@@ -87,6 +90,10 @@ public class SwerveDrive extends SmartPrintable {
     private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
+    private static final double SET_ANGLE_PID_P = 1.0;
+    private static final double SET_ANGLE_PID_I = 0.0;
+    private static final double SET_ANGLE_PID_D = 0.0;
+
     // Singleton instance.
     private static final SwerveDrive instance = new SwerveDrive();
 
@@ -103,9 +110,15 @@ public class SwerveDrive extends SmartPrintable {
     private final PIDController trajectoryRotateController
         = new PIDController(TRAJECTORY_ROTATE_PID_P, TRAJECTORY_ROTATE_PID_I, TRAJECTORY_ROTATE_PID_D);
 
+    private final PIDController setAngleController
+        = new PIDController(SET_ANGLE_PID_P, SET_ANGLE_PID_I, SET_ANGLE_PID_D);
+
     // Fully mutable state objects
+    private StatusedTimer pathTimer = new StatusedTimer();
     private Trajectory autonomousTrajectory = new Trajectory();
+
     private StatusedTimer trajectoryTimer = new StatusedTimer();
+    private SidewalkPaver sidewalkPaverPath = null;
     
     private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
     private BiFunction<Double, Double, Double> inactiveTransationCurve = null;
@@ -118,6 +131,8 @@ public class SwerveDrive extends SmartPrintable {
 
     private ChassisSpeeds chassisSpeedsOutput = null;
     private ChassisSpeeds chassisSpeedsCalculated = null;
+
+    private Angle setAngle = new Angle().setRadians(0.0);
 
     private double translationSpeedX = 0.0;
     private double translationSpeedY = 0.0;
@@ -433,7 +448,22 @@ public class SwerveDrive extends SmartPrintable {
                 }
 
                 break;
-            } 
+            }
+
+            case SET_ANGLE: {
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        instance.translationSpeedY,
+                        instance.setAngleController.calculate(
+                            Pigeon.getYaw().radians(),
+                            instance.setAngle.radians()
+                        ), 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+                break;
+            }
 
             case AIMBOT_ROTATION: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
@@ -488,6 +518,36 @@ public class SwerveDrive extends SmartPrintable {
                         -setPosition.getX()
                     );
                 instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
+                    position.getRotation().getRadians(),
+                    setPosition.getRotation().getRadians()
+                );
+
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        instance.translationSpeedY,
+                        instance.rotationSpeed, 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+
+                break;
+            }
+
+            case SIDEWALK_WALK: {
+                if (instance.sidewalkPaverPath == null) {
+                    // Break early if we have no path.
+                    break;
+                }
+
+                Pose2d setPosition = instance.sidewalkPaverPath.pathPoseAtTime(instance.pathTimer.get()).pose;
+                Pose2d position = instance.odometry.getPoseMeters();
+
+                instance.translationSpeedX
+                    = instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
+                instance.translationSpeedY
+                    = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
+                instance.rotationSpeed = instance.trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
                 );
@@ -669,6 +729,34 @@ public class SwerveDrive extends SmartPrintable {
         instance.trajectoryTimer.reset();
         instance.trajectoryTimer.start();
     }
+
+    /**
+     * Sets the path for the `SIDEWALK_WALK` drive mode.
+     */
+    public static void setPath(SidewalkPaver path) {
+        instance.sidewalkPaverPath = path;
+        instance.odometry.resetPosition(
+            new Rotation2d(Pigeon.getYaw().radians()),
+            instance.positions, 
+            instance.sidewalkPaverPath.startPose()
+        );
+    }
+
+    /**
+     * Resets the path timer used by both `TRAJECTORY_FOLLOW` and 
+     * `SIDEWALK_WALK` modes.
+     */
+    public static void resetPathTimer() {
+        instance.pathTimer.reset();
+        instance.pathTimer.start();
+    }
+
+    /**
+     * Sets the set angle for `SET_ANGLE` drive mode.
+     */
+    public static void setTargetAngle(Angle angle) {
+        instance.setAngle = angle;
+    }
     
     /**
      * Print data to smart dashboard.
@@ -692,6 +780,7 @@ public class SwerveDrive extends SmartPrintable {
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vx", chassisSpeedsCalculated.vxMetersPerSecond);
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vy", chassisSpeedsCalculated.vyMetersPerSecond);
         SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Tau", chassisSpeedsCalculated.omegaRadiansPerSecond);
+
         SmartDashboard.putString("Swerve Drive Trajectory", autonomousTrajectory.toString());
         SmartDashboard.putNumber("Swerve Trajectory Timer Time", trajectoryTimer.get());
 
@@ -706,6 +795,15 @@ public class SwerveDrive extends SmartPrintable {
             SmartDashboard.putBoolean("Swerve Drive Trajectory Time Finished", instance.autonomousTrajectory.getTotalTimeSeconds() < instance.trajectoryTimer.get());
         } catch (Exception e) {
             SmartDashboard.putString("Swerve Drive Trajectory Current State", "No State");
+	}
+
+        if (sidewalkPaverPath != null) {
+            PathPosition pose = sidewalkPaverPath.pathPoseAtTime(pathTimer.get());
+            SmartDashboard.putNumber("Swerve Drive Path Timer Time", pathTimer.get());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose X", pose.pose.getX());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Y", pose.pose.getY());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Rotation Degrees", pose.pose.getRotation().getDegrees());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Discrete Time", pose.timeSeconds);
         }
     }
 }
