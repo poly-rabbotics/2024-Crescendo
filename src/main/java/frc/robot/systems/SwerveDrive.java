@@ -795,7 +795,7 @@ public class SwerveDrive extends SmartPrintable {
             SmartDashboard.putBoolean("Swerve Drive Trajectory Time Finished", instance.autonomousTrajectory.getTotalTimeSeconds() < instance.trajectoryTimer.get());
         } catch (Exception e) {
             SmartDashboard.putString("Swerve Drive Trajectory Current State", "No State");
-	}
+	    }
 
         if (sidewalkPaverPath != null) {
             PathPosition pose = sidewalkPaverPath.pathPoseAtTime(pathTimer.get());
