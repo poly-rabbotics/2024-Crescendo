@@ -45,9 +45,13 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         Pigeon.setFeildZero();
+
         SwerveDrive.setMode(SwerveMode.TRAJECTORY_FOLLOW);
+        
         SwerveDrive.grabPathweaverFile("Unnamed.wpilib.json");
+
         SwerveDrive.startTrajectoryTimer();
+        SwerveDrive.startPathTimer();
     }
 
     @Override

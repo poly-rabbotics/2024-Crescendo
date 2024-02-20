@@ -114,10 +114,10 @@ public class SwerveDrive extends SmartPrintable {
         = new PIDController(SET_ANGLE_PID_P, SET_ANGLE_PID_I, SET_ANGLE_PID_D);
 
     // Fully mutable state objects
-    private StatusedTimer pathTimer = new StatusedTimer();
-    private Trajectory autonomousTrajectory = new Trajectory();
-
     private StatusedTimer trajectoryTimer = new StatusedTimer();
+    private Trajectory autonomousTrajectory = new Trajectory();
+    
+    private StatusedTimer pathTimer = new StatusedTimer();
     private SidewalkPaver sidewalkPaverPath = null;
     
     private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
@@ -746,7 +746,7 @@ public class SwerveDrive extends SmartPrintable {
      * Resets the path timer used by both `TRAJECTORY_FOLLOW` and 
      * `SIDEWALK_WALK` modes.
      */
-    public static void resetPathTimer() {
+    public static void startPathTimer() {
         instance.pathTimer.reset();
         instance.pathTimer.start();
     }
