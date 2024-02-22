@@ -37,7 +37,7 @@ import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.StatusedTimer;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.SwerveModule;
-import frc.robot.subsystems.SidewalkPaver.PathPosition;
+import frc.robot.subsystems.PathPosition;
 
 /*
  * Manages the swerve drive train.
@@ -78,12 +78,12 @@ public class SwerveDrive extends SmartPrintable {
         new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.15;
-    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.0;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.2;
+    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.01;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.0;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.15;
-    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.0;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.2;
+    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.01;
     private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.0;
 
     private static final double TRAJECTORY_ROTATE_PID_P = 0.75;
@@ -116,9 +116,7 @@ public class SwerveDrive extends SmartPrintable {
     // Fully mutable state objects
     private StatusedTimer trajectoryTimer = new StatusedTimer();
     private Trajectory autonomousTrajectory = new Trajectory();
-    
-    private StatusedTimer pathTimer = new StatusedTimer();
-    private SidewalkPaver sidewalkPaverPath = null;
+    private PathPosition setPathPosition = null;
     
     private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
     private BiFunction<Double, Double, Double> inactiveTransationCurve = null;
@@ -169,6 +167,7 @@ public class SwerveDrive extends SmartPrintable {
         );
 
         trajectoryRotateController.enableContinuousInput(0.0, Angle.TAU);
+        setAngleController.enableContinuousInput(0.0, Angle.TAU);
     }
 
     /**
@@ -455,7 +454,7 @@ public class SwerveDrive extends SmartPrintable {
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         instance.translationSpeedX,
                         instance.translationSpeedY,
-                        instance.setAngleController.calculate(
+                        -instance.setAngleController.calculate(
                             Pigeon.getYaw().radians(),
                             instance.setAngle.radians()
                         ), 
@@ -535,19 +534,19 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case SIDEWALK_WALK: {
-                if (instance.sidewalkPaverPath == null) {
+                if (instance.setPathPosition == null) {
                     // Break early if we have no path.
                     break;
                 }
 
-                Pose2d setPosition = instance.sidewalkPaverPath.pathPoseAtTime(instance.pathTimer.get()).pose;
+                Pose2d setPosition = instance.setPathPosition.pose;
                 Pose2d position = instance.odometry.getPoseMeters();
 
                 instance.translationSpeedX
-                    = instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
-                instance.translationSpeedY
                     = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
-                instance.rotationSpeed = instance.trajectoryRotateController.calculate(
+                instance.translationSpeedY
+                    = -instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
+                instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
                 );
@@ -679,6 +678,13 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
+     * Gets current odometry position.
+     */
+    public static Pose2d getOdometryPose() {
+        return instance.odometry.getPoseMeters();
+    }
+
+    /**
      * Zeros position entirely, assuming the robot is facing forward, then set
      * the odometry position to the given X and Y components.
      */
@@ -731,31 +737,17 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
-     * Sets the path for the `SIDEWALK_WALK` drive mode.
-     */
-    public static void setPath(SidewalkPaver path) {
-        instance.sidewalkPaverPath = path;
-        instance.odometry.resetPosition(
-            new Rotation2d(Pigeon.getYaw().radians()),
-            instance.positions, 
-            instance.sidewalkPaverPath.startPose()
-        );
-    }
-
-    /**
-     * Resets the path timer used by both `TRAJECTORY_FOLLOW` and 
-     * `SIDEWALK_WALK` modes.
-     */
-    public static void startPathTimer() {
-        instance.pathTimer.reset();
-        instance.pathTimer.start();
-    }
-
-    /**
      * Sets the set angle for `SET_ANGLE` drive mode.
      */
     public static void setTargetAngle(Angle angle) {
         instance.setAngle = angle;
+    }
+
+    /**
+     * Sets the path position for the `SIDEWALK_WALK` mode.
+     */
+    public static void setTargetPathPosition(PathPosition setPathPosition) {
+        instance.setPathPosition = setPathPosition;
     }
     
     /**
@@ -797,13 +789,11 @@ public class SwerveDrive extends SmartPrintable {
             SmartDashboard.putString("Swerve Drive Trajectory Current State", "No State");
 	    }
 
-        if (sidewalkPaverPath != null) {
-            PathPosition pose = sidewalkPaverPath.pathPoseAtTime(pathTimer.get());
-            SmartDashboard.putNumber("Swerve Drive Path Timer Time", pathTimer.get());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose X", pose.pose.getX());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Y", pose.pose.getY());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Rotation Degrees", pose.pose.getRotation().getDegrees());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Discrete Time", pose.timeSeconds);
+        if (setPathPosition != null) {
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose X", setPathPosition.pose.getX());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Y", setPathPosition.pose.getY());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Rotation Degrees", setPathPosition.pose.getRotation().getDegrees());
+            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Discrete Time", setPathPosition.timeSeconds);
         }
     }
 }

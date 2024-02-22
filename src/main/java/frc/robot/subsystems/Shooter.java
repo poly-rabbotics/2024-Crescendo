@@ -54,9 +54,13 @@ public class Shooter {
         } else {
             targetVelocity = 0;
         }
-        
-        leftMotor.setControl(requestLeft.withVelocity(targetVelocity));
-        rightMotor.setControl(requestRight.withVelocity(-targetVelocity));
+        if(targetVelocity > 0) {
+            leftMotor.setControl(requestLeft.withVelocity(targetVelocity));
+            rightMotor.setControl(requestRight.withVelocity(-targetVelocity));
+        } else {
+            leftMotor.set(0);
+            rightMotor.set(0);
+        }
     }
 
     /**

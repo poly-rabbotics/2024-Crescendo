@@ -4,13 +4,18 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 import frc.robot.subsystems.Angle;
+import frc.robot.subsystems.AutonomousProcedure;
+import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.SwerveMode;
+import frc.robot.subsystems.PathPosition;
 import frc.robot.systems.*;
 
 /**
@@ -45,13 +50,42 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         Pigeon.setFeildZero();
-
-        SwerveDrive.setMode(SwerveMode.TRAJECTORY_FOLLOW);
         
-        SwerveDrive.grabPathweaverFile("Unnamed.wpilib.json");
+        var intakePath = new SidewalkPaver(
+            new Pose2d(0.0, 0.0, new Rotation2d(Math.toRadians(0.0))), 
+            new PathPosition(new Pose2d(1.1, -1.67, new Rotation2d(Math.toRadians(0.0))), 1.0),
+            new PathPosition(new Pose2d(3.57, -1.85, new Rotation2d(Math.toRadians(180.0))), 3.0)
+        );
 
-        SwerveDrive.startTrajectoryTimer();
-        SwerveDrive.startPathTimer();
+        var returnPath = new SidewalkPaver(
+            new Pose2d(3.57, -1.85, new Rotation2d(Math.toRadians(180.0))),
+            new PathPosition(new Pose2d(0.97, -0.33, new Rotation2d(Math.toRadians(0.0))), 5.0),
+            new PathPosition(new Pose2d(0.0, 0.0,new Rotation2d(Math.toRadians(0.0))), 7.0)
+        );
+
+        var procedure = new AutonomousProcedure("My Procedure")
+            .wait((prevState) -> {
+                intakePath.nextPoseIfComplete(SwerveDrive.getOdometryPose());
+                return intakePath.isComplete()
+                    ? AutonomousProcedure.StepStatus.Done
+                    : AutonomousProcedure.StepStatus.Running;
+            })
+            .wait((prevState) -> {
+                // Fucking intake
+                return AutonomousProcedure.StepStatus.Done;
+            })
+            .wait((prevState) -> {
+                returnPath.nextPoseIfComplete(SwerveDrive.getOdometryPose());
+                return returnPath.isComplete()
+                    ? AutonomousProcedure.StepStatus.Done
+                    : AutonomousProcedure.StepStatus.Running;
+            })
+            .wait((prevState) -> {
+                // Fucking shoot
+                return AutonomousProcedure.StepStatus.Done;
+            });
+            
+        SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
     }
 
     @Override
@@ -104,9 +138,11 @@ public class Robot extends TimedRobot {
 
         double pov = controllerOne.getPOV();
 
-        if (pov != -1 && SwerveDrive.getMode() == SwerveMode.HEADLESS) {
+        if (pov != -1 && (SwerveDrive.getMode() == SwerveMode.HEADLESS || SwerveDrive.getMode() == SwerveMode.SET_ANGLE)) {
+            double angle = -((double)pov + 90.0);
+
             SwerveDrive.setMode(SwerveMode.SET_ANGLE);
-            SwerveDrive.setTargetAngle(new Angle().setDegrees((double)pov));
+            SwerveDrive.setTargetAngle(new Angle().setDegrees(angle));
         } else if (Math.abs(controllerOne.getRightX()) > 0.15 && SwerveDrive.getMode() == SwerveMode.SET_ANGLE) {
             SwerveDrive.setMode(SwerveMode.HEADLESS);
         }
@@ -159,11 +195,11 @@ public class Robot extends TimedRobot {
             controllerTwo.getLeftBumper() || controllerOne.getAButton(),        // Intake
             controllerTwo.getRightBumper(),        // Outtake
             controllerTwo.getLeftTriggerAxis() > 0.3,        // Ramp Up
-            controllerTwo.getRightTriggerAxis() > 0.3,        // Fire
+            controllerTwo.getAButtonPressed(),        // Fire
             controllerTwo.getLeftStickButton(),        // Linear Actuator
             controllerTwo.getLeftY(),                   // Manual Shooter input
             controllerTwo.getLeftX(),                   // Manual Pivot input
-            controllerTwo.getAButton(),        // Source Intake
+            false,        // Source Intake
             false,        // Ground Intake
             controllerTwo.getXButton(),        // Speaker Shooting
             controllerTwo.getBButton(),        // Dynamic Shooting

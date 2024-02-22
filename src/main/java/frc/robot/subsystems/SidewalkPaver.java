@@ -3,19 +3,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Pose2d;
 
 public class SidewalkPaver {
-    public class PathPosition {
-        public Pose2d pose;
-        public double timeSeconds;
-
-        /**
-         * Creates a new `PathPosition`, wrapping the given `Pose2d` and
-         * associating it with the given time in seconds.
-         */
-        public PathPosition(Pose2d pose, double timeSeconds) {
-            this.pose = pose;
-            this.timeSeconds = timeSeconds;
-        }
-    }
+    private static final double POSITION_TOLERANCE = 5.0 / 100.0;
 
     // time at start is assumed to be a zero.
     private Pose2d startPose;
@@ -44,6 +32,10 @@ public class SidewalkPaver {
      * current position is tracked internally in an iterator-style fashion.
      */
     public PathPosition nextPathPose() {
+        if (index >= path.length) {
+            return path[path.length - 1];
+        }
+
         var pathPose = path[index];
         index++;
         return pathPose;
@@ -57,8 +49,15 @@ public class SidewalkPaver {
      * This function will never return `null`.
      */
     public PathPosition pathPoseAtTime(double timeSeconds) {
-        PathPosition leastHigherPose = null;
-
+        PathPosition leastHigherPose = path[0];
+        
+        // Get the furure most pose.
+        for (PathPosition p : path) {
+            if (p.timeSeconds > leastHigherPose.timeSeconds) {
+                leastHigherPose = p;
+            }
+        }
+        
         for (PathPosition p : path) {
             // Consider past points invalid.
             if (p.timeSeconds < timeSeconds) {
@@ -74,21 +73,34 @@ public class SidewalkPaver {
             // the future. This comparrison can be made since all points in time
             // before the given time are considered invalid, making a lesser
             // time always closer to te given time.
-            if (leastHigherPose.timeSeconds < p.timeSeconds) {
+            if (leastHigherPose.timeSeconds > p.timeSeconds) {
                 leastHigherPose = p;
-            }
-        }
-
-        // If no future point exists give the latest point.
-        if (leastHigherPose == null) {
-            for (PathPosition p : path) {
-                if (p.timeSeconds > leastHigherPose.timeSeconds) {
-                    leastHigherPose = p;
-                }
             }
         }
 
         assert leastHigherPose != null;
         return leastHigherPose;
+    }
+
+    /**
+     * Gets the next position if within tolerance of the current set position,
+     * otherwise returns the same set position as before.
+     */
+    public PathPosition nextPoseIfComplete(Pose2d currentPose) {
+        var currentSetPose = path[index];
+
+        var distX = currentPose.getX() - currentSetPose.pose.getX();
+        var distY = currentPose.getY() - currentSetPose.pose.getX();
+        var distance = Math.sqrt(distX * distX + distY * distY);
+
+        if (distance < POSITION_TOLERANCE) {
+            return nextPathPose();
+        }
+
+        return currentSetPose;
+    }
+
+    public boolean isComplete() {
+        return index >= path.length;
     }
 }

@@ -20,7 +20,7 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
      * is `CompletionState` may safely be ignored and should always represent a
      * completed step.
      */
-    public AutonomousProcedure wait(Function<CompletionState, CompletionState> fn) {
+    public AutonomousProcedure wait(Function<StepStatus, StepStatus> fn) {
         procedureSteps.add(new ProcedureStep(fn, true));
         return this;
     }
@@ -30,14 +30,14 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
      * It is expected that the given function will be able to manage itself
      * based on the given `CompletionState` of the previous step.
      */
-    public AutonomousProcedure then(Function<CompletionState, CompletionState> fn) {
+    public AutonomousProcedure then(Function<StepStatus, StepStatus> fn) {
         procedureSteps.add(new ProcedureStep(fn, false));
         return this;
     }
 
     @Override
     public void run() {
-        CompletionState prevState = new CompletionState(StepStatus.Done, 1.0);
+        StepStatus prevState = StepStatus.Done;
 
         for (ProcedureStep step : procedureSteps) {
             prevState = step.run(prevState);
@@ -53,42 +53,28 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
      * Step of a procedure, handling the state in which it starts.
      */
     public class ProcedureStep {
-        private Function<CompletionState, CompletionState> fn;
-        private CompletionState prevState = new CompletionState(StepStatus.Waiting, 0.0);
+        private Function<StepStatus, StepStatus> fn;
+        private StepStatus prevState = StepStatus.Waiting;
         private boolean isWaitingStep;
 
-        public ProcedureStep(Function<CompletionState, CompletionState> fn, boolean isWaitingStep) {
+        public ProcedureStep(Function<StepStatus, StepStatus> fn, boolean isWaitingStep) {
             this.fn = fn;
             this.isWaitingStep = isWaitingStep;
         }
 
-        public CompletionState run(CompletionState previousStep) {
-            if (prevState.status == StepStatus.Done) {
+        public StepStatus run(StepStatus previousStep) {
+            if (prevState == StepStatus.Done) {
                 return prevState;
             }
             
-            if (isWaitingStep && previousStep.status != StepStatus.Done) {
-                return new CompletionState(StepStatus.Waiting, 0.0);
+            if (isWaitingStep && previousStep != StepStatus.Done) {
+                return StepStatus.Waiting;
             }
 
             return fn.apply(previousStep);
         }
     }
 
-    /**
-     * Represents the state of a procedure step. If the status is
-     * `StepStatus.Done` then `percentComplete` will not be considered.
-     */
-    public class CompletionState {
-        public StepStatus status;
-        public double percentComplete;
-
-        public CompletionState(StepStatus status, double percentComplete) {
-            this.status = status;
-            this.percentComplete = percentComplete;
-        }
-    }
-    
     public enum StepStatus {
         Waiting,
         Running,

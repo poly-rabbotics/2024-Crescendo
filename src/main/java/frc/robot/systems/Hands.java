@@ -96,7 +96,7 @@ public class Hands extends SmartPrintable {
         if(shooter.getControlMode().equals(ControlMode.POSITION))
             shooter.pidControl(shoot);
         else if(intakeIn || intakeOut) {
-            shooter.manualControl(intakeIn ? 0.4 : -0.4);
+            shooter.manualControl(intakeIn ? -0.4 : 0.4);
         } else {
             shooter.manualControl(manualShooter);
         }
