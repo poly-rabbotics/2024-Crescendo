@@ -132,6 +132,18 @@ public class LightRenderer implements Runnable {
 		timer.start();
 	} 
 
+	public LightRenderer(int addressableLEDPort, int bufferLength, boolean isDenseStrip) {
+		lightStrip = new AddressableLED(addressableLEDPort);
+		ledBuffer = new AddressableLEDBuffer(bufferLength);
+		lightStrip.setLength(bufferLength);
+		pattern = new Rainbow(bufferLength, DEFAULT_RAINBOW_SPEED);
+
+		lightStrip.setBitTiming(1000, 250, 650, 600);
+
+		lightStrip.start();
+		timer.start();
+	}
+
 	/**
 	 * Creates a new {@link LightPattern}.
 	 * 
