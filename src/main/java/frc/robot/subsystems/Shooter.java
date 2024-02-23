@@ -4,6 +4,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.Hands.ControlMode;
 import frc.robot.systems.Hands.ShooterState;
 
@@ -50,6 +51,15 @@ public class Shooter {
      */
     public void pidControl(boolean runShooter) {
         if(runShooter) {
+            if(getVelocity() > RAMPING_THRESHOLD)
+                shooterState = ShooterState.AT_SPEED;
+            else
+                shooterState = ShooterState.RAMPING;
+        } else {
+            shooterState = ShooterState.IDLE;
+        }
+
+        if(shooterState.equals(ShooterState.RAMPING) || shooterState.equals(ShooterState.AT_SPEED)) {
             targetVelocity = VELOCITY;
         } else {
             targetVelocity = 0;
@@ -72,12 +82,41 @@ public class Shooter {
         rightMotor.set(-speed);
     }
 
+    public void autoRun() {
+
+        if(shooterState.equals(ShooterState.RAMPING) || shooterState.equals(ShooterState.AT_SPEED)) {
+            targetVelocity = VELOCITY;
+        } else {
+            targetVelocity = 0;
+        }
+        if(targetVelocity > 0) {
+            leftMotor.setControl(requestLeft.withVelocity(targetVelocity));
+            rightMotor.setControl(requestRight.withVelocity(-targetVelocity));
+        } else {
+            leftMotor.set(0);
+            rightMotor.set(0);
+        }
+    }
+
     /**
      * Sets the control mode of the shooter
      * @param mode
      */
     public void setControlMode(ControlMode mode) {
         controlMode = mode;
+    }
+
+    public StepStatus setState(ShooterState state) {
+        StepStatus status;
+
+        shooterState = state;
+        
+        if(getVelocity() >= RAMPING_THRESHOLD)
+            status = StepStatus.Done;
+        else
+            status = StepStatus.Running;
+
+        return status;
     }
 
     /**

@@ -17,6 +17,7 @@ import frc.robot.systems.Hands.Setpoint;
 import frc.robot.systems.Hands;
 import frc.robot.systems.Aimbot;
 import frc.robot.systems.Limelight;
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 
 /*
  * Reminders to myself on what i need to do before testing this:
@@ -65,8 +66,8 @@ public class Pivot {
         pidController.setTolerance(0.1);
     }
 
-    public boolean getProxSensorTripped() {
-        return proxSensor.get();
+    public void init() {
+        setSetpoint(Setpoint.GROUND_INTAKE);
     }
 
     public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
@@ -119,12 +120,12 @@ public class Pivot {
                 } else {
                     targetPosition = Hands.clamp(angle.degrees(), 0, 90);
                 }
-
+                
                 break;
         }
         
-        calc = pidController.calculate(getEncoderPosition(), targetPosition);
-
+        calc = pidController.calculate(getPosition(), targetPosition);
+        
         pivotMotor.set(calc);
     }
 
@@ -133,23 +134,22 @@ public class Pivot {
 
         targetPosition += speed;
 
-        calc = pidController.calculate(getEncoderPosition(), targetPosition);
+        calc = pidController.calculate(getPosition(), targetPosition);
 
         pivotMotor.set(calc);
     }
 
-    public Setpoint getSetpoint() {
-        return setpoint;
-    }
+    public void autoRun() {
+        double calc = 0;
 
-    public double getOutputPower() {
-        return pivotMotor.get();
+        calc = pidController.calculate(getPosition(), targetPosition);
+        pivotMotor.set(calc);
     }
 
     /**
      * Gets the current position of the pivot (in degrees because I'm not Evan)
      */
-    public double getEncoderPosition() {
+    public double getPosition() {
         var pos = absoluteEncoder.getPosition();
 
         pos = pos > 270.0
@@ -159,8 +159,57 @@ public class Pivot {
         return (pos);
     }
 
-    public double getRawPosition() {
-        return absoluteEncoder.getPosition();
+    public StepStatus setSetpoint(Setpoint setpoint) {
+        StepStatus status;
+
+        if(setpoint != this.setpoint) {
+            this.setpoint = setpoint;
+
+            switch(setpoint) {
+                case SOURCE_INTAKE:
+                    targetPosition = SOURCE_INTAKE_ANGLE;
+                    break;
+                case GROUND_INTAKE:
+                    targetPosition = GROUND_INTAKE_ANGLE;
+                    break;
+                case AMP_SCORING:
+                    targetPosition = AMP_SCORING_ANGLE;
+                    break;
+                case STATIC_SHOOTING:
+                    targetPosition = SPEAKER_SHOOTING_ANGLE;
+                    break;
+                case DYNAMIC_SHOOTING:
+                    var angle = Aimbot.calculateShooterAngle();
+                
+                    if (angle == null) {
+                        targetPosition = SPEAKER_SHOOTING_ANGLE;
+                    } else {
+                        targetPosition = Hands.clamp(angle.degrees(), 0, 90);
+                    }
+                
+                    break;
+            }
+        }
+
+        
+        if(Math.abs(targetPosition - getPosition()) < 0.5)
+            status = StepStatus.Done;
+        else    
+            status = StepStatus.Running;
+
+        return status;
+    }
+    
+    public Setpoint getSetpoint() {
+        return setpoint;
+    }
+
+    public double getOutputPower() {
+        return pivotMotor.get();
+    }
+
+    public void setControlMode(ControlMode mode) {
+        controlMode = mode;
     }
 
     public double getTargetPosition() {
@@ -171,7 +220,7 @@ public class Pivot {
         return controlMode;
     }
 
-    public void setControlMode(ControlMode mode) {
-        controlMode = mode;
+    public boolean getProxSensorTripped() {
+        return proxSensor.get();
     }
 }

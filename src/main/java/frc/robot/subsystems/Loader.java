@@ -5,6 +5,7 @@ import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.SmartPrinter;
 
 public class Loader extends SmartPrinter {
@@ -32,12 +33,36 @@ public class Loader extends SmartPrinter {
 
     }
 
+    public void init() {
+        loaderMotor.getEncoder().setPosition(0);
+    }
+
     public void run(boolean buttonPressed) {
         if(buttonPressed) {
             targetPosition += COUNTS_PER_REVOLUTION;
         }
 
         pidController.setReference(targetPosition, ControlType.kPosition, 0);
+    }
+
+    public void autoRun() {
+        pidController.setReference(targetPosition, ControlType.kPosition, 0);
+    }
+
+    public StepStatus fire() {
+        StepStatus status = StepStatus.Running;
+
+        if(Math.abs(getEncoderPosition() - targetPosition) > 2) {
+            status =  StepStatus.Running;
+        } else {
+            targetPosition += COUNTS_PER_REVOLUTION;
+        }
+
+        if(Math.abs(getEncoderPosition() - targetPosition) < 2) {
+            status = StepStatus.Done;
+        }
+
+        return status;
     }
 
     public double getEncoderPosition() {

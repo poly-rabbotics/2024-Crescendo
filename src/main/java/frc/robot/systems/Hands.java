@@ -59,12 +59,12 @@ public class Hands extends SmartPrintable {
 
     private static final double MANUAL_DEADZONE = 0.2;
 
-    private static LinearActuator linearActuator;
-    private static LinearServo linearServo;
-    private static Shooter shooter;
-    private static Intake intake;
-    private static Loader loader;
-    private static Pivot pivot;
+    public static LinearActuator linearActuator;
+    public static LinearServo linearServo;
+    public static Shooter shooter;
+    public static Intake intake;
+    public static Loader loader;
+    public static Pivot pivot;
     
     private Hands() {
         super();
@@ -77,6 +77,11 @@ public class Hands extends SmartPrintable {
         intake = new Intake(OUTER_INTAKE_MOTOR_CAN_ID, INNER_INTAKE_MOTOR_PWM_CHANNEL);
         pivot = new Pivot(PIVOT_MOTOR_ID);
 
+    }
+
+    public static void autoInit() {
+        loader.init();
+        pivot.init();
     }
 
     public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
@@ -127,6 +132,13 @@ public class Hands extends SmartPrintable {
         }
     }
 
+    public static void autoRun() {
+        intake.autoRun();
+        pivot.autoRun();
+        shooter.autoRun();
+        loader.autoRun();
+    }
+
     /**
      * Clamps num to be between the min and max values
      * @param num
@@ -159,10 +171,9 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Outer Intake Speed", intake.getOuterMotorSpeed());
 
         //Pivot stuff
-        SmartDashboard.putNumber("Pivot Position", pivot.getEncoderPosition());
+        SmartDashboard.putNumber("Pivot Position", pivot.getPosition());
         SmartDashboard.putNumber("Pivot Motor Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
-        SmartDashboard.putNumber("Pivot Position (Raw)", pivot.getRawPosition());
         SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());
 

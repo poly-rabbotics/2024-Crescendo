@@ -16,7 +16,10 @@ import frc.robot.subsystems.AutonomousProcedure;
 import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.PathPosition;
+import frc.robot.subsystems.Intake;
 import frc.robot.systems.*;
+import frc.robot.systems.Hands.Setpoint;
+import frc.robot.systems.Hands.ShooterState;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -71,19 +74,14 @@ public class Robot extends TimedRobot {
                     : AutonomousProcedure.StepStatus.Running;
             })
             .wait((prevState) -> {
-                // Fucking intake
-                return AutonomousProcedure.StepStatus.Done;
-            })
-            .wait((prevState) -> {
                 returnPath.nextPoseIfComplete(SwerveDrive.getOdometryPose());
                 return returnPath.isComplete()
                     ? AutonomousProcedure.StepStatus.Done
                     : AutonomousProcedure.StepStatus.Running;
             })
-            .wait((prevState) -> {
-                // Fucking shoot
-                return AutonomousProcedure.StepStatus.Done;
-            });
+            .wait((prevState) -> Hands.pivot.setSetpoint(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
+            .wait((prevState) -> Hands.shooter.setState(ShooterState.RAMPING))
+            .wait((prevState) -> Hands.loader.fire());
             
         SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
     }
@@ -91,6 +89,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         SwerveDrive.run();
+        Hands.autoRun();
     }
 
     @Override

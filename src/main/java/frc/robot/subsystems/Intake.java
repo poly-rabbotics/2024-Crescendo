@@ -4,6 +4,8 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
+
 public class Intake {
 
     private static final double INTAKE_SPEED = -1.0;
@@ -35,6 +37,11 @@ public class Intake {
         
         outerMotor.set(speed);
         innerMotor.set(speed);
+    }
+
+    public void autoRun() {
+        outerMotor.set(INTAKE_SPEED);
+        innerMotor.set(INTAKE_SPEED);
     }
 
     public double getInnerMotorSpeed() {
