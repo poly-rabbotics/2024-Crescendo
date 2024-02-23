@@ -205,7 +205,7 @@ public class Robot extends TimedRobot {
             controllerTwo.getBButton(),        // Dynamic Shooting
             controllerTwo.getYButton()         // Amp Scoring
         );
-    }
+        }
 
     @Override
     public void disabledInit() {}

@@ -14,6 +14,7 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import frc.robot.systems.Hands.ControlMode;
 import frc.robot.systems.Hands.Setpoint;
+import frc.robot.systems.Hands;
 import frc.robot.systems.Aimbot;
 import frc.robot.systems.Limelight;
 
@@ -27,7 +28,7 @@ import frc.robot.systems.Limelight;
 
 public class Pivot {
     private static final double P_0 = 0.02;
-    private static final double I_0 = 0;
+    private static final double I_0 = 0.0004;
     private static final double D_0 = 0.0003;
 
     private static final double ENCODER_OFFSET = 0;
@@ -116,7 +117,7 @@ public class Pivot {
                 if (angle == null) {
                     targetPosition = SPEAKER_SHOOTING_ANGLE;
                 } else {
-                    targetPosition = angle.degrees() + (angle.degrees() * -0.0303) + 6.0;
+                    targetPosition = Hands.clamp(angle.degrees(), 0, 90);
                 }
 
                 break;
@@ -151,7 +152,7 @@ public class Pivot {
     public double getEncoderPosition() {
         var pos = absoluteEncoder.getPosition();
 
-        pos = pos > 180.0
+        pos = pos > 270.0
             ? -(360.0 - pos)
             : pos;
         
@@ -160,6 +161,10 @@ public class Pivot {
 
     public double getRawPosition() {
         return absoluteEncoder.getPosition();
+    }
+
+    public double getTargetPosition() {
+        return targetPosition;
     }
 
     public ControlMode getControlMode() {

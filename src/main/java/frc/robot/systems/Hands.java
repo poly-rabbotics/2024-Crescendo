@@ -96,7 +96,7 @@ public class Hands extends SmartPrintable {
         if(shooter.getControlMode().equals(ControlMode.POSITION))
             shooter.pidControl(shoot);
         else if(intakeIn || intakeOut) {
-            shooter.manualControl(intakeIn ? -0.4 : 0.4);
+            shooter.manualControl(intakeIn ? -0.25 : 0.25);
         } else {
             shooter.manualControl(manualShooter);
         }
@@ -127,6 +127,21 @@ public class Hands extends SmartPrintable {
         }
     }
 
+    /**
+     * Clamps num to be between the min and max values
+     * @param num
+     * @param min
+     * @param max
+     */
+    public static double clamp(double num, double min, double max) {
+        if(num < min)
+            num = min;
+        else if(num > max)
+            num = max;
+
+        return num;
+    }
+
     @Override
     public void print() {
         //Shooter stuff
@@ -148,6 +163,7 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Pivot Motor Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
         SmartDashboard.putNumber("Pivot Position (Raw)", pivot.getRawPosition());
+        SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());
 
     }

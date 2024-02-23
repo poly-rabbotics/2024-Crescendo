@@ -39,7 +39,7 @@ public class Aimbot extends SmartPrintable {
 
         double x = Limelight.estimateTagDistance();
 
-        if (x > 105.0 || x < 36) {
+        if (x > 200.0 || x < 36 || Double.isNaN(x)) {
             return null;
         }
 
