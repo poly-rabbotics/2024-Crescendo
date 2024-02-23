@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 import frc.robot.subsystems.Angle;
 import frc.robot.subsystems.AutonomousProcedure;
+import frc.robot.subsystems.ColorUtils;
 import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.PathPosition;
@@ -37,6 +38,24 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         Pigeon.setFeildZero();
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
+        LEDLights.setBitArrangements(new ColorUtils.BitArrangement[] {
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+            ColorUtils.BitArrangement.GRB,
+        });
     }
     
     @Override

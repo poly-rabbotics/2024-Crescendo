@@ -44,4 +44,21 @@ public class ColorUtils {
 
 		return colors;
 	}
+
+	public enum BitArrangement {
+		RGB, 
+		GRB,
+	}
+
+	/**
+	 * Rarranges a color from any `BitArrangement` to RGB.
+	 */
+	public static Color rearrangeColorToRGB(Color color, BitArrangement bitArrangement) {
+		switch (bitArrangement) {
+			case RGB: return color;
+			case GRB: return new Color(color.green, color.red, color.blue);
+		}
+
+		return null;
+	}
 }
