@@ -10,7 +10,6 @@ import frc.robot.patterns.Rainbow;
  */
 public class LightRenderer implements Runnable {
 	private static final double DEFAULT_RAINBOW_SPEED = 50.0;
-	//public static final DigitalInput ledSwitch = new DigitalInput(0);
 
 	private AddressableLED lightStrip;
 	private AddressableLEDBuffer ledBuffer;
