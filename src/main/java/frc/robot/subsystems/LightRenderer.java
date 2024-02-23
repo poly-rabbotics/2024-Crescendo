@@ -10,8 +10,8 @@ import frc.robot.patterns.Rainbow;
  */
 public class LightRenderer implements Runnable {
 	private static final double DEFAULT_RAINBOW_SPEED = 50.0;
-	//public static final DigitalInput ledSwitch = new DigitalInput(0);
 
+	private ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[0];
 	private AddressableLED lightStrip;
 	private AddressableLEDBuffer ledBuffer;
 	private LightPattern pattern;
@@ -95,6 +95,16 @@ public class LightRenderer implements Runnable {
 	}
 
 	/**
+	 * Sets bit arrangements of colors in patterns by an array with equal 
+	 * indices to the LED each bit arrangement wishes to address. If given an
+	 * array that does not fill the whole strip, RGB will be assumed for all 
+	 * remaining lights.
+	 */
+	public void setBitArrangements(ColorUtils.BitArrangement[] arrangements) {
+		bitArrangements = arrangements;
+	}
+
+	/**
 	 * Updates the LED light strip to account for time changes, calling this method continuously in a loop will allow patterns
 	 * to appear fluid.
 	 */
@@ -102,7 +112,12 @@ public class LightRenderer implements Runnable {
 		final Color[] colors = pattern.getPattern(timer.get());
 
 		for (int led = 0; led < ledBuffer.getLength(); led++) {
-			final Color color = colors[led % pattern.getPatternLength()];
+			Color color = colors[led % pattern.getPatternLength()];
+
+			if (led < bitArrangements.length) {
+				color = ColorUtils.rearrangeColorToRGB(color, bitArrangements[led]);
+			}
+
 			ledBuffer.setLED(led, color);
 		}
 

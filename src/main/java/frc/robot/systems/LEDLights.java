@@ -3,16 +3,19 @@ package frc.robot.systems;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.patterns.Rainbow;
+import frc.robot.patterns.Solid;
+import frc.robot.patterns.Breathe;
 import frc.robot.patterns.FadeIn;
 import frc.robot.patterns.FadeIntoPattern;
+import frc.robot.subsystems.ColorUtils;
 import frc.robot.subsystems.LightPattern;
 import frc.robot.subsystems.LightRenderer;
 import frc.robot.subsystems.SwerveMode;
 
 public class LEDLights {
     // Public since it may be usefule for pattern instantiation.
-    public static final int LED_LENGTH = 108;
-    private static final int LED_PORT = 9; // TODO: correct
+    public static final int LED_LENGTH = 64;
+    private static final int LED_PORT = 8;
 
     private static final LEDLights instance = new LEDLights();
 
@@ -29,8 +32,8 @@ public class LEDLights {
 
         if (DriverStation.isDisabled()) {
             // Rainbow if disabled.
-            //setPattern = new Rainbow();
-            setPattern = new FadeIntoPattern(new Rainbow(), 0.15);
+            setPattern = new Rainbow(100, 1.0);
+            //setPattern = new Breathe();
         } else if (DriverStation.isAutonomous()) {
             setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 1.0);
         } else {
@@ -49,5 +52,15 @@ public class LEDLights {
         }
 
         instance.renderer.run();
+    }
+
+    /**
+	 * Sets bit arrangements of colors in patterns by an array with equal 
+	 * indices to the LED each bit arrangement wishes to address. If given an
+	 * array that does not fill the whole strip, RGB will be assumed for all 
+	 * remaining lights.
+	 */
+    public static void setBitArrangements(ColorUtils.BitArrangement[] arrangements) {
+        instance.renderer.setBitArrangements(arrangements);
     }
 }
