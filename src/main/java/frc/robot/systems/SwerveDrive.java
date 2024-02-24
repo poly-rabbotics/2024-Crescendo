@@ -24,6 +24,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -51,9 +53,9 @@ public class SwerveDrive extends SmartPrintable {
 
     private static final Angle MODULE_CANCODER_OFFSETS[] = {
         new Angle().setDegrees(-132.62695), 
-        new Angle().setDegrees(-12.3046875), 
+        new Angle().setDegrees(-12.3046875 + 180.0), 
         new Angle().setDegrees(147.216799), 
-        new Angle().setDegrees(196.9628906) 
+        new Angle().setDegrees(196.9628906 + 180.0) 
     };
 
     // Wyvern
@@ -72,10 +74,15 @@ public class SwerveDrive extends SmartPrintable {
     };
 
     private static final Translation2d MODULE_PHYSICAL_POSITIONS[] = {
-        new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
-        new Translation2d(   CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
-        new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
-        new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
+        new Translation2d( -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2),
+        new Translation2d( -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2),
+        new Translation2d(  CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2),
+        new Translation2d(  CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2),
+
+        //new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
+        //new Translation2d(   CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
+        //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
+        //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
     private static final double TRAJECTORY_STRAFE_X_PID_P = 0.2;
@@ -102,6 +109,9 @@ public class SwerveDrive extends SmartPrintable {
     private final SwerveModulePosition positions[] = new SwerveModulePosition[MODULE_MOVEMENT_CAN_IDS.length];
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
+
+    private final StructArrayPublisher<SwerveModuleState> advantagePublisher
+        = NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
 
     private final PIDController trajectoryStrafeXController
         = new PIDController(TRAJECTORY_STRAFE_X_PID_P, TRAJECTORY_STRAFE_X_PID_I, TRAJECTORY_STRAFE_X_PID_D);
@@ -543,9 +553,9 @@ public class SwerveDrive extends SmartPrintable {
                 Pose2d position = instance.odometry.getPoseMeters();
 
                 instance.translationSpeedX
-                    = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
+                    = instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
                 instance.translationSpeedY
-                    = -instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
+                    = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
                 instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
@@ -567,6 +577,8 @@ public class SwerveDrive extends SmartPrintable {
             // have more than the above possible values.
             default: assert false;
         }
+
+        instance.advantagePublisher.set(moduleStates);
 
         for (int i = 0; i < instance.modules.length; i++) {
             instance.modules[i].setDesiredState(moduleStates[i]);

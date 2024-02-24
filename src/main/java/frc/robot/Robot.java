@@ -98,6 +98,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousPeriodic() {
+        SwerveDrive.setTargetPathPosition(new PathPosition(new Pose2d(10.0, 10.0, new Rotation2d(0.0)), 0.0));
         SwerveDrive.run();
         Hands.autoRun();
     }
@@ -172,8 +173,8 @@ public class Robot extends TimedRobot {
         SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.run(
-            controllerOne.getLeftX(),
             -controllerOne.getLeftY(),
+            -controllerOne.getLeftX(),
             controllerOne.getRightX()
         );
 
