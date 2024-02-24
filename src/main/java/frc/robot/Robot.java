@@ -191,10 +191,9 @@ public class Robot extends TimedRobot {
             : SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
-        /* MECHANISMS CONTROLS TO CHANGE BACK TO AFTER ITS FINISHED
-            Hands.run(
-            controlPanel.getRawButton(9) || controllerOne.getAButton(),        // Intake
-            controlPanel.getRawButton(8),        // Outtake
+        Hands.run(
+            controlPanel.getRawButton(8) || controllerOne.getAButton(),        // Intake
+            controlPanel.getRawButton(9),        // Outtake
             controlPanel.getRawButton(6),        // Ramp Up
             controlPanel.getRawButtonPressed(7),        // Fire
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
@@ -206,10 +205,9 @@ public class Robot extends TimedRobot {
             controlPanel.getRawButton(5),        // Dynamic Shooting
             controlPanel.getRawButton(3)         // Amp Scoring
         );
-        */
 
 
-        Hands.run(
+        /* Hands.run(
             controllerTwo.getLeftBumper() || controllerOne.getAButton(),        // Intake
             controllerTwo.getRightBumper(),        // Outtake
             controllerTwo.getLeftTriggerAxis() > 0.3,        // Ramp Up
@@ -222,8 +220,8 @@ public class Robot extends TimedRobot {
             controllerTwo.getXButton(),        // Speaker Shooting
             controllerTwo.getBButton(),        // Dynamic Shooting
             controllerTwo.getYButton()         // Amp Scoring
-        );
-        }
+        ); */
+    }
 
     @Override
     public void disabledInit() {}
