@@ -67,7 +67,7 @@ public class Pivot {
     }
 
     public void init() {
-        setSetpoint(Setpoint.GROUND_INTAKE);
+        setSetpointAuto(Setpoint.GROUND_INTAKE);
     }
 
     public void pidControl(boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
@@ -159,7 +159,12 @@ public class Pivot {
         return (pos);
     }
 
-    public StepStatus setSetpoint(Setpoint setpoint) {
+    /**
+     * Sets the setpoint of the pivot, to be used in autonomous modes
+     * @param setpoint
+     * @return
+     */
+    public StepStatus setSetpointAuto(Setpoint setpoint) {
         StepStatus status;
 
         if(setpoint != this.setpoint) {

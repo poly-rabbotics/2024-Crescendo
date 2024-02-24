@@ -85,22 +85,13 @@ public class Robot extends TimedRobot {
             new PathPosition(new Pose2d(0.0, 0.0,new Rotation2d(Math.toRadians(0.0))), 7.0)
         );
 
+        /* Fire straight into shooter and pivot back to ground intake */
         var procedure = new AutonomousProcedure("My Procedure")
-            .wait((prevState) -> {
-                intakePath.nextPoseIfComplete(SwerveDrive.getOdometryPose());
-                return intakePath.isComplete()
-                    ? AutonomousProcedure.StepStatus.Done
-                    : AutonomousProcedure.StepStatus.Running;
-            })
-            .wait((prevState) -> {
-                returnPath.nextPoseIfComplete(SwerveDrive.getOdometryPose());
-                return returnPath.isComplete()
-                    ? AutonomousProcedure.StepStatus.Done
-                    : AutonomousProcedure.StepStatus.Running;
-            })
-            .wait((prevState) -> Hands.pivot.setSetpoint(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
-            .wait((prevState) -> Hands.shooter.setState(ShooterState.RAMPING))
-            .wait((prevState) -> Hands.loader.fire());
+            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
+            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.RAMPING)) //Fucking ramp up the shooter
+            .wait((prevState) -> Hands.loader.fire()) //Fucking fire the note
+            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
+            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.IDLE)); //Fucking stop the shooter
             
         SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
     }
@@ -197,13 +188,18 @@ public class Robot extends TimedRobot {
             controlPanel.getRawButton(6),        // Ramp Up
             controlPanel.getRawButtonPressed(7),        // Fire
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
-            controllerTwo.getLeftY(),                   // Manual Shooter input
+            0,                   // Manual Shooter input
             controlPanel.getRawAxis(1),                   // Manual Pivot input
             controlPanel.getRawButton(2),        // Source Intake
             controlPanel.getRawButton(1),        // Ground Intake
             controlPanel.getRawButton(4),        // Speaker Shooting
             controlPanel.getRawButton(5),        // Dynamic Shooting
             controlPanel.getRawButton(3)         // Amp Scoring
+        );
+
+        Climb.run(
+            controllerTwo.getLeftY(), 
+            controllerTwo.getRightY()
         );
 
 

@@ -82,6 +82,9 @@ public class Shooter {
         rightMotor.set(-speed);
     }
 
+    /**
+     * To be run periodically in autonomous mode
+     */
     public void autoRun() {
 
         if(shooterState.equals(ShooterState.RAMPING) || shooterState.equals(ShooterState.AT_SPEED)) {
@@ -106,7 +109,12 @@ public class Shooter {
         controlMode = mode;
     }
 
-    public StepStatus setState(ShooterState state) {
+    /**
+     * Sets the ShooterState of the shooter, for use in autonomous
+     * @param state
+     * @return StepStatus
+     */
+    public StepStatus setStateAuto(ShooterState state) {
         StepStatus status;
 
         shooterState = state;
