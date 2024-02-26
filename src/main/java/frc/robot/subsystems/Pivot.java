@@ -197,7 +197,7 @@ public class Pivot {
         }
 
         
-        if(Math.abs(targetPosition - getPosition()) < 0.5)
+        if(Math.abs(targetPosition - getPosition()) < 2.0)
             status = StepStatus.Done;
         else    
             status = StepStatus.Running;

@@ -32,6 +32,7 @@ public class Robot extends TimedRobot {
     private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
     private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
     private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
+    AutonomousProcedure procedure;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -86,21 +87,19 @@ public class Robot extends TimedRobot {
         );
 
         /* Fire straight into shooter and pivot back to ground intake */
-        var procedure = new AutonomousProcedure("My Procedure")
+        procedure = new AutonomousProcedure("My Procedure")
             .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
             .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.RAMPING)) //Fucking ramp up the shooter
             .wait((prevState) -> Hands.loader.fire()) //Fucking fire the note
             .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
-            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.IDLE)); //Fucking stop the shooter
-            
-        SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
+            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.IDLE)); //Fucking stop the shooter 
     }
 
     @Override
     public void autonomousPeriodic() {
-        SwerveDrive.setTargetPathPosition(new PathPosition(new Pose2d(10.0, 10.0, new Rotation2d(0.0)), 0.0));
         SwerveDrive.run();
         Hands.autoRun();
+        procedure.run();
     }
 
     @Override
@@ -172,15 +171,14 @@ public class Robot extends TimedRobot {
         SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT_ROTATION, controllerOne.getLeftTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
+        SwerveDrive.conditionalTempMode(SwerveMode.RELATIVE, controllerOne.getYButton());
         SwerveDrive.run(
             -controllerOne.getLeftY(),
             -controllerOne.getLeftX(),
             controllerOne.getRightX()
         );
 
-        double rumble = controllerOne.getYButton() 
-            ? SwerveDrive.getAverageMotorTemp() / 80.0
-            : SwerveDrive.getAveragePercentRatedCurrent();
+        double rumble = SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
         Hands.run(

@@ -10,7 +10,7 @@ import frc.robot.systems.Hands.ShooterState;
 
 public class Shooter {
 
-    private static final int RAMPING_THRESHOLD = 105; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
+    private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
     private static final double VELOCITY = 120; //Velocity in RPM
 
     private static double targetVelocity = 0; //Velocity in RPM
@@ -162,7 +162,7 @@ public class Shooter {
      * Returns the average velocity of the shooter motors, in RPM
      */
     public double getVelocity() {
-        return (leftMotor.getVelocity().getValue() + rightMotor.getVelocity().getValue()) / 2.0;
+        return leftMotor.getVelocity().getValue();
     }
 
     /**

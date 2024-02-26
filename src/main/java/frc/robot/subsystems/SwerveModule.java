@@ -27,7 +27,7 @@ public class SwerveModule extends SmartPrintable {
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
 
     private static final double PID_P = 0.5;
-    private static final double PID_I = 0.0;
+    private static final double PID_I = 0.1;
     private static final double PID_D = 0.0;
 
     private static final double ROCK_PID_P = 0.05;

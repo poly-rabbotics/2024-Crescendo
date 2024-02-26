@@ -5,6 +5,8 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 
 import frc.robot.subsystems.AutonomousProcedure.StepStatus;
+import frc.robot.systems.Hands;
+import frc.robot.systems.Hands.ShooterState;
 
 public class Intake {
 
@@ -40,8 +42,11 @@ public class Intake {
     }
 
     public void autoRun() {
-        outerMotor.set(INTAKE_SPEED);
-        innerMotor.set(INTAKE_SPEED);
+        if(Hands.shooter.getShooterState().equals(ShooterState.IDLE)) {
+            outerMotor.set(INTAKE_SPEED);
+            innerMotor.set(INTAKE_SPEED);
+
+        }
     }
 
     public double getInnerMotorSpeed() {

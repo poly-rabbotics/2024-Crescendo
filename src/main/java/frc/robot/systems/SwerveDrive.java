@@ -35,7 +35,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.SmartPrintable;
 
 import frc.robot.subsystems.Angle;
-import frc.robot.subsystems.SidewalkPaver;
 import frc.robot.subsystems.StatusedTimer;
 import frc.robot.subsystems.SwerveMode;
 import frc.robot.subsystems.SwerveModule;
@@ -137,6 +136,7 @@ public class SwerveDrive extends SmartPrintable {
     private SwerveMode inactiveMode = null;
     private SwerveMode displayMode = SwerveMode.HEADLESS;
 
+    private SwerveModuleState[] moduleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
     private ChassisSpeeds chassisSpeedsOutput = null;
     private ChassisSpeeds chassisSpeedsCalculated = null;
 
@@ -434,10 +434,11 @@ public class SwerveDrive extends SmartPrintable {
 
             case RELATIVE: {
                 moduleStates = instance.kinematics.toSwerveModuleStates(
-                    new ChassisSpeeds(
+                        ChassisSpeeds.fromFieldRelativeSpeeds(
                         instance.translationSpeedX,
                         instance.translationSpeedY,
-                        instance.rotationSpeed
+                        instance.rotationSpeed, 
+                        new Rotation2d(0.0)
                     )
                 ); 
                 break;
@@ -577,8 +578,6 @@ public class SwerveDrive extends SmartPrintable {
             // have more than the above possible values.
             default: assert false;
         }
-
-        instance.advantagePublisher.set(moduleStates);
 
         for (int i = 0; i < instance.modules.length; i++) {
             instance.modules[i].setDesiredState(moduleStates[i]);
@@ -767,6 +766,8 @@ public class SwerveDrive extends SmartPrintable {
      */
     @Override
     public void print() {
+        instance.advantagePublisher.set(moduleStates);
+
         SmartDashboard.putString("Swerve Drive Mode", getMode().toString());
         SmartDashboard.putString("Swerve Drive Odometry", 
             "(" + ((double)(long)(odometry.getPoseMeters().getX() * 100)) / 100 + ", "
