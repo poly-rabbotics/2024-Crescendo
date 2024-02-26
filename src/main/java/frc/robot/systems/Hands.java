@@ -69,8 +69,7 @@ public class Hands extends SmartPrintable {
     private Hands() {
         super();
 
-        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 26.5, 0.1, 0.0, 0.0);
-        //linearServo = new LinearServo(LINEAR_SERVO_ID);
+        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 26.5);
         loader = new Loader(LOADER_ID);
 
         shooter = new Shooter(SHOOTER_LEFT_MOTOR_ID, SHOOTER_RIGHT_MOTOR_ID);
@@ -79,15 +78,16 @@ public class Hands extends SmartPrintable {
 
     }
 
-    public static void autoInit() {
+    public static void init() {
         loader.init();
         pivot.init();
     }
 
     public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
         
+        loader.fire(runLoader);
+
         //Loader and intake run
-        loader.run(runLoader);
         intake.run(intakeIn, intakeOut);
 
         //Update shooter control mode
@@ -136,7 +136,7 @@ public class Hands extends SmartPrintable {
         intake.autoRun();
         pivot.autoRun();
         shooter.autoRun();
-        loader.autoRun();
+        loader.run();
     }
 
     /**
@@ -176,6 +176,11 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
         SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());
+
+        //Linear actuator stuff
+        SmartDashboard.putNumber("Linear Actuator Position", linearActuator.getPosition());
+        SmartDashboard.putNumber("Linear Actuator PID Output", linearActuator.getPIDOutput());
+        SmartDashboard.putNumber("Linear Actuator Motor Temp", linearActuator.getMotorTemperature());
 
     }
 }

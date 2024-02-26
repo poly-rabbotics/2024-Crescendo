@@ -19,14 +19,6 @@ import frc.robot.systems.Aimbot;
 import frc.robot.systems.Limelight;
 import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 
-/*
- * Reminders to myself on what i need to do before testing this:
- * - Set the motor ID
- * - Set the encoder offset
- * - Find setpoint angles
- * - Add right parameters in Robot.java
- */
-
 public class Pivot {
     private static final double P_0 = 0.02;
     private static final double I_0 = 0.0004;

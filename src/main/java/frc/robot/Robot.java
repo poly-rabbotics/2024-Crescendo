@@ -81,6 +81,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         Pigeon.setFeildZero();
+        Hands.init();
         
         var intakePath = new SidewalkPaver(
             new Pose2d(0.0, 0.0, new Rotation2d(Math.toRadians(0.0))), 
@@ -113,6 +114,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         SwerveDrive.setMode(SwerveMode.HEADLESS);
+        Hands.init();
     }
 
     static boolean invertedTurn = false;

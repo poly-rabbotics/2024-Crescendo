@@ -4,12 +4,15 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 
-import frc.robot.SmartPrintable;
+public class LinearActuator {
+    private static final double ACTUATION_DISTANCE = 26.5;
 
-public class LinearActuator extends SmartPrintable {
-    private final double actuationDistance;
+    private static final double P = 0.1;
+    private static final double I = 0;
+    private static final double D = 0;
+
     private final CANSparkMax motor;
     private final PIDController controller;
 
@@ -22,29 +25,30 @@ public class LinearActuator extends SmartPrintable {
      * @param actuationDistance Actuation distance, in motor rotations, of the 
      * linear actuator.
      */
-    public LinearActuator(int canSparkId, double actuationDistance, double p, double i, double d) {
+    public LinearActuator(int canSparkId) {
         super();
 
         motor = new CANSparkMax(canSparkId, MotorType.kBrushless);
-        controller = new PIDController(p, i, d);
-        this.actuationDistance = actuationDistance;
+        controller = new PIDController(P, I, D);
 
         motor.setInverted(true);
     }
 
     /**
-     * Gets the position of the `LinearActuator` as a fraction of the actuator's
-     * maximun distance.
+     * Sets the setpoint of the `LinearActuator` and returns StepStatus.Done once position is reached
+     * @param setPoint
+     * @return StepStatus of actuator
      */
-    public double position() {
-        return motor.getEncoder().getPosition() / actuationDistance;
-    }
+    public StepStatus setPosition(double setPoint) {
+        StepStatus stepStatus = StepStatus.Running;
 
-    /**
-     * Sets the set point of the `LinearActuator`.
-     */
-    public void setPosition(double setPoint) {
-        controller.setSetpoint(setPoint * actuationDistance);
+        controller.setSetpoint(setPoint * ACTUATION_DISTANCE);
+
+        if (controller.atSetpoint()) {
+            stepStatus = StepStatus.Done;
+        }
+
+        return stepStatus;
     }
 
     /**
@@ -59,10 +63,19 @@ public class LinearActuator extends SmartPrintable {
         motor.set(calculation);
     }
 
-    @Override
-    public void print() {
-        SmartDashboard.putNumber("Linear Actuator (on ID " + motor.getDeviceId() + ") distance", motor.getEncoder().getPosition());
-        SmartDashboard.putNumber("Lineaer Actuator (on ID " + motor.getDeviceId() + ") PID output", calculation);
-        SmartDashboard.putNumber("Linear Actuator (on ID" + motor.getDeviceId() + ") Tempurature", motor.getMotorTemperature());
+    /**
+     * Gets the position of the `LinearActuator` as a fraction of the actuator's
+     * maximun distance.
+     */
+    public double getPosition() {
+        return motor.getEncoder().getPosition() / ACTUATION_DISTANCE;
+    }
+
+    public double getPIDOutput() {
+        return calculation;
+    }
+
+    public double getMotorTemperature() {
+        return motor.getMotorTemperature();
     }
 }

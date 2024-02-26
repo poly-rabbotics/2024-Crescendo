@@ -37,25 +37,34 @@ public class Loader extends SmartPrinter {
         loaderMotor.getEncoder().setPosition(0);
     }
 
-    public void run(boolean buttonPressed) {
+    /**
+     * Runs the loader's PID loop
+     */
+    public void run() {
+        pidController.setReference(targetPosition * COUNTS_PER_REVOLUTION, ControlType.kPosition, 0);
+    }
+
+    /**
+     * If true, increment shooter target position by one revolution
+     * @param buttonPressed Fire button pressed
+     */
+    public void fire(boolean buttonPressed) {
         if(buttonPressed) {
             targetPosition += COUNTS_PER_REVOLUTION;
         }
-
-        pidController.setReference(targetPosition, ControlType.kPosition, 0);
     }
 
-    public void autoRun() {
-        pidController.setReference(targetPosition, ControlType.kPosition, 0);
-    }
-
+    /**
+     * Increment shooter target position by one revolution, then return StepStatus.Done once position is reached
+     * @return StepStatus of loader
+     */
     public StepStatus fire() {
         StepStatus status = StepStatus.Running;
 
         if(Math.abs(getEncoderPosition() - targetPosition) > 2) {
             status =  StepStatus.Running;
         } else {
-            targetPosition += COUNTS_PER_REVOLUTION;
+            targetPosition = COUNTS_PER_REVOLUTION;
         }
 
         if(Math.abs(getEncoderPosition() - targetPosition) < 2) {
@@ -66,6 +75,6 @@ public class Loader extends SmartPrinter {
     }
 
     public double getEncoderPosition() {
-        return loaderMotor.getEncoder().getPosition();
+        return loaderMotor.getEncoder().getPosition() / COUNTS_PER_REVOLUTION;
     }
 }
