@@ -14,6 +14,8 @@ public class Climb extends SmartPrintable {
     private static ClimbArm climbRight;
     
     private Climb() {
+        super();
+
         climbLeft = new ClimbArm(CLIMB_MOTOR_LEFT_ID);
         climbRight = new ClimbArm(CLIMB_MOTOR_RIGHT_ID);
     }
