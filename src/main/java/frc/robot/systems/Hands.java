@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.SmartPrintable;
 import frc.robot.subsystems.*;
 
-
 public class Hands extends SmartPrintable {
 
     public enum Setpoint {
@@ -217,18 +216,23 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Shooter Motor Power", shooter.getOutputPower());
         SmartDashboard.putNumber("Shooter Velocity (RPM)", shooter.getVelocity());
 
+
         //Loader stuff (stuff implies plural, should it be "thing"?)
         SmartDashboard.putNumber("Loader Position", loader.getEncoderPosition());
 
         //Intake stuff
         SmartDashboard.putNumber("Inner Intake Speed", intake.getInnerMotorSpeed());
         SmartDashboard.putNumber("Outer Intake Speed", intake.getOuterMotorSpeed());
+        SmartDashboard.putNumber("Intake temperature", intake.getMotorTemperature());
+        SmartDashboard.putNumber("Intake speed", intake.getSpeed());
 
         //Pivot stuff
         SmartDashboard.putNumber("Pivot Position", pivot.getPosition());
-        SmartDashboard.putNumber("Pivot Motor Power", pivot.getOutputPower());
+        SmartDashboard.putNumber("Pivot Output Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
         SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
+        SmartDashboard.putNumber("Pivot Manual Input", pivot.getManualInput());
+        SmartDashboard.putString("Pivot Control Mode", pivot.getControlMode().toString());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());
 
         //Linear actuator stuff

@@ -191,6 +191,14 @@ public class Pivot {
     }
 
     /**
+     * Returns the manual input power to the pivot motor
+     * @return manualInput
+     */
+    public double getManualInput() {
+        return manualInput;
+    }
+
+    /**
      * Returns the value of the proximity sensor
      * @return
      */
