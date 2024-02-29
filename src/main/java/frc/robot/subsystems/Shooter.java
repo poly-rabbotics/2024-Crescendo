@@ -46,7 +46,7 @@ public class Shooter {
         requestLeft = new VelocityVoltage(0).withSlot(0);
         requestRight = new VelocityVoltage(0).withSlot(0);
     }
-
+    
     public void init() {
         setControlMode(ControlMode.POSITION);
         set(ShooterState.IDLE);
@@ -54,16 +54,7 @@ public class Shooter {
     }
 
     /**
-     * Manually controls the shooter
-     * @param speed
-     */
-    public void manualControl(double speed) {
-        leftMotor.set(speed);
-        rightMotor.set(-speed);
-    }
-
-    /**
-     * To be run periodically in autonomous mode
+     * Runs the shooter motors at a set velocity, call periodically in autonomous or teleop
      */
     public void run() {
 
@@ -99,6 +90,10 @@ public class Shooter {
         return status;
     }
 
+    /**
+     * Sets manual input power to the shooter motors
+     * @param input
+     */
     public void setManualInput(double input) {
         manualInput = input;
     }
@@ -112,18 +107,24 @@ public class Shooter {
     }
 
     /**
-     * Returns the current state of the shooter
+     * Returns the current ShooterState of the shooter
+     * @return shooterState
      */
     public ShooterState getShooterState() {
         return shooterState;
     }
 
+    /**
+     * Returns the current ControlMode of the shooter
+     * @return controlMode
+     */
     public ControlMode getControlMode() {
         return controlMode;
     }
 
     /**
-     * Returns the average velocity of the shooter motors, in RPM
+     * Returns the velocity of the shooter motors, in RPM
+     * @return velocity
      */
     public double getVelocity() {
         return leftMotor.getVelocity().refresh().getValue();
@@ -131,6 +132,7 @@ public class Shooter {
 
     /**
      * Returns the average output power of the shooter motors
+     * @return outputPower
      */
     public double getOutputPower() {
         return (leftMotor.get() + rightMotor.get()) / 2.0;
@@ -138,6 +140,7 @@ public class Shooter {
 
     /**
      * Return last manual control input value
+     * @return manualInput
      */
     public double getManualInput() {
         return manualInput;

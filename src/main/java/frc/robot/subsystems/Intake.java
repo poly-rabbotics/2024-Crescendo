@@ -4,19 +4,15 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 
-import frc.robot.subsystems.AutonomousProcedure.StepStatus;
-import frc.robot.systems.Hands;
-import frc.robot.systems.Hands.ShooterState;
-
 public class Intake {
 
-    private static final double INTAKE_SPEED = -1.0;
-    private static final double OUTTAKE_SPEED = 0.7;
+    public static final double INTAKE_SPEED = -0.7;
+    public static final double OUTTAKE_SPEED = 0.7;
 
     private final CANSparkMax outerMotor;
     private final VictorSP innerMotor;
 
-    private static double speed = 0;
+    private double speed = 0;
 
     public Intake(int outerMotorCanID, int innerMotorPWMChannel) {
         super();
@@ -28,32 +24,51 @@ public class Intake {
         
     }
 
-    public void run(boolean intake, boolean outtake) {
-        if(intake) {
-            speed = INTAKE_SPEED;
-        } else if(outtake) {
-            speed = OUTTAKE_SPEED;
-        } else {
-            speed = 0;
-        }
-        
+    /**
+     * Runs both intake motors at set speed, call periodically in autonomous or teleop
+     */
+    public void run() {
         outerMotor.set(speed);
         innerMotor.set(speed);
     }
 
-    public void autoRun() {
-        if(Hands.shooter.getShooterState().equals(ShooterState.IDLE)) {
-            outerMotor.set(INTAKE_SPEED);
-            innerMotor.set(INTAKE_SPEED);
-
-        }
+    /**
+     * Sets the speed of the intake motors
+     * @param speed
+     */
+    public void set(double speed) {
+        this.speed = speed;
     }
 
+    /**
+     * Gets the speed of the inner (VictorSP) motor
+     * @return speed
+     */
     public double getInnerMotorSpeed() {
         return innerMotor.get();
     }
 
+    /**
+     * Gets the speed of the outer (CANSparkMax) motor
+     * @return speed
+     */
     public double getOuterMotorSpeed() {
         return outerMotor.get();
+    }
+
+    /**
+     * Gets the intake class's speed value
+     * @return speed
+     */
+    public double getSpeed() {
+        return speed;
+    }
+
+    /**
+     * Gets the temperature of the outer (CANSparkMax) motor
+     * @return
+     */
+    public double getMotorTemperature() {
+        return outerMotor.getMotorTemperature();
     }
 }

@@ -16,12 +16,6 @@ import frc.robot.systems.Hands.Setpoint;
 import frc.robot.subsystems.*;
 import frc.robot.systems.*;
 
-/* LIST OF STUFF KYLE NEEDS TO CHANGE
- * I apologize for this being at the top of Robot, I zoned out while working on wyvern's code and don't wanna forget this stuff
- * - Update intake
- * - Full documentation on every method :)
- */
-
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or

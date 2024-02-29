@@ -53,12 +53,18 @@ public class Pivot {
         pidController.setTolerance(0.5);
     }
 
+    /**
+     * Initializes the pivot, sets the control mode to position and the setpoint to ground intake
+     */
     public void init() {
         set(Setpoint.GROUND_INTAKE);
         setControlMode(ControlMode.POSITION);
         setManualInput(0);
     }
 
+    /**
+     * Runs the pivot motor at a set speed, call periodically in autonomous or teleop
+     */
     public void run() {
         double speed = 0;
 
@@ -71,19 +77,6 @@ public class Pivot {
         }
 
         pivotMotor.set(speed);
-    }
-
-    /**
-     * Gets the current position of the pivot (in degrees because I'm not Evan)
-     */
-    public double getPosition() {
-        var pos = absoluteEncoder.getPosition();
-
-        pos = pos > 270.0
-            ? -(360.0 - pos)
-            : pos;
-        
-        return (pos);
     }
 
     /**
@@ -135,30 +128,72 @@ public class Pivot {
         return status;
     }
 
+    /**
+     * Sets the manual input power to the pivot motor
+     * @param input
+     */
     public void setManualInput(double input) {
         manualInput = input;
     }
-    
-    public Setpoint getSetpoint() {
-        return setpoint;
-    }
 
-    public double getOutputPower() {
-        return pivotMotor.get();
-    }
-
+    /**
+     * Sets the control mode of the pivot
+     * @param mode
+     */
     public void setControlMode(ControlMode mode) {
         controlMode = mode;
     }
 
+    /**
+     * Gets the current position of the pivot (in degrees because I'm not Evan)
+     * @return position
+     */
+    public double getPosition() {
+        var pos = absoluteEncoder.getPosition();
+
+        pos = pos > 270.0
+            ? -(360.0 - pos)
+            : pos;
+        
+        return (pos);
+    }
+    
+    /**
+     * Gets the Setpoint of the pivot
+     * @return setpoint
+     */
+    public Setpoint getSetpoint() {
+        return setpoint;
+    }
+
+    /**
+     * Gets the output power of the pivot motor
+     * @return power
+     */
+    public double getOutputPower() {
+        return pivotMotor.get();
+    }
+
+    /**
+     * Gets the target position of the pivot
+     * @return
+     */
     public double getTargetPosition() {
         return pidController.getSetpoint();
     }
 
+    /**
+     * Returns the control mode of the pivot
+     * @return
+     */
     public ControlMode getControlMode() {
         return controlMode;
     }
 
+    /**
+     * Returns the value of the proximity sensor
+     * @return
+     */
     public boolean getProxSensorTripped() {
         return proxSensor.get();
     }

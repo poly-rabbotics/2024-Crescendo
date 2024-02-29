@@ -1,29 +1,26 @@
 package frc.robot.systems;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
+import frc.robot.subsystems.ClimbArm;
 
 public class Climb {
     private static Climb instance = new Climb();
 
-    private static final int CLIMB_MOTOR_LEFT_ID = 15;
-    private static final int CLIMB_MOTOR_RIGHT_ID = 16;
+    private static final int CLIMB_MOTOR_LEFT_ID = 16;
+    private static final int CLIMB_MOTOR_RIGHT_ID = 15;
 
-    TalonFX climbMotorLeft;
-    TalonFX climbMotorRight;
+    private static ClimbArm climbLeft;
+    private static ClimbArm climbRight;
     
     private Climb() {
-        climbMotorLeft = new TalonFX(CLIMB_MOTOR_LEFT_ID);
-        climbMotorRight = new TalonFX(CLIMB_MOTOR_RIGHT_ID);
-        
-        climbMotorLeft.setNeutralMode(NeutralModeValue.Brake);
-        climbMotorRight.setNeutralMode(NeutralModeValue.Brake);
+        climbLeft = new ClimbArm(CLIMB_MOTOR_LEFT_ID);
+        climbRight = new ClimbArm(CLIMB_MOTOR_RIGHT_ID);
     }
 
     public static void run(double speedLeft, double speedRight) {
-        instance.climbMotorLeft.set(speedLeft);
-        instance.climbMotorRight.set(speedRight);
+        climbLeft.set(speedLeft);
+        climbRight.set(speedRight);
+
+        climbLeft.run();
+        climbRight.run();
     }
 }

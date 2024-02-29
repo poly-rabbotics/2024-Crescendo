@@ -12,8 +12,8 @@ package frc.robot.systems;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import frc.robot.subsystems.*;
 import frc.robot.SmartPrintable;
+import frc.robot.subsystems.*;
 
 
 public class Hands extends SmartPrintable {
@@ -39,7 +39,6 @@ public class Hands extends SmartPrintable {
     private static Hands instance = new Hands();
 
     private static final int LINEAR_ACTUATOR_ID = 61;
-    private static final int LINEAR_SERVO_ID = 9;
 
     private static final int SHOOTER_LEFT_MOTOR_ID = 5;
     private static final int SHOOTER_RIGHT_MOTOR_ID = 6;
@@ -72,20 +71,35 @@ public class Hands extends SmartPrintable {
 
     }
 
+    /**
+     * Run during teleop and autonomous init, resets subsystem values
+     */
     public static void init() {
         loader.init();
         shooter.init();
         pivot.init();
     }
 
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
-
-        /* INTAKE */
-        intake.run(intakeIn, intakeOut);
+    /**
+     * Run all subsystems in teleop mode
+     * @param intakeIn
+     * @param intakeOut
+     * @param shoot
+     * @param runLoader
+     * @param actuatorPressed
+     * @param manualShooter
+     * @param manualPivot
+     * @param climbing
+     * @param groundIntake
+     * @param speakerShooting
+     * @param dynamicShooting
+     * @param ampScoring
+     */
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
 
         /* PIVOT */
         //Update pivot control mode
-        if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
+        if(climbing || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
             pivot.setControlMode(ControlMode.POSITION);
         } else if(Math.abs(manualPivot) > MANUAL_DEADZONE) {
             pivot.setControlMode(ControlMode.MANUAL);
@@ -94,7 +108,7 @@ public class Hands extends SmartPrintable {
         //Update pivot target pos/set manual input
         Setpoint setpoint = Setpoint.GROUND_INTAKE;
 
-        if(sourceIntake) {
+        if(climbing) {
             setpoint = Setpoint.CLIMBING;
         } else if(groundIntake) {
             setpoint = Setpoint.GROUND_INTAKE;
@@ -136,6 +150,18 @@ public class Hands extends SmartPrintable {
             linearActuator.setPosition(0);
         }     
 
+        /* INTAKE */
+        if(intakeIn) {
+            intake.set(Intake.INTAKE_SPEED);
+            shooter.setManualInput(-0.1);
+        } else if(intakeOut) {
+            intake.set(Intake.OUTTAKE_SPEED);
+            shooter.setManualInput(0.1);
+        } else {
+            intake.set(0);
+            shooter.setManualInput(0);
+        }
+
 
         /* LOADER */
         if(runLoader) loader.fire();
@@ -145,11 +171,22 @@ public class Hands extends SmartPrintable {
         pivot.run();
         shooter.run();
         loader.run();
+        intake.run();
         linearActuator.run();
     }
 
+    /**
+     * run periodically in autonomous mode, updates all subsystems
+     */
     public static void autoRun() {
-        intake.autoRun();
+        if(shooter.getShooterState().equals(ShooterState.IDLE)) {
+            shooter.setControlMode(ControlMode.MANUAL);
+            shooter.setManualInput(0.1);
+        } else {
+            shooter.setControlMode(ControlMode.POSITION);
+        }
+
+        intake.run();
         pivot.run();
         shooter.run();
         loader.run();
