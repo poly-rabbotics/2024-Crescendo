@@ -68,7 +68,7 @@ public class LinearActuator {
 
     /**
      * Gets the position of the `LinearActuator` as a fraction of the actuator's
-     * maximun (<------ EVAN'S TYPO) distance. 
+     * maximum distance. 
      */
     public double getPosition() {
         return motor.getEncoder().getPosition() / ACTUATION_DISTANCE;
