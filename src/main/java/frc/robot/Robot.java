@@ -18,7 +18,7 @@ import frc.robot.systems.*;
 
 /* LIST OF STUFF KYLE NEEDS TO CHANGE
  * I apologize for this being at the top of Robot, I zoned out while working on wyvern's code and don't wanna forget this stuff
- * - Update all subsystems to just work how they're used in auto
+ * - Update intake
  * - Full documentation on every method :)
  */
 
@@ -42,24 +42,13 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         Pigeon.setFeildZero();
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
-        LEDLights.setBitArrangements(new ColorUtils.BitArrangement[] {
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-        });
+        ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
+
+        for(int i = 0; i < bitArrangements.length; i++) {
+            bitArrangements[i] = ColorUtils.BitArrangement.GRB;
+        }
+
+        LEDLights.setBitArrangements(bitArrangements);
     }
     
     @Override

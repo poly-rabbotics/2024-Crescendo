@@ -29,7 +29,6 @@ public class Pivot {
     private ControlMode controlMode = ControlMode.POSITION;
 
     //Local variables to be used for position/manual control
-    private double targetPosition = GROUND_INTAKE_ANGLE;
     private double manualInput = 0;
 
     private DigitalInput proxSensor;
@@ -51,23 +50,24 @@ public class Pivot {
             D_0
         );
 
-        pidController.setTolerance(0.1);
+        pidController.setTolerance(0.5);
     }
 
     public void init() {
         set(Setpoint.GROUND_INTAKE);
         setControlMode(ControlMode.POSITION);
+        setManualInput(0);
     }
 
     public void run() {
         double speed = 0;
 
         if(controlMode == ControlMode.POSITION) {
-            speed = pidController.calculate(getPosition(), targetPosition);
+            speed = pidController.calculate(getPosition());
             pivotMotor.set(speed);
         } else {
-            targetPosition += manualInput;
-            speed = pidController.calculate(getPosition(), targetPosition);
+            pidController.setSetpoint(getTargetPosition() + manualInput);
+            speed = pidController.calculate(getPosition());
         }
 
         pivotMotor.set(speed);
@@ -93,38 +93,41 @@ public class Pivot {
      */
     public StepStatus set(Setpoint setpoint) {
         StepStatus status;
+        double target = 0;
 
         if(setpoint != this.setpoint) {
             this.setpoint = setpoint;
 
             switch(setpoint) {
                 case CLIMBING:
-                    targetPosition = CLIMBING_ANGLE;
+                    target = CLIMBING_ANGLE;
                     break;
                 case GROUND_INTAKE:
-                    targetPosition = GROUND_INTAKE_ANGLE;
+                    target = GROUND_INTAKE_ANGLE;
                     break;
                 case AMP_SCORING:
-                    targetPosition = AMP_SCORING_ANGLE;
+                    target = AMP_SCORING_ANGLE;
                     break;
                 case STATIC_SHOOTING:
-                    targetPosition = SPEAKER_SHOOTING_ANGLE;
+                    target = SPEAKER_SHOOTING_ANGLE;
                     break;
                 case DYNAMIC_SHOOTING:
                     var angle = Aimbot.calculateShooterAngle();
                 
                     if (angle == null) {
-                        targetPosition = SPEAKER_SHOOTING_ANGLE;
+                        target = SPEAKER_SHOOTING_ANGLE;
                     } else {
-                        targetPosition = Hands.clamp(angle.degrees(), 0, 90);
+                        target = Hands.clamp(angle.degrees(), 0, 90);
                     }
                 
                     break;
             }
+
+            pidController.setSetpoint(target);
         }
 
         
-        if(Math.abs(targetPosition - getPosition()) < 2.0)
+        if(pidController.atSetpoint())
             status = StepStatus.Done;
         else    
             status = StepStatus.Running;
@@ -149,7 +152,7 @@ public class Pivot {
     }
 
     public double getTargetPosition() {
-        return targetPosition;
+        return pidController.getSetpoint();
     }
 
     public ControlMode getControlMode() {

@@ -12,12 +12,7 @@ package frc.robot.systems;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import frc.robot.subsystems.LinearActuator;
-import frc.robot.subsystems.LinearServo;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Loader;
-import frc.robot.subsystems.Pivot;
+import frc.robot.subsystems.*;
 import frc.robot.SmartPrintable;
 
 
@@ -79,12 +74,11 @@ public class Hands extends SmartPrintable {
 
     public static void init() {
         loader.init();
+        shooter.init();
         pivot.init();
     }
 
     public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
-        
-        loader.fire(runLoader);
 
         /* INTAKE */
         intake.run(intakeIn, intakeOut);
@@ -96,7 +90,7 @@ public class Hands extends SmartPrintable {
         } else if(Math.abs(manualPivot) > MANUAL_DEADZONE) {
             pivot.setControlMode(ControlMode.MANUAL);
         }
-
+        
         //Update pivot target pos/set manual input
         Setpoint setpoint = Setpoint.GROUND_INTAKE;
 
@@ -140,18 +134,17 @@ public class Hands extends SmartPrintable {
             linearActuator.setPosition(0.45);
         } else {
             linearActuator.setPosition(0);
-        }
+        }     
 
-        //Update pivot control mode
-        if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
-            pivot.setControlMode(ControlMode.POSITION);
-        } else if(manualPivot > MANUAL_DEADZONE) {
-            pivot.setControlMode(ControlMode.MANUAL);
-        }
+
+        /* LOADER */
+        if(runLoader) loader.fire();
+
 
         //Run subsystems
         pivot.run();
         shooter.run();
+        loader.run();
         linearActuator.run();
     }
 

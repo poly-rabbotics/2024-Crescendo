@@ -47,6 +47,12 @@ public class Shooter {
         requestRight = new VelocityVoltage(0).withSlot(0);
     }
 
+    public void init() {
+        setControlMode(ControlMode.POSITION);
+        set(ShooterState.IDLE);
+        setManualInput(0);
+    }
+
     /**
      * Manually controls the shooter
      * @param speed
