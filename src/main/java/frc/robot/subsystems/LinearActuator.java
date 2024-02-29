@@ -34,15 +34,30 @@ public class LinearActuator {
         motor.setInverted(true);
     }
 
+    public void init() {
+        setPosition(0);
+    }
+
+    /**
+     * Runs the `LinearActuator` setting its motor's speed according to the 
+     * current set point and passed-in PID constants.
+     */
+    public void run() {
+        double calculation = controller.calculate(getPosition());
+
+        this.calculation = calculation;
+        motor.set(calculation);
+    }
+
     /**
      * Sets the setpoint of the `LinearActuator` and returns StepStatus.Done once position is reached
-     * @param setPoint
+     * @param setPoint: desired position as a percentage of the actuator's maximum distance
      * @return StepStatus of actuator
      */
     public StepStatus setPosition(double setPoint) {
         StepStatus stepStatus = StepStatus.Running;
 
-        controller.setSetpoint(setPoint * ACTUATION_DISTANCE);
+        controller.setSetpoint(setPoint);
 
         if (controller.atSetpoint()) {
             stepStatus = StepStatus.Done;
@@ -52,20 +67,8 @@ public class LinearActuator {
     }
 
     /**
-     * Runs the `LinearActuator` setting its motor's speed according to the 
-     * current set point and passed-in PID constants.
-     */
-    public void run() {
-        double position = motor.getEncoder().getPosition();
-        double calculation = controller.calculate(position);
-
-        this.calculation = calculation;
-        motor.set(calculation);
-    }
-
-    /**
      * Gets the position of the `LinearActuator` as a fraction of the actuator's
-     * maximun distance.
+     * maximun (<------ EVAN'S TYPO) distance. 
      */
     public double getPosition() {
         return motor.getEncoder().getPosition() / ACTUATION_DISTANCE;

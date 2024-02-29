@@ -153,6 +153,7 @@ public class Hands extends SmartPrintable {
         pivot.run();
         shooter.run();
         loader.run();
+        linearActuator.run();
     }
 
     /**
