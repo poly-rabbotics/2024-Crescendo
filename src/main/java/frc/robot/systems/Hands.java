@@ -24,7 +24,7 @@ import frc.robot.SmartPrintable;
 public class Hands extends SmartPrintable {
 
     public enum Setpoint {
-        SOURCE_INTAKE,
+        CLIMBING,
         GROUND_INTAKE,
         STATIC_SHOOTING,
         DYNAMIC_SHOOTING,
@@ -33,8 +33,7 @@ public class Hands extends SmartPrintable {
 
     public enum ShooterState {
         IDLE, 
-        RAMPING,
-        AT_SPEED
+        RUNNING,
     }
 
     public enum ControlMode {
@@ -57,7 +56,7 @@ public class Hands extends SmartPrintable {
 
     private static final int PIVOT_MOTOR_ID = 13;
 
-    private static final double MANUAL_DEADZONE = 0.2;
+    private static final double MANUAL_DEADZONE = 0.3;
 
     public static LinearActuator linearActuator;
     public static LinearServo linearServo;
@@ -69,7 +68,7 @@ public class Hands extends SmartPrintable {
     private Hands() {
         super();
 
-        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 26.5);
+        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID);
         loader = new Loader(LOADER_ID);
 
         shooter = new Shooter(SHOOTER_LEFT_MOTOR_ID, SHOOTER_RIGHT_MOTOR_ID);
@@ -87,35 +86,61 @@ public class Hands extends SmartPrintable {
         
         loader.fire(runLoader);
 
-        //Loader and intake run
+        /* INTAKE */
         intake.run(intakeIn, intakeOut);
 
+        /* PIVOT */
+        //Update pivot control mode
+        if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
+            pivot.setControlMode(ControlMode.POSITION);
+        } else if(Math.abs(manualPivot) > MANUAL_DEADZONE) {
+            pivot.setControlMode(ControlMode.MANUAL);
+        }
+
+        //Update pivot target pos/set manual input
+        Setpoint setpoint = Setpoint.GROUND_INTAKE;
+
+        if(sourceIntake) {
+            setpoint = Setpoint.CLIMBING;
+        } else if(groundIntake) {
+            setpoint = Setpoint.GROUND_INTAKE;
+        } else if(speakerShooting) {
+            setpoint = Setpoint.STATIC_SHOOTING;
+        } else if(dynamicShooting) {
+            setpoint = Setpoint.DYNAMIC_SHOOTING;
+        } else if(ampScoring) {
+            setpoint = Setpoint.AMP_SCORING;
+        }
+
+        pivot.set(setpoint);
+
+        pivot.setManualInput(manualPivot);
+
+        /* SHOOTER */
         //Update shooter control mode
         if(shoot) {
             shooter.setControlMode(ControlMode.POSITION);
-        } else if(manualShooter > MANUAL_DEADZONE || intakeIn || intakeOut) {
+        } else if(Math.abs(manualShooter) > MANUAL_DEADZONE || intakeIn || intakeOut) {
             shooter.setControlMode(ControlMode.MANUAL);
         }
 
-        //Actually running the shooter
-        if(shooter.getControlMode().equals(ControlMode.POSITION))
-            shooter.pidControl(shoot);
-        else if(intakeIn || intakeOut) {
-            shooter.manualControl(intakeIn ? -0.25 : 0.25);
+        //Set shooter state
+        if(shoot) {
+            shooter.set(ShooterState.RUNNING);
         } else {
-            shooter.manualControl(manualShooter);
+            shooter.set(ShooterState.IDLE);
         }
 
-        shooter.updateShooterState();
+        //Set shooter manual input
+        shooter.setManualInput(manualShooter);
 
-        //Linear actuator running
+
+        /* LINEAR ACTUATOR */
         if(actuatorPressed) {
             linearActuator.setPosition(0.45);
         } else {
             linearActuator.setPosition(0);
         }
-
-        linearActuator.run();
 
         //Update pivot control mode
         if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
@@ -124,18 +149,16 @@ public class Hands extends SmartPrintable {
             pivot.setControlMode(ControlMode.MANUAL);
         }
 
-        //Pivot running
-        if(pivot.getControlMode().equals(ControlMode.POSITION)) {
-            pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
-        } else  {
-            pivot.manualControl(manualPivot * 0.2);
-        }
+        //Run subsystems
+        pivot.run();
+        shooter.run();
+        linearActuator.run();
     }
 
     public static void autoRun() {
         intake.autoRun();
-        pivot.autoRun();
-        shooter.autoRun();
+        pivot.run();
+        shooter.run();
         loader.run();
     }
 
@@ -159,7 +182,7 @@ public class Hands extends SmartPrintable {
         //Shooter stuff
         SmartDashboard.putString("Shooter State", shooter.getShooterState().toString());
         SmartDashboard.putString("Shooter Control Mode", shooter.getControlMode().toString());
-        SmartDashboard.putNumber("Shooter Target (RPM)", shooter.getTargetVelocity());
+        SmartDashboard.putNumber("Shooter Manual Input", shooter.getManualInput());
         SmartDashboard.putNumber("Shooter Motor Power", shooter.getOutputPower());
         SmartDashboard.putNumber("Shooter Velocity (RPM)", shooter.getVelocity());
 

@@ -4,28 +4,20 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
-import frc.robot.subsystems.Angle;
-import frc.robot.subsystems.AutonomousProcedure;
-import frc.robot.subsystems.ColorUtils;
-import frc.robot.subsystems.SidewalkPaver;
-import frc.robot.subsystems.SwerveMode;
-import frc.robot.subsystems.PathPosition;
-import frc.robot.subsystems.Intake;
-import frc.robot.systems.*;
-import frc.robot.systems.Hands.Setpoint;
 import frc.robot.systems.Hands.ShooterState;
+import frc.robot.systems.Hands.Setpoint;
+import frc.robot.subsystems.*;
+import frc.robot.systems.*;
 
 /* LIST OF STUFF KYLE NEEDS TO CHANGE
  * I apologize for this being at the top of Robot, I zoned out while working on wyvern's code and don't wanna forget this stuff
- * - Change source intake to climbing setpoint (and move to top of the panel)
- * - Re-add toggle control, more tedious but its just more convenient for this game
  * - Update all subsystems to just work how they're used in auto
  * - Full documentation on every method :)
  */
@@ -97,11 +89,11 @@ public class Robot extends TimedRobot {
 
         /* Fire straight into shooter and pivot back to ground intake */
         procedure = new AutonomousProcedure("My Procedure")
-            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
-            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.RAMPING)) //Fucking ramp up the shooter
+            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
+            .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING)) //Fucking ramp up the shooter
             .wait((prevState) -> Hands.loader.fire()) //Fucking fire the note
-            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
-            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.IDLE)); //Fucking stop the shooter 
+            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE)); //Fucking stop the shooter 
     }
 
     @Override
@@ -199,11 +191,11 @@ public class Robot extends TimedRobot {
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
             0,                   // Manual Shooter input
             controlPanel.getRawAxis(1),                   // Manual Pivot input
-            controlPanel.getRawButton(2),        // Source Intake
+            controlPanel.getRawButton(5),        // Climbing
             controlPanel.getRawButton(1),        // Ground Intake
-            controlPanel.getRawButton(4),        // Speaker Shooting
-            controlPanel.getRawButton(5),        // Dynamic Shooting
-            controlPanel.getRawButton(3)         // Amp Scoring
+            controlPanel.getRawButton(3),        // Speaker Shooting
+            controlPanel.getRawButton(4),        // Dynamic Shooting
+            controlPanel.getRawButton(2)         // Amp Scoring
         );
 
         Climb.run(
