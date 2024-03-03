@@ -12,19 +12,13 @@ package frc.robot.systems;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import frc.robot.subsystems.LinearActuator;
-import frc.robot.subsystems.LinearServo;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Loader;
-import frc.robot.subsystems.Pivot;
 import frc.robot.SmartPrintable;
-
+import frc.robot.subsystems.*;
 
 public class Hands extends SmartPrintable {
 
     public enum Setpoint {
-        SOURCE_INTAKE,
+        CLIMBING,
         GROUND_INTAKE,
         STATIC_SHOOTING,
         DYNAMIC_SHOOTING,
@@ -33,8 +27,7 @@ public class Hands extends SmartPrintable {
 
     public enum ShooterState {
         IDLE, 
-        RAMPING,
-        AT_SPEED
+        RUNNING,
     }
 
     public enum ControlMode {
@@ -45,7 +38,6 @@ public class Hands extends SmartPrintable {
     private static Hands instance = new Hands();
 
     private static final int LINEAR_ACTUATOR_ID = 61;
-    private static final int LINEAR_SERVO_ID = 9;
 
     private static final int SHOOTER_LEFT_MOTOR_ID = 5;
     private static final int SHOOTER_RIGHT_MOTOR_ID = 6;
@@ -57,7 +49,7 @@ public class Hands extends SmartPrintable {
 
     private static final int PIVOT_MOTOR_ID = 13;
 
-    private static final double MANUAL_DEADZONE = 0.2;
+    private static final double MANUAL_DEADZONE = 0.3;
 
     public static LinearActuator linearActuator;
     public static LinearServo linearServo;
@@ -69,8 +61,7 @@ public class Hands extends SmartPrintable {
     private Hands() {
         super();
 
-        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID, 26.5, 0.1, 0.0, 0.0);
-        //linearServo = new LinearServo(LINEAR_SERVO_ID);
+        linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID);
         loader = new Loader(LOADER_ID);
 
         shooter = new Shooter(SHOOTER_LEFT_MOTOR_ID, SHOOTER_RIGHT_MOTOR_ID);
@@ -79,64 +70,126 @@ public class Hands extends SmartPrintable {
 
     }
 
-    public static void autoInit() {
+    /**
+     * Run during teleop and autonomous init, resets subsystem values
+     */
+    public static void init() {
         loader.init();
+        shooter.init();
         pivot.init();
     }
 
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean sourceIntake, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
-        
-        //Loader and intake run
-        loader.run(runLoader);
-        intake.run(intakeIn, intakeOut);
+    /**
+     * Run all subsystems in teleop mode
+     * @param intakeIn
+     * @param intakeOut
+     * @param shoot
+     * @param runLoader
+     * @param actuatorPressed
+     * @param manualShooter
+     * @param manualPivot
+     * @param climbing
+     * @param groundIntake
+     * @param speakerShooting
+     * @param dynamicShooting
+     * @param ampScoring
+     */
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
 
+        /* PIVOT */
+        //Update pivot control mode
+        if(climbing || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
+            pivot.setControlMode(ControlMode.POSITION);
+        } else if(Math.abs(manualPivot) > MANUAL_DEADZONE) {
+            pivot.setControlMode(ControlMode.MANUAL);
+        }
+        
+        //Update pivot target pos/set manual input
+        Setpoint setpoint = Setpoint.GROUND_INTAKE;
+
+        if(climbing) {
+            setpoint = Setpoint.CLIMBING;
+        } else if(groundIntake) {
+            setpoint = Setpoint.GROUND_INTAKE;
+        } else if(speakerShooting) {
+            setpoint = Setpoint.STATIC_SHOOTING;
+        } else if(dynamicShooting) {
+            setpoint = Setpoint.DYNAMIC_SHOOTING;
+        } else if(ampScoring) {
+            setpoint = Setpoint.AMP_SCORING;
+        }
+
+        pivot.set(setpoint);
+
+        pivot.setManualInput(manualPivot);
+
+        /* SHOOTER */
         //Update shooter control mode
         if(shoot) {
             shooter.setControlMode(ControlMode.POSITION);
-        } else if(manualShooter > MANUAL_DEADZONE || intakeIn || intakeOut) {
+        } else if(Math.abs(manualShooter) > MANUAL_DEADZONE || intakeIn || intakeOut) {
             shooter.setControlMode(ControlMode.MANUAL);
         }
 
-        //Actually running the shooter
-        if(shooter.getControlMode().equals(ControlMode.POSITION))
-            shooter.pidControl(shoot);
-        else if(intakeIn || intakeOut) {
-            shooter.manualControl(intakeIn ? -0.25 : 0.25);
+        //Set shooter state
+        if(shoot) {
+            shooter.set(ShooterState.RUNNING);
         } else {
-            shooter.manualControl(manualShooter);
+            shooter.set(ShooterState.IDLE);
         }
 
-        shooter.updateShooterState();
+        //Set shooter manual input
+        shooter.setManualInput(manualShooter);
 
-        //Linear actuator running
+
+        /* LINEAR ACTUATOR */
         if(actuatorPressed) {
             linearActuator.setPosition(0.45);
         } else {
             linearActuator.setPosition(0);
+        }     
+
+        /* INTAKE */
+        if(intakeIn) {
+            intake.set(Intake.INTAKE_SPEED);
+            shooter.setManualInput(-0.1);
+        } else if(intakeOut) {
+            intake.set(Intake.OUTTAKE_SPEED);
+            shooter.setManualInput(0.1);
+        } else {
+            intake.set(0);
+            shooter.setManualInput(0);
         }
 
+
+        /* LOADER */
+        if(runLoader) loader.fire();
+
+
+        //Run subsystems
+        pivot.run();
+        shooter.run();
+        loader.run();
+        intake.run();
         linearActuator.run();
-
-        //Update pivot control mode
-        if(sourceIntake || groundIntake || ampScoring || speakerShooting || dynamicShooting) {
-            pivot.setControlMode(ControlMode.POSITION);
-        } else if(manualPivot > MANUAL_DEADZONE) {
-            pivot.setControlMode(ControlMode.MANUAL);
-        }
-
-        //Pivot running
-        if(pivot.getControlMode().equals(ControlMode.POSITION)) {
-            pivot.pidControl(sourceIntake, groundIntake, speakerShooting, dynamicShooting, ampScoring);
-        } else  {
-            pivot.manualControl(manualPivot * 0.2);
-        }
     }
 
+    /**
+     * run periodically in autonomous mode, updates all subsystems
+     */
     public static void autoRun() {
-        intake.autoRun();
-        pivot.autoRun();
-        shooter.autoRun();
-        loader.autoRun();
+        if(shooter.getShooterState().equals(ShooterState.IDLE)) {
+            shooter.setControlMode(ControlMode.MANUAL);
+            shooter.setManualInput(0.1);
+        } else {
+            shooter.setControlMode(ControlMode.POSITION);
+        }
+
+        intake.run();
+        pivot.run();
+        shooter.run();
+        loader.run();
+        linearActuator.run();
     }
 
     /**
@@ -159,9 +212,10 @@ public class Hands extends SmartPrintable {
         //Shooter stuff
         SmartDashboard.putString("Shooter State", shooter.getShooterState().toString());
         SmartDashboard.putString("Shooter Control Mode", shooter.getControlMode().toString());
-        SmartDashboard.putNumber("Shooter Target (RPM)", shooter.getTargetVelocity());
+        SmartDashboard.putNumber("Shooter Manual Input", shooter.getManualInput());
         SmartDashboard.putNumber("Shooter Motor Power", shooter.getOutputPower());
         SmartDashboard.putNumber("Shooter Velocity (RPM)", shooter.getVelocity());
+
 
         //Loader stuff (stuff implies plural, should it be "thing"?)
         SmartDashboard.putNumber("Loader Position", loader.getEncoderPosition());
@@ -169,13 +223,22 @@ public class Hands extends SmartPrintable {
         //Intake stuff
         SmartDashboard.putNumber("Inner Intake Speed", intake.getInnerMotorSpeed());
         SmartDashboard.putNumber("Outer Intake Speed", intake.getOuterMotorSpeed());
+        SmartDashboard.putNumber("Intake temperature", intake.getMotorTemperature());
+        SmartDashboard.putNumber("Intake speed", intake.getSpeed());
 
         //Pivot stuff
         SmartDashboard.putNumber("Pivot Position", pivot.getPosition());
-        SmartDashboard.putNumber("Pivot Motor Power", pivot.getOutputPower());
+        SmartDashboard.putNumber("Pivot Output Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
         SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
+        SmartDashboard.putNumber("Pivot Manual Input", pivot.getManualInput());
+        SmartDashboard.putString("Pivot Control Mode", pivot.getControlMode().toString());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());
+
+        //Linear actuator stuff
+        SmartDashboard.putNumber("Linear Actuator Position", linearActuator.getPosition());
+        SmartDashboard.putNumber("Linear Actuator PID Output", linearActuator.getPIDOutput());
+        SmartDashboard.putNumber("Linear Actuator Motor Temp", linearActuator.getMotorTemperature());
 
     }
 }

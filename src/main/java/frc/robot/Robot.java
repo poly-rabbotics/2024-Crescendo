@@ -4,23 +4,17 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
-import frc.robot.subsystems.Angle;
-import frc.robot.subsystems.AutonomousProcedure;
-import frc.robot.subsystems.ColorUtils;
-import frc.robot.subsystems.SidewalkPaver;
-import frc.robot.subsystems.SwerveMode;
-import frc.robot.subsystems.PathPosition;
-import frc.robot.subsystems.Intake;
-import frc.robot.systems.*;
-import frc.robot.systems.Hands.Setpoint;
 import frc.robot.systems.Hands.ShooterState;
+import frc.robot.systems.Hands.Setpoint;
+import frc.robot.subsystems.*;
+import frc.robot.systems.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -42,24 +36,13 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         Pigeon.setFeildZero();
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
-        LEDLights.setBitArrangements(new ColorUtils.BitArrangement[] {
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-            ColorUtils.BitArrangement.GRB,
-        });
+        ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
+
+        for(int i = 0; i < bitArrangements.length; i++) {
+            bitArrangements[i] = ColorUtils.BitArrangement.GRB;
+        }
+
+        LEDLights.setBitArrangements(bitArrangements);
     }
     
     @Override
@@ -73,6 +56,7 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         Pigeon.setFeildZero();
+        Hands.init();
         
         var intakePath = new SidewalkPaver(
             new Pose2d(0.0, 0.0, new Rotation2d(Math.toRadians(0.0))), 
@@ -88,11 +72,11 @@ public class Robot extends TimedRobot {
 
         /* Fire straight into shooter and pivot back to ground intake */
         procedure = new AutonomousProcedure("My Procedure")
-            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
-            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.RAMPING)) //Fucking ramp up the shooter
+            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
+            .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING)) //Fucking ramp up the shooter
             .wait((prevState) -> Hands.loader.fire()) //Fucking fire the note
-            .wait((prevState) -> Hands.pivot.setSetpointAuto(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
-            .wait((prevState) -> Hands.shooter.setStateAuto(ShooterState.IDLE)); //Fucking stop the shooter 
+            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE)); //Fucking stop the shooter 
     }
 
     @Override
@@ -105,6 +89,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         SwerveDrive.setMode(SwerveMode.HEADLESS);
+        Hands.init();
     }
 
     static boolean invertedTurn = false;
@@ -189,11 +174,11 @@ public class Robot extends TimedRobot {
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
             0,                   // Manual Shooter input
             controlPanel.getRawAxis(1),                   // Manual Pivot input
-            controlPanel.getRawButton(2),        // Source Intake
+            controlPanel.getRawButton(5),        // Climbing
             controlPanel.getRawButton(1),        // Ground Intake
-            controlPanel.getRawButton(4),        // Speaker Shooting
-            controlPanel.getRawButton(5),        // Dynamic Shooting
-            controlPanel.getRawButton(3)         // Amp Scoring
+            controlPanel.getRawButton(3),        // Speaker Shooting
+            controlPanel.getRawButton(4),        // Dynamic Shooting
+            controlPanel.getRawButton(2)         // Amp Scoring
         );
 
         Climb.run(
