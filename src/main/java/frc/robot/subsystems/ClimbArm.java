@@ -11,11 +11,13 @@ public class ClimbArm {
     private static final double D = 0.0;
 
     private static final double MAX_VELOCITY = 1;
+
+    private boolean isInverted;
     
     TalonFX climbMotor;
     PIDController pidController;
 
-    public ClimbArm(int motorID) {
+    public ClimbArm(int motorID, boolean isInverted) {
         climbMotor = new TalonFX(motorID);
         climbMotor.setNeutralMode(NeutralModeValue.Brake);
 
@@ -24,6 +26,8 @@ public class ClimbArm {
             I, 
             D
         );
+
+        this.isInverted = isInverted;
     }
 
     public void init() {
@@ -32,7 +36,9 @@ public class ClimbArm {
 
     public void run() {
         double calc = pidController.calculate(getVelocity());
-        climbMotor.set(calc);
+        //climbMotor.set(climbMotor.get() + calc);
+
+        climbMotor.set(pidController.getSetpoint());
     }
 
     /**
@@ -40,7 +46,7 @@ public class ClimbArm {
      * @param setpoint, as a percentage of the motor's maximum velocity
      */
     public void set(double setpoint) {
-        pidController.setSetpoint(setpoint * MAX_VELOCITY);
+        pidController.setSetpoint((isInverted ? -setpoint : setpoint) * MAX_VELOCITY);
     }
 
     /**

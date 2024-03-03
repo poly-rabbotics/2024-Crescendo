@@ -60,14 +60,14 @@ public class Shooter {
 
         if(getControlMode().equals(ControlMode.POSITION)) { //Position control
             if(getShooterState().equals(ShooterState.RUNNING)) {
-                leftMotor.setControl(requestLeft.withVelocity(VELOCITY));
+                leftMotor.setControl(requestLeft.withVelocity(-VELOCITY));
                 rightMotor.setControl(requestRight.withVelocity(-VELOCITY));
             } else {
                 leftMotor.set(0);
                 rightMotor.set(0);
             }
         } else { //Manual control
-            leftMotor.set(manualInput);
+            leftMotor.set(-manualInput);
             rightMotor.set(-manualInput);
         }
     }
