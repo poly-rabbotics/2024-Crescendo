@@ -148,7 +148,7 @@ public class Robot extends TimedRobot {
         double pov = controllerOne.getPOV();
 
         if (pov != -1 && (SwerveDrive.getMode() == SwerveMode.HEADLESS || SwerveDrive.getMode() == SwerveMode.SET_ANGLE)) {
-            double angle = -((double)pov + 90.0);
+            double angle = -((double)pov);
 
             SwerveDrive.setMode(SwerveMode.SET_ANGLE);
             SwerveDrive.setTargetAngle(new Angle().setDegrees(angle));
