@@ -29,7 +29,7 @@ public class Intake {
      */
     public void run() {
         outerMotor.set(speed);
-        innerMotor.set(speed);
+        innerMotor.set(-speed);
     }
 
     /**
