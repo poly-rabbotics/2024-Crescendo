@@ -230,7 +230,7 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Pivot Position", pivot.getPosition());
         SmartDashboard.putNumber("Pivot Output Power", pivot.getOutputPower());
         SmartDashboard.putString("Pivot Setpoint", pivot.getSetpoint().toString());
-        SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition());
+        SmartDashboard.putNumber("Pivot Target", pivot.getTargetPosition().degrees());
         SmartDashboard.putNumber("Pivot Manual Input", pivot.getManualInput());
         SmartDashboard.putString("Pivot Control Mode", pivot.getControlMode().toString());
         SmartDashboard.putBoolean("Pivot Prox Sensor", pivot.getProxSensorTripped());

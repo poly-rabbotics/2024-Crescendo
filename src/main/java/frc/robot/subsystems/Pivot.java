@@ -20,10 +20,10 @@ public class Pivot {
     private static final double I_0 = 0.0004;
     private static final double D_0 = 0.0003;
 
-    private static final double CLIMBING_ANGLE = 105;
-    private static final double GROUND_INTAKE_ANGLE = -60;
-    private static final double SPEAKER_SHOOTING_ANGLE = 45;
-    private static final double AMP_SCORING_ANGLE = 85;
+    private static final Angle CLIMBING_ANGLE = new Angle().setDegrees(105);
+    private static final Angle GROUND_INTAKE_ANGLE = new Angle().setDegrees(-60);
+    private static final Angle SPEAKER_SHOOTING_ANGLE = new Angle().setDegrees(45);
+    private static final Angle AMP_SCORING_ANGLE = new Angle().setDegrees(85);
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
     private ControlMode controlMode = ControlMode.POSITION;
@@ -58,6 +58,7 @@ public class Pivot {
      */
     public void init() {
         set(Setpoint.GROUND_INTAKE);
+        pidController.setSetpoint(GROUND_INTAKE_ANGLE.degrees());
         setControlMode(ControlMode.POSITION);
         setManualInput(0);
     }
@@ -72,8 +73,7 @@ public class Pivot {
             speed = pidController.calculate(getPosition());
             pivotMotor.set(speed);
         } else {
-            pidController.setSetpoint(getTargetPosition() + manualInput);
-            speed = pidController.calculate(getPosition());
+            pivotMotor.set(getManualInput());
         }
 
         pivotMotor.set(speed);
@@ -86,9 +86,9 @@ public class Pivot {
      */
     public StepStatus set(Setpoint setpoint) {
         StepStatus status;
-        double target = 0;
+        Angle target = new Angle().setDegrees(0);
 
-        if(setpoint != this.setpoint) {
+        if(setpoint != getSetpoint()) {
             this.setpoint = setpoint;
 
             switch(setpoint) {
@@ -110,13 +110,13 @@ public class Pivot {
                     if (angle == null) {
                         target = SPEAKER_SHOOTING_ANGLE;
                     } else {
-                        target = Hands.clamp(angle.degrees(), 0, 90);
+                        target = new Angle().setDegrees(Hands.clamp(angle.degrees(), 0, 90));
                     }
                 
                     break;
             }
 
-            pidController.setSetpoint(target);
+            pidController.setSetpoint(target.degrees());
         }
 
         
@@ -178,8 +178,8 @@ public class Pivot {
      * Gets the target position of the pivot
      * @return
      */
-    public double getTargetPosition() {
-        return pidController.getSetpoint();
+    public Angle getTargetPosition() {
+        return new Angle().setDegrees(pidController.getSetpoint());
     }
 
     /**

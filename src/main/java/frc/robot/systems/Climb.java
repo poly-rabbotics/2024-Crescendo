@@ -20,6 +20,11 @@ public class Climb extends SmartPrintable {
         climbRight = new ClimbArm(CLIMB_MOTOR_RIGHT_ID, false);
     }
 
+    public static void init() {
+        climbLeft.init();
+        climbRight.init();
+    }
+
     public static void run(double speedLeft, double speedRight) {
         climbLeft.set(speedLeft);
         climbRight.set(speedRight);
