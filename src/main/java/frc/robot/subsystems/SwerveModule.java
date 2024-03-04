@@ -129,6 +129,7 @@ public class SwerveModule extends SmartPrintable {
 
         rotationMotor = new CANSparkMax(rotationalMotorID, CANSparkMax.MotorType.kBrushless);
         rotationMotor.setInverted(true);
+        rotationMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
         rotationMotor.setSmartCurrentLimit(30);
         
         movementMotor = new CANSparkMax(movementMotorID, CANSparkMax.MotorType.kBrushless);
