@@ -4,12 +4,22 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
+
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import frc.robot.systems.Hands.ShooterState;
 import frc.robot.systems.Hands.Setpoint;
@@ -22,7 +32,7 @@ import frc.robot.systems.*;
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends TimedRobot {
+public class Robot extends LoggedRobot {
     private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
     private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
     private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
@@ -34,14 +44,34 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        Pigeon.setFeildZero();
-        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
-        ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
+        //https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/INSTALLATION.md#new-projects
+        Logger.recordMetadata("ProjectName", "7042 Mantis");
 
-        for(int i = 0; i < bitArrangements.length; i++) {
-            bitArrangements[i] = ColorUtils.BitArrangement.GRB;
+        if (isReal()) {
+            // Log for real robot runs
+            Logger.addDataReceiver(new WPILOGWriter());
+            Logger.addDataReceiver(new NT4Publisher());
+            new PowerDistribution(1, ModuleType.kRev);
+        } else {
+            // in simulation mode replay from logs
+            setUseTiming(false);
+            String logPath = LogFileUtil.findReplayLog();
+            Logger.setReplaySource(new WPILOGReader(logPath));
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
         }
 
+        Logger.start();
+
+        // Log driver station data
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
+
+        Pigeon.setFeildZero();
+
+        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
+        
+        ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
+        for(int i = 0; i < bitArrangements.length; i++) { bitArrangements[i] = ColorUtils.BitArrangement.GRB; }
         LEDLights.setBitArrangements(bitArrangements);
     }
     
@@ -49,8 +79,12 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         SmartPrinter.print();
         LEDLights.run();
+
         Pigeon.update();
+        Pigeon.recordState();
+
         SwerveDrive.updateOdometry();
+        SwerveDrive.recordStates();
     }
     
     @Override
