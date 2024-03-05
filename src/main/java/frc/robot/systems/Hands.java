@@ -105,7 +105,7 @@ public class Hands extends SmartPrintable {
         }
         
         //Update pivot target pos/set manual input
-        Setpoint setpoint = Setpoint.GROUND_INTAKE;
+        Setpoint setpoint = pivot.getSetpoint();
 
         if(climbing) {
             setpoint = Setpoint.CLIMBING;
@@ -219,6 +219,9 @@ public class Hands extends SmartPrintable {
 
         //Loader stuff (stuff implies plural, should it be "thing"?)
         SmartDashboard.putNumber("Loader Position", loader.getEncoderPosition());
+        SmartDashboard.putNumber("Loader last position", loader.getLastTarget());
+        SmartDashboard.putNumber("Loader target position", loader.getTargetPosition());
+        SmartDashboard.putBoolean("Loader at target", loader.getAtSetpoint());
 
         //Intake stuff
         SmartDashboard.putNumber("Inner Intake Speed", intake.getInnerMotorSpeed());
