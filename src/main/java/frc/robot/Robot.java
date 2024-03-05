@@ -4,11 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 import frc.robot.systems.Hands.ShooterState;
@@ -34,14 +36,15 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
+
         Pigeon.setFeildZero();
+
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
+        
         ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
-
-        for(int i = 0; i < bitArrangements.length; i++) {
-            bitArrangements[i] = ColorUtils.BitArrangement.GRB;
-        }
-
+        for(int i = 0; i < bitArrangements.length; i++) { bitArrangements[i] = ColorUtils.BitArrangement.GRB; }
         LEDLights.setBitArrangements(bitArrangements);
     }
     

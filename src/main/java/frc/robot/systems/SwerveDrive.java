@@ -24,9 +24,10 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
+import edu.wpi.first.math.trajectory.Trajectory.State;
+
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.math.trajectory.Trajectory.State;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -760,13 +761,13 @@ public class SwerveDrive extends SmartPrintable {
     public static void setTargetPathPosition(PathPosition setPathPosition) {
         instance.setPathPosition = setPathPosition;
     }
-    
+
     /**
      * Print data to smart dashboard.
      */
     @Override
     public void print() {
-        instance.advantagePublisher.set(moduleStates);
+        advantagePublisher.set(moduleStates);
 
         SmartDashboard.putString("Swerve Drive Mode", getMode().toString());
         SmartDashboard.putString("Swerve Drive Odometry", 
