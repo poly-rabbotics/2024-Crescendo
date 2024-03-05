@@ -10,9 +10,13 @@ public class ClimbArm {
     private static final double I = 0.0;
     private static final double D = 0.0;
 
-    private static final double MAX_VELOCITY = 1;
+    private static final double MAX_VELOCITY = 0.5;
+    private static final double MANUAL_DEADZONE = 0.3;
 
     private boolean isInverted;
+    private boolean atZero = false;
+
+    private double speed = 0;
     
     TalonFX climbMotor;
     PIDController pidController;
@@ -32,13 +36,16 @@ public class ClimbArm {
 
     public void init() {
         pidController.setSetpoint(0);
+        climbMotor.setPosition(0);
     }
 
     public void run() {
-        double calc = pidController.calculate(getVelocity());
-        //climbMotor.set(climbMotor.get() + calc);
-
-        climbMotor.set(pidController.getSetpoint());
+        if(atZero) {
+            double calc = pidController.calculate(getPosition());
+            climbMotor.set(calc);
+        } else {
+            climbMotor.set(speed);
+        }
     }
 
     /**
@@ -46,7 +53,19 @@ public class ClimbArm {
      * @param setpoint, as a percentage of the motor's maximum velocity
      */
     public void set(double setpoint) {
-        pidController.setSetpoint((isInverted ? -setpoint : setpoint) * MAX_VELOCITY);
+
+        if(Math.abs(speed) < MANUAL_DEADZONE) {
+            speed = 0;
+
+            if(!atZero) {
+                pidController.setSetpoint(getPosition());
+                atZero = true;
+            }
+        } else {
+            speed = (isInverted ? -setpoint : setpoint) * MAX_VELOCITY;
+
+            atZero = false;
+        }
     }
 
     /**
@@ -63,5 +82,12 @@ public class ClimbArm {
      */
     public double getVelocity() {
         return climbMotor.getVelocity().getValueAsDouble();
+    }
+
+    /**
+     * Returns the relative encoder position of the motor's encoder
+     */
+    public double getPosition() {
+        return climbMotor.getPosition().getValueAsDouble();
     }
 }
