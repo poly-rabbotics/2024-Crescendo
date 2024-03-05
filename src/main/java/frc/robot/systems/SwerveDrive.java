@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -52,10 +54,10 @@ public class SwerveDrive extends SmartPrintable {
     private static final double CHASSIS_SIDE_LENGTH = 0.58;
 
     private static final Angle MODULE_CANCODER_OFFSETS[] = {
-        new Angle().setDegrees(0), 
-        new Angle().setDegrees(0), 
-        new Angle().setDegrees(0), 
-        new Angle().setDegrees(0) 
+        new Angle().setDegrees(75.498046875), 
+        new Angle().setDegrees(-222.802734375), 
+        new Angle().setDegrees(-73.388671875), 
+        new Angle().setDegrees(57.216796875)  
     };
 
     // Wyvern
@@ -109,9 +111,6 @@ public class SwerveDrive extends SmartPrintable {
     private final SwerveModulePosition positions[] = new SwerveModulePosition[MODULE_MOVEMENT_CAN_IDS.length];
     private final SwerveDriveKinematics kinematics;
     private final SwerveDriveOdometry odometry;
-
-    private final StructArrayPublisher<SwerveModuleState> advantagePublisher
-        = NetworkTableInstance.getDefault().getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
 
     private final PIDController trajectoryStrafeXController
         = new PIDController(TRAJECTORY_STRAFE_X_PID_P, TRAJECTORY_STRAFE_X_PID_I, TRAJECTORY_STRAFE_X_PID_D);
@@ -585,6 +584,10 @@ public class SwerveDrive extends SmartPrintable {
             instance.modules[i].setRockMode(holdPos);
             instance.modules[i].run();
         }
+
+        // Record module states
+
+        instance.moduleStates = moduleStates;
         
         // Reset temporary states
         
@@ -604,6 +607,14 @@ public class SwerveDrive extends SmartPrintable {
             instance.rotationCurve = instance.inactiveRotationCurve;
             instance.inactiveRotationCurve = null;
         }
+    }
+
+    /**
+     * Record states for logging and displays like AdvantageKit.
+     */
+    public static void recordStates() {
+        Logger.recordOutput("Swerve Module States", instance.moduleStates);
+        Logger.recordOutput("Swerve Odometry", getOdometryPose());
     }
 
     /**
@@ -630,6 +641,43 @@ public class SwerveDrive extends SmartPrintable {
         );
 
         instance.odometry.update(new Rotation2d(Pigeon.getYaw().radians()), instance.positions);
+    }
+    
+    /**
+     * Gets current odometry position.
+     */
+    public static Pose2d getOdometryPose() {
+        return instance.odometry.getPoseMeters();
+    }
+
+    /**
+     * Zeros position entirely, assuming the robot is facing forward, then set
+     * the odometry position to the given X and Y components.
+     */
+    public static void setOdometry(double x, double y) {
+        zeroPositions();
+
+        instance.odometry.resetPosition(
+            new Rotation2d(Pigeon.getYaw().radians()),
+            instance.positions,
+            new Pose2d(x, y, new Rotation2d(0.0))
+        );
+    }
+    
+    /**
+     * Zeros all movement encoder positions.
+     */
+    public static void zeroPositions() {
+        for (int i = 0; i < instance.modules.length; i++) {
+            instance.modules[i].zeroPositions();
+            instance.positions[i] = instance.modules[i].getPosition();
+        }
+
+        instance.odometry.resetPosition(
+            new Rotation2d(Pigeon.getYaw().radians()), 
+            instance.positions, 
+            new Pose2d(0.0, 0.0, new Rotation2d(0.0))
+        );
     }
 
     /**
@@ -671,43 +719,6 @@ public class SwerveDrive extends SmartPrintable {
         }
 
         return percentSum / (double)instance.modules.length;
-    }
-
-    /**
-     * Zeros all movement encoder positions.
-     */
-    public static void zeroPositions() {
-        for (int i = 0; i < instance.modules.length; i++) {
-            instance.modules[i].zeroPositions();
-            instance.positions[i] = instance.modules[i].getPosition();
-        }
-
-        instance.odometry.resetPosition(
-            new Rotation2d(Pigeon.getYaw().radians()), 
-            instance.positions, 
-            new Pose2d(0.0, 0.0, new Rotation2d(0.0))
-        );
-    }
-
-    /**
-     * Gets current odometry position.
-     */
-    public static Pose2d getOdometryPose() {
-        return instance.odometry.getPoseMeters();
-    }
-
-    /**
-     * Zeros position entirely, assuming the robot is facing forward, then set
-     * the odometry position to the given X and Y components.
-     */
-    public static void setOdometry(double x, double y) {
-        zeroPositions();
-
-        instance.odometry.resetPosition(
-            new Rotation2d(Pigeon.getYaw().radians()),
-            instance.positions,
-            new Pose2d(x, y, new Rotation2d(0.0))
-        );
     }
 
     /**
@@ -767,8 +778,6 @@ public class SwerveDrive extends SmartPrintable {
      */
     @Override
     public void print() {
-        advantagePublisher.set(moduleStates);
-
         SmartDashboard.putString("Swerve Drive Mode", getMode().toString());
         SmartDashboard.putString("Swerve Drive Odometry", 
             "(" + ((double)(long)(odometry.getPoseMeters().getX() * 100)) / 100 + ", "

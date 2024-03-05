@@ -7,6 +7,8 @@ package frc.robot.systems;
 import java.time.Clock;
 import java.time.Instant;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.hardware.Pigeon2;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -102,6 +104,11 @@ public class Pigeon extends SmartPrintable {
      */
     public static double getAccelerationZ() {
         return instance.pigeon.getAccelerationZ().getValueAsDouble();
+    }
+
+    public static void recordState() {
+        Logger.recordOutput("Pigeon Yaw (Radians)", getYaw().radians());
+        Logger.recordOutput("Pigeon Yaw (Degrees)", getYaw().degrees());
     }
     
     @Override
