@@ -109,6 +109,21 @@ public class Pigeon extends SmartPrintable {
     public static void recordState() {
         Logger.recordOutput("Pigeon Yaw (Radians)", getYaw().radians());
         Logger.recordOutput("Pigeon Yaw (Degrees)", getYaw().degrees());
+        Logger.recordOutput("Pigeon Roll (Radians)", getRoll().radians());
+        Logger.recordOutput("Pigeon Roll (Degrees)", getRoll().degrees());
+        Logger.recordOutput("Pigeon Pitch (Radians)", getPitch().radians());
+        Logger.recordOutput("Pigeon Pitch (Degrees)", getPitch().degrees());
+
+        Logger.recordOutput("Pigeon Yaw/Sec (Radians)", getChangePerSecond().yawPerSecond.radians());
+        Logger.recordOutput("Pigeon Yaw/Sec (Degrees)", getChangePerSecond().yawPerSecond.degrees());
+        Logger.recordOutput("Pigeon Roll/Sec (Radians)", getChangePerSecond().rollPerSecond.radians());
+        Logger.recordOutput("Pigeon Roll/Sec (Degrees)", getChangePerSecond().rollPerSecond.degrees());
+        Logger.recordOutput("Pigeon Pitch/Sec (Radians)", getChangePerSecond().pitchPerSecond.radians());
+        Logger.recordOutput("Pigeon Pitch/Sec (Degrees)", getChangePerSecond().pitchPerSecond.degrees());
+
+        Logger.recordOutput("Pigeon Acceleration X (g)", getAccelerationX());
+        Logger.recordOutput("Pigeon Acceleration Y (g)", getAccelerationY());
+        Logger.recordOutput("Pigeon Acceleration Z (g)", getAccelerationZ());
     }
     
     @Override
