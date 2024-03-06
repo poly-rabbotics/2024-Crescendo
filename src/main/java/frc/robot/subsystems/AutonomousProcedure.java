@@ -50,6 +50,24 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
     }
 
     /**
+     * If the given function does not indicate completion by the given time in 
+     * seconds, indicate completion anyways.
+     */
+    public static Function<StepStatus, StepStatus> timeoutAt(double timeoutSeconds, Function<StepStatus, StepStatus> fn) {
+        StatusedTimer timer = new StatusedTimer();
+
+        return (prevStatus) -> {
+            if (!timer.getStatus()) {
+                timer.start();
+            } else if (timer.get() >= timeoutSeconds) {
+                return StepStatus.Done;
+            }
+
+            return fn.apply(prevStatus);
+        };
+    }
+
+    /**
      * Step of a procedure, handling the state in which it starts.
      */
     public class ProcedureStep {
