@@ -58,7 +58,7 @@ public class Loader extends SmartPrinter {
     public StepStatus fire() {
         StepStatus status = StepStatus.Running;
         
-        if(Math.abs(getEncoderPosition() - targetPosition) < 0.05) {
+        if(getAtSetpoint()) {
             if(targetPosition == lastTarget) {
                 targetPosition += 1;
             } else {

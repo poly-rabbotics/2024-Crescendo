@@ -206,7 +206,7 @@ public class Robot extends LoggedRobot {
             controlPanel.getRawButton(8) || controllerOne.getAButton(),        // Intake
             controlPanel.getRawButton(9),        // Outtake
             controlPanel.getRawButton(6),        // Ramp Up
-            controlPanel.getRawButtonPressed(7),        // Fire
+            controlPanel.getRawButton(7),        // Fire
             controlPanel.getRawAxis(0) > 0,        // Linear Actuator
             0,                   // Manual Shooter input
             controlPanel.getRawAxis(1),                   // Manual Pivot input
