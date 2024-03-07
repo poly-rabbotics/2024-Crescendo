@@ -50,7 +50,7 @@ public class Pivot {
             D_0
         );
 
-        pidController.setTolerance(0.5);
+        pidController.setTolerance(1.5);
     }
 
     /**
@@ -120,7 +120,7 @@ public class Pivot {
         }
 
         
-        if(pidController.atSetpoint())
+        if(Math.abs(getPosition() - getTargetPosition().degrees()) < 2)
             status = StepStatus.Done;
         else    
             status = StepStatus.Running;
@@ -203,6 +203,6 @@ public class Pivot {
      * @return
      */
     public boolean getProxSensorTripped() {
-        return proxSensor.get();
+        return !proxSensor.get();
     }
 }

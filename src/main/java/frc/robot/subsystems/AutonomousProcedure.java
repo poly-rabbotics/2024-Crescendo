@@ -89,7 +89,8 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
                 return StepStatus.Waiting;
             }
 
-            return fn.apply(previousStep);
+            prevState = fn.apply(previousStep);
+            return prevState;
         }
     }
 

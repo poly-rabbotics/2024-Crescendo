@@ -24,6 +24,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import frc.robot.systems.Hands.ShooterState;
 import frc.robot.systems.Hands.Setpoint;
 import frc.robot.subsystems.*;
+import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.*;
 
 /**
@@ -73,6 +74,8 @@ public class Robot extends LoggedRobot {
         ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
         for(int i = 0; i < bitArrangements.length; i++) { bitArrangements[i] = ColorUtils.BitArrangement.GRB; }
         LEDLights.setBitArrangements(bitArrangements);
+
+        Hands.init();
     }
     
     @Override
@@ -107,11 +110,12 @@ public class Robot extends LoggedRobot {
 
         /* Fire straight into shooter and pivot back to ground intake */
         procedure = new AutonomousProcedure("My Procedure")
-            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to shooting position
-            .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING)) //Fucking ramp up the shooter
-            .wait((prevState) -> Hands.loader.fire()) //Fucking fire the note
-            .wait((prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)) //Fucking pivot to ground intake
-            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE)); //Fucking stop the shooter 
+            .wait((prevStep) -> Hands.pivot.set(Setpoint.AMP_SCORING))
+            .wait((prevStep) -> Hands.linearActuator.setPosition(0.5))
+            .wait(AutonomousProcedure.timeoutAt(0.3, (prevStep) -> StepStatus.Running))
+            .wait((prevStep) -> Hands.linearActuator.setPosition(0.0))
+            .wait((prevStep) -> Hands.pivot.set(Setpoint.GROUND_INTAKE));
+
     }
 
     @Override

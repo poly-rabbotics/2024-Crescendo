@@ -180,7 +180,13 @@ public class Hands extends SmartPrintable {
     public static void autoRun() {
         if(shooter.getShooterState().equals(ShooterState.IDLE)) {
             shooter.setControlMode(ControlMode.MANUAL);
-            shooter.setManualInput(0.1);
+            if(pivot.getPosition() <= -50 && !pivot.getProxSensorTripped()) {
+                shooter.setManualInput(-0.1);
+                intake.set(Intake.INTAKE_SPEED);
+            } else {
+                shooter.setManualInput(0);
+                intake.set(0);
+            }
         } else {
             shooter.setControlMode(ControlMode.POSITION);
         }

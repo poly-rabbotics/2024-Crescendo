@@ -87,6 +87,9 @@ public class Shooter {
         else
             status = StepStatus.Running;
 
+        if(getShooterState().equals(ShooterState.IDLE))
+            status = StepStatus.Done;
+
         return status;
     }
 
