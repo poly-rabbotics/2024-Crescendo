@@ -28,9 +28,6 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.Trajectory.State;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -615,6 +612,22 @@ public class SwerveDrive extends SmartPrintable {
     public static void recordStates() {
         Logger.recordOutput("Swerve Module States", instance.moduleStates);
         Logger.recordOutput("Swerve Odometry", getOdometryPose());
+        Logger.recordOutput("Swerve Applied Current (amps)", getAppliedCurrent());
+        Logger.recordOutput("Swerve Average Motor Tempurature (celsius)", getAverageMotorTemp());
+
+        Logger.recordOutput("Swerve Speed Rotation", getRotationSpeed());
+        Logger.recordOutput("Swerve Speed Translation X", getTranslationSpeedX());
+        Logger.recordOutput("Swerve Speed Translation Y", getTranslationSpeedY());
+
+        Logger.recordOutput("Swerve Drive Mode", getMode());
+        Logger.recordOutput("Swerve Display Mode", getDisplayMode());
+
+        Logger.recordOutput("Swerve Chassis Speeds Output Vx", instance.chassisSpeedsOutput.vxMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Output Vy", instance.chassisSpeedsOutput.vyMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Output Tau", instance.chassisSpeedsOutput.omegaRadiansPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Vx", instance.chassisSpeedsCalculated.vxMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Vy", instance.chassisSpeedsCalculated.vyMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Tau", instance.chassisSpeedsCalculated.omegaRadiansPerSecond);
     }
 
     /**

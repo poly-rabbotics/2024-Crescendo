@@ -58,6 +58,6 @@ public final class Angle implements Cloneable {
 
 	@Override
 	public String toString() {
-		return this.degrees() + "°";
+		return this.degrees() + " degrees";
 	}
 }
