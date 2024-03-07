@@ -144,7 +144,7 @@ public class Hands extends SmartPrintable {
 
         /* LINEAR ACTUATOR */
         if(actuatorPressed) {
-            linearActuator.setPosition(0.45);
+            linearActuator.setPosition(0.55);
         } else {
             linearActuator.setPosition(0);
         }     

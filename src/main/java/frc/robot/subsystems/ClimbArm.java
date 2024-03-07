@@ -54,7 +54,7 @@ public class ClimbArm {
      */
     public void set(double setpoint) {
 
-        if(Math.abs(speed) < MANUAL_DEADZONE) {
+        if(Math.abs(setpoint) < MANUAL_DEADZONE) {
             speed = 0;
 
             if(!atZero) {
@@ -89,5 +89,9 @@ public class ClimbArm {
      */
     public double getPosition() {
         return climbMotor.getPosition().getValueAsDouble();
+    }
+
+    public boolean getAtZero() {
+        return atZero;
     }
 }

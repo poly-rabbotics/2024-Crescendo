@@ -218,8 +218,8 @@ public class Robot extends LoggedRobot {
         );
 
         Climb.run(
-            controllerTwo.getLeftY(), 
-            controllerTwo.getRightY()
+            controllerTwo.getRawAxis(1), 
+            controllerTwo.getRawAxis(5)
         );
 
 
