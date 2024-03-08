@@ -60,7 +60,7 @@ public class Hands extends SmartPrintable {
     
     private Hands() {
         super();
-
+        
         linearActuator = new LinearActuator(LINEAR_ACTUATOR_ID);
         loader = new Loader(LOADER_ID);
 
@@ -180,13 +180,7 @@ public class Hands extends SmartPrintable {
     public static void autoRun() {
         if(shooter.getShooterState().equals(ShooterState.IDLE)) {
             shooter.setControlMode(ControlMode.MANUAL);
-            if(pivot.getPosition() <= -50 && !pivot.getProxSensorTripped()) {
-                shooter.setManualInput(-0.1);
-                intake.set(Intake.INTAKE_SPEED);
-            } else {
-                shooter.setManualInput(0);
-                intake.set(0);
-            }
+            shooter.setManualInput(-0.1);
         } else {
             shooter.setControlMode(ControlMode.POSITION);
         }

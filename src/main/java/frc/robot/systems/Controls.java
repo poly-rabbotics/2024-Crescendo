@@ -55,7 +55,7 @@ public class Controls {
             return 0.0;
         }
 
-        return Math.pow(x, DEFAULT_CURVE_EXPONENT);
+        return Math.pow(x, DEFAULT_CURVE_EXPONENT) * 1.15;
     }
 
     public static double invertedCurve(double x) {

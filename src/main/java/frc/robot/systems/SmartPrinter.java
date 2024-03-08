@@ -21,7 +21,7 @@ public class SmartPrinter {
         if (printable == null) {
             throw new InvalidParameterException("Cannot pass null to SmartPrinter.register()");
         }
-
+        
         instance.printables.add(printable);
     }
 

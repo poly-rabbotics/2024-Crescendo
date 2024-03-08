@@ -8,8 +8,6 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
@@ -21,8 +19,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import frc.robot.systems.Hands.ShooterState;
-import frc.robot.systems.Hands.Setpoint;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.*;
@@ -70,6 +66,8 @@ public class Robot extends LoggedRobot {
         Pigeon.setFeildZero();
 
         Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
+
+        Hands.init();
         
         ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
         for(int i = 0; i < bitArrangements.length; i++) { bitArrangements[i] = ColorUtils.BitArrangement.GRB; }
@@ -95,34 +93,18 @@ public class Robot extends LoggedRobot {
         Pigeon.setFeildZero();
         Hands.init();
         Climb.init();
-        
-        var intakePath = new SidewalkPaver(
-            new Pose2d(0.0, 0.0, new Rotation2d(Math.toRadians(0.0))), 
-            new PathPosition(new Pose2d(1.1, -1.67, new Rotation2d(Math.toRadians(0.0))), 1.0),
-            new PathPosition(new Pose2d(3.57, -1.85, new Rotation2d(Math.toRadians(180.0))), 3.0)
-        );
-
-        var returnPath = new SidewalkPaver(
-            new Pose2d(3.57, -1.85, new Rotation2d(Math.toRadians(180.0))),
-            new PathPosition(new Pose2d(0.97, -0.33, new Rotation2d(Math.toRadians(0.0))), 5.0),
-            new PathPosition(new Pose2d(0.0, 0.0,new Rotation2d(Math.toRadians(0.0))), 7.0)
-        );
-
-        /* Fire straight into shooter and pivot back to ground intake */
-        procedure = new AutonomousProcedure("My Procedure")
-            .wait((prevStep) -> Hands.pivot.set(Setpoint.AMP_SCORING))
-            .wait((prevStep) -> Hands.linearActuator.setPosition(0.5))
-            .wait(AutonomousProcedure.timeoutAt(0.3, (prevStep) -> StepStatus.Running))
-            .wait((prevStep) -> Hands.linearActuator.setPosition(0.0))
-            .wait((prevStep) -> Hands.pivot.set(Setpoint.GROUND_INTAKE));
-
     }
 
     @Override
     public void autonomousPeriodic() {
-        SwerveDrive.run();
+        AutonomousManager.getAutoProcedure(1).run();
+        
+        /* AutonomousManager.getProcedureFromSwitches(
+            false, false, false, false // fill with actual switches
+        ).run(); */
+            
         Hands.autoRun();
-        procedure.run();
+        SwerveDrive.run();
     }
 
     @Override

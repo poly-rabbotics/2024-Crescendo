@@ -47,7 +47,7 @@ public class LEDLights {
             }
         }
 
-        setPattern = new Rainbow(100, 100);
+        setPattern = new Breathe();
 
         if (setPattern != null) {
             instance.renderer.setIfNotEqual(setPattern);
