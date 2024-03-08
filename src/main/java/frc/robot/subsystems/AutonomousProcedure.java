@@ -11,6 +11,13 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
     private int procedureStep = 0;
     private String name = null;
 
+    // This exists only for nested procedures and is used to inject the
+    // completion of the prior step from before the nested procedure, ensuring
+    // that "wait" steps work as intended and that "then" steps get accurate
+    // data.
+    private StepStatus startingStepStatus = StepStatus.Done;
+    private StepStatus lastStepStatus = StepStatus.Waiting;
+
     public AutonomousProcedure(String name) {
         this.name = name;
     }
@@ -26,6 +33,23 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
     }
 
     /**
+     * Adds all steps of another procedure to this one. This function ensures
+     * that the enclosed procedure will operate the same as though its steps
+     * were individually added to this procedure with the exception that the
+     * previous step must complete before the procedure, regardless of whether
+     * or not the first step in the nested procedure is a "then" step or not.
+     */
+    public AutonomousProcedure wait(AutonomousProcedure procedure) {
+        procedureSteps.add(new ProcedureStep((prevState) ->  {
+            procedure.startingStepStatus = prevState;
+            procedure.run();
+            return procedure.lastStepStatus;
+        }, true));
+
+        return this;
+    }
+
+    /**
      * Adds a step that will only run regardless of the previous's completion.
      * It is expected that the given function will be able to manage itself
      * based on the given `CompletionState` of the previous step.
@@ -35,13 +59,30 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
         return this;
     }
 
+    /**
+     * Adds all steps of another procedure to this one. This function ensures
+     * that the enclosed procedure will operate the same as though its steps
+     * were individually added to this procedure.
+     */
+    public AutonomousProcedure then(AutonomousProcedure procedure) {
+        procedureSteps.add(new ProcedureStep((prevState) ->  {
+            procedure.startingStepStatus = prevState;
+            procedure.run();
+            return procedure.lastStepStatus;
+        }, false));
+
+        return this;
+    }
+
     @Override
     public void run() {
-        StepStatus prevState = StepStatus.Done;
+        StepStatus prevState = startingStepStatus;
 
         for (ProcedureStep step : procedureSteps) {
             prevState = step.run(prevState);
         }
+
+        lastStepStatus = prevState;
     }
 
     @Override
