@@ -22,6 +22,12 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
         this.name = name;
     }
 
+    public void reset() {
+        lastStepStatus = StepStatus.Waiting;
+        startingStepStatus = StepStatus.Done;
+        procedureStep = 0;
+    }
+
     /**
      * Adds a step that will only run upon the previous's completion. The passed
      * is `CompletionState` may safely be ignored and should always represent a

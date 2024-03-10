@@ -81,7 +81,7 @@ public class Controls {
      * @return The curved x value.
      */
     public static double defaultCurveTwoDimensional(double x, double y) {
-        double distance = Math.sqrt(x*x + y*y);
+        double distance = Math.sqrt(x*x + y*y) * 1.15;
 
         if (distance < 0.1) {
             return 0.0;

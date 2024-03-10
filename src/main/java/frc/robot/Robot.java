@@ -90,6 +90,8 @@ public class Robot extends LoggedRobot {
     
     @Override
     public void autonomousInit() {
+        SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
+        AutonomousManager.reset();
         Pigeon.setFeildZero();
         Hands.init();
         Climb.init();
@@ -97,7 +99,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void autonomousPeriodic() {
-        AutonomousManager.getAutoProcedure(1).run();
+        AutonomousManager.getAutoProcedure(3).run();
         
         /* AutonomousManager.getProcedureFromSwitches(
             false, false, false, false // fill with actual switches

@@ -67,7 +67,7 @@ public class Loader extends SmartPrinter {
             }
         }
 
-        return status;
+        return StepStatus.Running;
     }
 
     public double getEncoderPosition() {

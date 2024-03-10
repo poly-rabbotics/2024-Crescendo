@@ -106,7 +106,7 @@ public class SwerveModule extends SmartPrintable {
 
     public void run() {
         SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(getAngle().radians()));
-        double rotationSpeed = rotationController.calculate(getAngle().radians(), (state.angle.getRadians() + Angle.TAU) % Angle.TAU);
+        double rotationSpeed = rotationController.calculate(getAngle().radians(), state.angle.getRadians() % Angle.TAU);
         double propulsionSpeed = Double.isNaN(rockPos)
             ? state.speedMetersPerSecond
             : rockController.calculate(getDistanceTraveled(), rockPos);
@@ -184,6 +184,10 @@ public class SwerveModule extends SmartPrintable {
      * repeatedly to continue PID calculations.
      */
     public void setDesiredState(SwerveModuleState desiredState) {
+        while (desiredState.angle.getRadians() < 0.0) {
+            desiredState.angle = new Rotation2d(desiredState.angle.getRadians() + Angle.TAU);
+        }
+
         this.desiredState = desiredState;
     }
 
@@ -232,6 +236,7 @@ public class SwerveModule extends SmartPrintable {
 
     public Angle getAngle() {
         var radians = angularEncoder.getPosition().getValue() * Angle.TAU;
+        //var radians = rotationEncoder.getPosition();
         var offsetRadians = radians + canCoderOffset.radians();
         return new Angle().setRadians(offsetRadians % Angle.TAU);
     }

@@ -84,16 +84,16 @@ public class SwerveDrive extends SmartPrintable {
         //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.2;
-    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.01;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.3;
+    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.15;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.0;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.2;
-    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.01;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.3;
+    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.15;
     private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.0;
 
-    private static final double TRAJECTORY_ROTATE_PID_P = 0.75;
-    private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
+    private static final double TRAJECTORY_ROTATE_PID_P = 1.2;
+    private static final double TRAJECTORY_ROTATE_PID_I = 1.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
     private static final double SET_ANGLE_PID_P = 1.0;
@@ -174,7 +174,9 @@ public class SwerveDrive extends SmartPrintable {
         );
 
         trajectoryRotateController.enableContinuousInput(0.0, Angle.TAU);
+        trajectoryRotateController.setTolerance(0.1);
         setAngleController.enableContinuousInput(0.0, Angle.TAU);
+        setAngleController.setTolerance(0.1);
     }
 
     /**
@@ -544,6 +546,13 @@ public class SwerveDrive extends SmartPrintable {
             case SIDEWALK_WALK: {
                 if (instance.setPathPosition == null) {
                     // Break early if we have no path.
+
+                    moduleStates = instance.kinematics.toSwerveModuleStates(
+                        ChassisSpeeds.fromFieldRelativeSpeeds(0, 0, 0, 
+                            new Rotation2d(Pigeon.getYaw().radians())
+                        )
+                    );
+
                     break;
                 }
 
@@ -610,7 +619,21 @@ public class SwerveDrive extends SmartPrintable {
      * Record states for logging and displays like AdvantageKit.
      */
     public static void recordStates() {
+        SwerveModuleState[] measuredState = new SwerveModuleState[instance.modules.length];
+
+        for (int i = 0; i < instance.modules.length; i++) {
+            measuredState[i] = instance.modules[i].getActualState();
+        }
+
+        Logger.recordOutput("Swerve Module States Measured", measuredState);
         Logger.recordOutput("Swerve Module States", instance.moduleStates);
+
+        if (instance.setPathPosition != null) {
+            Logger.recordOutput("Swerve Drive Target Pose", instance.setPathPosition.pose);
+        } else {
+            Logger.recordOutput("Swerve Drive Target Pose", new Pose2d());
+        }
+
         Logger.recordOutput("Swerve Odometry", getOdometryPose());
         Logger.recordOutput("Swerve Applied Current (amps)", getAppliedCurrent());
         Logger.recordOutput("Swerve Average Motor Tempurature (celsius)", getAverageMotorTemp());
@@ -784,6 +807,17 @@ public class SwerveDrive extends SmartPrintable {
      */
     public static void setTargetPathPosition(PathPosition setPathPosition) {
         instance.setPathPosition = setPathPosition;
+    }
+
+    public static boolean withinPositionTolerance() {
+        final double TOLERANCE_X = 0.05;
+        final double TOLERANCE_Y = 0.05;
+        final double TOLERANCE_THETA = 0.1;
+
+        return Math.abs(getOdometryPose().getX() - instance.setPathPosition.pose.getX()) < TOLERANCE_X
+            && Math.abs(getOdometryPose().getY() - instance.setPathPosition.pose.getY()) < TOLERANCE_Y
+            && Math.abs(getOdometryPose().getRotation().getRadians() 
+                - instance.setPathPosition.pose.getRotation().getRadians()) < TOLERANCE_THETA;
     }
 
     /**

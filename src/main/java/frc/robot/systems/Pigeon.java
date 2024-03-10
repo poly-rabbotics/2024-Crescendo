@@ -54,6 +54,10 @@ public class Pigeon extends SmartPrintable {
         instance.pigeon.setYaw(0.0);
     }
 
+    public static void setFeildOrientation(Angle value) {
+        instance.pigeon.setYaw(value.degrees());
+    }
+
     /**
      * Gets the change per second in the orientation of the Pigeon.
      */

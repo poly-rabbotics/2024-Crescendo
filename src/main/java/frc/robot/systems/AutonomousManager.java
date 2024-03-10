@@ -1,6 +1,10 @@
 package frc.robot.systems;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.Angle;
 import frc.robot.subsystems.AutonomousProcedure;
+import frc.robot.subsystems.PathPosition;
 import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.Hands.Setpoint;
 import frc.robot.systems.Hands.ShooterState;
@@ -10,32 +14,75 @@ public class AutonomousManager {
     private static AutonomousManager instance = new AutonomousManager();
     private AutonomousProcedure[] procedures = new AutonomousProcedure[1 << (AUTO_SWITCH_COUNT - 1)];
 
-    private static final AutonomousProcedure scoreSpeaker = new AutonomousProcedure("Speaker Score")
-        .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-        .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING))
-        .wait(AutonomousProcedure.timeoutAt(2.0, (prevState) -> Hands.loader.fire()))
-        .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-        .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
-
-    private static final AutonomousProcedure scoreAmp = new AutonomousProcedure("Amp Score")
-        .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.AMP_SCORING)))
-        .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.5)))
-        .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.0)))
-        .wait(AutonomousProcedure.timeoutAt(0.3, (prevState) -> StepStatus.Running))
-        .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0)))
-        .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE)));
-
     private AutonomousManager() {
         procedures[0] = new AutonomousProcedure("Unit Procedure");
 
         /* MODE 1 // SPEAKER SCORE ONLY */
-        procedures[1] = new AutonomousProcedure("Speaker score only")
-            .wait(scoreSpeaker);
+        procedures[1] = new AutonomousProcedure("Speaker Score")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
         /* MODE 2 // DRIVE TO AMP AND SCORE */
         procedures[2] = new AutonomousProcedure("")
             .wait((prevState) -> StepStatus.Running) //SWERVE DRIVING PART
-            .wait(scoreAmp);
+            .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.AMP_SCORING)))
+            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.5)))
+            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.0)))
+            .wait(AutonomousProcedure.timeoutAt(0.3, (prevState) -> StepStatus.Running))
+            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0)))
+            .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE)));
+
+        procedures[3] = new AutonomousProcedure("Speaker Score -> Leave")
+            .wait((prevState) -> {
+                Pigeon.setFeildOrientation(new Angle().setRadians(Math.PI));
+                return StepStatus.Done;
+            })
+            .wait((prevState) -> {
+                SwerveDrive.setOdometry(0.0, 0.0);
+                return StepStatus.Done;
+            })
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait((prevState) -> {
+                var pose = new Pose2d(1.25, 0.0, new Rotation2d(Angle.TAU));
+                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+
+                if (SwerveDrive.withinPositionTolerance()) {
+                    return StepStatus.Done;
+                }
+                
+                return StepStatus.Running;
+            })
+            .wait((prevState) -> {
+                var pose = new Pose2d(1.25, 0.0, new Rotation2d(0.0));
+                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+
+                if (SwerveDrive.withinPositionTolerance()) {
+                    return StepStatus.Done;
+                }
+                
+                return StepStatus.Running;
+            })
+            .wait((prevState) -> {
+                var pose = new Pose2d(2.25, 0.0, new Rotation2d(0.0));
+                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+
+                if (SwerveDrive.withinPositionTolerance()) {
+                    return StepStatus.Done;
+                }
+                
+                return StepStatus.Running;
+            });
+    }
+
+    public static void reset() {
+        instance = new AutonomousManager();
     }
 
     /**
