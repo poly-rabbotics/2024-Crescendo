@@ -814,10 +814,13 @@ public class SwerveDrive extends SmartPrintable {
         final double TOLERANCE_Y = 0.05;
         final double TOLERANCE_THETA = 0.1;
 
+        // makes sure angle are within [0, tau)
+        double measuredAngle = (getOdometryPose().getRotation().getRadians() % Angle.TAU + Angle.TAU) % Angle.TAU;
+        double setAngle = (instance.setPathPosition.pose.getRotation().getRadians() % Angle.TAU + Angle.TAU) % Angle.TAU;
+
         return Math.abs(getOdometryPose().getX() - instance.setPathPosition.pose.getX()) < TOLERANCE_X
             && Math.abs(getOdometryPose().getY() - instance.setPathPosition.pose.getY()) < TOLERANCE_Y
-            && Math.abs(getOdometryPose().getRotation().getRadians() 
-                - instance.setPathPosition.pose.getRotation().getRadians()) < TOLERANCE_THETA;
+            && Math.abs(measuredAngle - setAngle) < TOLERANCE_THETA;
     }
 
     /**
