@@ -3,11 +3,11 @@ package frc.robot.systems;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.patterns.Rainbow;
-import frc.robot.patterns.Solid;
 import frc.robot.patterns.Breathe;
 import frc.robot.patterns.FadeIn;
 import frc.robot.patterns.FadeIntoPattern;
 import frc.robot.subsystems.ColorUtils;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.LightPattern;
 import frc.robot.subsystems.LightRenderer;
 import frc.robot.subsystems.SwerveMode;
@@ -32,22 +32,34 @@ public class LEDLights {
 
         if (DriverStation.isDisabled()) {
             // Rainbow if disabled.
-            setPattern = new Rainbow(100, 1.0);
-            //setPattern = new Breathe();
+            setPattern = new Rainbow(100, 2.0);
         } else if (DriverStation.isAutonomous()) {
-            setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 1.0);
+            setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 2.0);
         } else {
+            if (Hands.pivot.getProxSensorTripped()) {
+                // Strobe rainbow, or *clears throat*
+	              // EPIC GAMER LIGHTS GO BRRRRR
+                setPattern = new FadeIntoPattern(new Rainbow(100, 140.0), 2.0);
+            } else if (Hands.intake.getSpeed() == Intake.INTAKE_SPEED) {
+                setPattern = new Breathe(new Color(1.0, 0.2, 0.6), 2.0);
+            }
+
             if (SwerveDrive.getDisplayMode() == SwerveMode.ROCK) {
                 // If in rock mode make wyvern scary >:D
-                setPattern = new FadeIn(new Color(1.0, 0.0, 0.0), 1.0);
-            } else if (SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT) {
-                setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 1.0);
-            } else if (SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT_ROTATION) {
-                setPattern = new FadeIn(new Color(0.0, 0.4, 1.0), 1.0);
+                setPattern = new FadeIn(new Color(1.0, 0.0, 0.0), 2.0);
             }
-        }
+            
+            if (
+                SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT 
+                || SwerveDrive.getDisplayMode() == SwerveMode.AIMBOT_ROTATION
+            ) {
+                setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 2.0);
+                if (Aimbot.isCentered()) {
+                    setPattern = new FadeIn(new Color(1.0, 0.0, 0.0), 2.0);
+                }
+            }
 
-        setPattern = new Breathe();
+        }
 
         if (setPattern != null) {
             instance.renderer.setIfNotEqual(setPattern);
