@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
@@ -20,7 +22,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import frc.robot.subsystems.*;
-import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.*;
 
 /**
@@ -33,6 +34,7 @@ public class Robot extends LoggedRobot {
     private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
     private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
     private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
+    private static final Joystick switchPanel = (Joystick)Controls.getControllerByPort(3);
     AutonomousProcedure procedure;
 
     /**
@@ -86,20 +88,39 @@ public class Robot extends LoggedRobot {
 
         SwerveDrive.updateOdometry();
         SwerveDrive.recordStates();
+        
+        if (controllerOne.getBackButtonReleased()) {
+            // USE SWITCHES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            var pose = DriverStation.isTeleop() 
+                ? new Pose2d(0.0, 0.0, new Rotation2d(0.0))
+                : AutonomousManager.getStartingPosSwitches(
+                    switchPanel.getRawButton(1),
+                    switchPanel.getRawButton(2),
+                    switchPanel.getRawButton(3),
+                    switchPanel.getRawButton(4)
+                );
+
+            Pigeon.setFeildOrientation(new Angle().setRadians(pose.getRotation().getRadians()));
+            SwerveDrive.setOdometry(pose);
+        }
     }
     
     @Override
     public void autonomousInit() {
         SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
         AutonomousManager.reset();
-        Pigeon.setFeildZero();
         Hands.init();
         Climb.init();
     }
 
     @Override
     public void autonomousPeriodic() {
-        AutonomousManager.getAutoProcedure(3).run();
+        AutonomousManager.getProcedureFromSwitches(
+                switchPanel.getRawButton(1),
+                switchPanel.getRawButton(2),
+                switchPanel.getRawButton(3),
+                switchPanel.getRawButton(4)
+            ).run();
         
         /* AutonomousManager.getProcedureFromSwitches(
             false, false, false, false // fill with actual switches
@@ -128,10 +149,6 @@ public class Robot extends LoggedRobot {
 
         if (controllerOne.getStartButtonReleased()) {
             Pigeon.setFeildZero();
-        }
-
-        if (controllerOne.getBackButtonReleased()) {
-            SwerveDrive.zeroPositions();
         }
         
         // Left stick changes between headless and relative control modes.

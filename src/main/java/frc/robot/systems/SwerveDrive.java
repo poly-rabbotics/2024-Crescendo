@@ -84,16 +84,16 @@ public class SwerveDrive extends SmartPrintable {
         //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.3;
-    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.15;
-    private static final double TRAJECTORY_STRAFE_X_PID_D = 0.0;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_X_PID_I = 0.004;
+    private static final double TRAJECTORY_STRAFE_X_PID_D = 0.035;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.3;
-    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.15;
-    private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.0;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.004;
+    private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.035;
 
-    private static final double TRAJECTORY_ROTATE_PID_P = 1.2;
-    private static final double TRAJECTORY_ROTATE_PID_I = 1.0;
+    private static final double TRAJECTORY_ROTATE_PID_P = 1.0;
+    private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
     private static final double SET_ANGLE_PID_P = 1.0;
@@ -690,13 +690,13 @@ public class SwerveDrive extends SmartPrintable {
      * Zeros position entirely, assuming the robot is facing forward, then set
      * the odometry position to the given X and Y components.
      */
-    public static void setOdometry(double x, double y) {
-        zeroPositions();
+    public static void setOdometry(Pose2d pose) {
+        //zeroPositions();
 
         instance.odometry.resetPosition(
             new Rotation2d(Pigeon.getYaw().radians()),
             instance.positions,
-            new Pose2d(x, y, new Rotation2d(0.0))
+            pose
         );
     }
     
@@ -810,8 +810,8 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     public static boolean withinPositionTolerance() {
-        final double TOLERANCE_X = 0.05;
-        final double TOLERANCE_Y = 0.05;
+        final double TOLERANCE_X = 0.2;
+        final double TOLERANCE_Y = 0.2;
         final double TOLERANCE_THETA = 0.1;
 
         // makes sure angle are within [0, tau)

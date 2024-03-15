@@ -21,6 +21,7 @@ public class Controls {
     public static final int CONTROLLER_PORT_DRIVE = 0;
     public static final int CONTROLLER_PORT_MECHS = 1;
     public static final int CONTROLLER_PORT_PANEL = 2;
+    public static final int CONTROLLER_PORT_SWITCHES = 3;
 
     private static final Controls instance = new Controls();
 
@@ -30,7 +31,8 @@ public class Controls {
         controllers = new GenericHID[] {
             new XboxController(CONTROLLER_PORT_DRIVE),
             new XboxController(CONTROLLER_PORT_MECHS),
-            new Joystick(CONTROLLER_PORT_PANEL)
+            new Joystick(CONTROLLER_PORT_PANEL),
+            new Joystick(CONTROLLER_PORT_SWITCHES)
         };
     }
 
