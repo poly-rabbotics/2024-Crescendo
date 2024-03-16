@@ -178,7 +178,7 @@ public class Hands extends SmartPrintable {
      * run periodically in autonomous mode, updates all subsystems
      */
     public static void autoRun() {
-        if(shooter.getShooterState().equals(ShooterState.IDLE) && pivot.getPosition() < -40 && !pivot.getProxSensorTripped()) {
+        if(shooter.getShooterState().equals(ShooterState.IDLE) && pivot.getPosition() < 0 && !pivot.getProxSensorTripped()) {
             shooter.setControlMode(ControlMode.MANUAL);
             shooter.setManualInput(-0.1);
             intake.set(Intake.INTAKE_SPEED);

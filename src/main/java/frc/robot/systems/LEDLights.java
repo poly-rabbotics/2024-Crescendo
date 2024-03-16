@@ -3,7 +3,6 @@ package frc.robot.systems;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.patterns.Rainbow;
-import frc.robot.patterns.Breathe;
 import frc.robot.patterns.FadeIn;
 import frc.robot.patterns.FadeIntoPattern;
 import frc.robot.subsystems.ColorUtils;
@@ -28,7 +27,7 @@ public class LEDLights {
     }
 
     public static void run() {
-        LightPattern setPattern = null;
+        LightPattern setPattern = new FadeIn(new Color(0.0, 0.0, 0.0), 1.0);
 
         if (DriverStation.isDisabled()) {
             // Rainbow if disabled.
@@ -37,11 +36,12 @@ public class LEDLights {
             setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 2.0);
         } else {
             if (Hands.pivot.getProxSensorTripped()) {
-                // Strobe rainbow, or *clears throat*
-	              // EPIC GAMER LIGHTS GO BRRRRR
-                setPattern = new FadeIntoPattern(new Rainbow(100, 140.0), 2.0);
+                // Strobe rainbow, or 
+                // *clears throat*
+	            // EPIC GAMER LIGHTS GO BRRRRR
+                setPattern = new FadeIntoPattern(new Rainbow(100, 140.0), 16.0);
             } else if (Hands.intake.getSpeed() == Intake.INTAKE_SPEED) {
-                setPattern = new Breathe(new Color(1.0, 0.2, 0.6), 2.0);
+                setPattern = new FadeIn(new Color(1.0, 0.2, 0.6), 2.0);
             }
 
             if (SwerveDrive.getDisplayMode() == SwerveMode.ROCK) {
@@ -59,6 +59,7 @@ public class LEDLights {
                 }
             }
 
+            //setPattern = new BenPattern();
         }
 
         if (setPattern != null) {

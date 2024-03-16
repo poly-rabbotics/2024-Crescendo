@@ -99,10 +99,19 @@ public class Robot extends LoggedRobot {
                     switchPanel.getRawButton(3),
                     switchPanel.getRawButton(4)
                 );
+            
+            //var pose = AutonomousManager.getStartingPos(4);
 
             Pigeon.setFeildOrientation(new Angle().setRadians(pose.getRotation().getRadians()));
             SwerveDrive.setOdometry(pose);
         }
+
+        AutonomousManager.log(
+            switchPanel.getRawButton(1),
+            switchPanel.getRawButton(2),
+            switchPanel.getRawButton(3),
+            switchPanel.getRawButton(4)
+        );
     }
     
     @Override
@@ -116,15 +125,13 @@ public class Robot extends LoggedRobot {
     @Override
     public void autonomousPeriodic() {
         AutonomousManager.getProcedureFromSwitches(
-                switchPanel.getRawButton(1),
-                switchPanel.getRawButton(2),
-                switchPanel.getRawButton(3),
-                switchPanel.getRawButton(4)
-            ).run();
+            switchPanel.getRawButton(1),
+            switchPanel.getRawButton(2),
+            switchPanel.getRawButton(3),
+            switchPanel.getRawButton(4)
+        ).run();
         
-        /* AutonomousManager.getProcedureFromSwitches(
-            false, false, false, false // fill with actual switches
-        ).run(); */
+        //AutonomousManager.getAutoProcedure(4).run();
             
         Hands.autoRun();
         SwerveDrive.run();
@@ -208,13 +215,13 @@ public class Robot extends LoggedRobot {
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
 
         Hands.run(
-            controlPanel.getRawButton(8) || controllerOne.getAButton(),        // Intake
-            controlPanel.getRawButton(9),        // Outtake
-            controlPanel.getRawButton(6),        // Ramp Up
-            controlPanel.getRawButton(7),        // Fire
-            controlPanel.getRawAxis(0) > 0,        // Linear Actuator
-            0,                   // Manual Shooter input
-            controlPanel.getRawAxis(1),                   // Manual Pivot input
+            controlPanel.getRawButton(6) || controllerOne.getAButton(),        // Intake
+            controlPanel.getRawButton(7),        // Outtake
+            controlPanel.getRawButton(10),        // Ramp Up
+            controlPanel.getRawButton(11),        // Fire
+            controlPanel.getRawButton(8),        // Linear Actuator
+            -controlPanel.getRawAxis(1),           // Manual Shooter input
+            controlPanel.getRawAxis(0),            // Manual Pivot input
             controlPanel.getRawButton(5),        // Climbing
             controlPanel.getRawButton(1),        // Ground Intake
             controlPanel.getRawButton(3),        // Speaker Shooting

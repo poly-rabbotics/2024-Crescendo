@@ -134,8 +134,8 @@ public class SwerveDrive extends SmartPrintable {
     private SwerveMode displayMode = SwerveMode.HEADLESS;
 
     private SwerveModuleState[] moduleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
-    private ChassisSpeeds chassisSpeedsOutput = null;
-    private ChassisSpeeds chassisSpeedsCalculated = null;
+    private ChassisSpeeds chassisSpeedsOutput = new ChassisSpeeds();
+    private ChassisSpeeds chassisSpeedsCalculated = new ChassisSpeeds();
 
     private Angle setAngle = new Angle().setRadians(0.0);
 

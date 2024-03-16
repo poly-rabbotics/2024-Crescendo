@@ -11,7 +11,7 @@ import frc.robot.systems.Hands.ControlMode;
 //TODO: CONVERT TO WPILIB PID LOOP
 public class Shooter {
 
-    private static final int RAMPING_THRESHOLD = 95; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
+    private static final int RAMPING_THRESHOLD = 97; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
     private static final double VELOCITY = 120; //Velocity in RPM
     
     private static final double P_0 = 0.65;

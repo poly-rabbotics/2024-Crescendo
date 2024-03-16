@@ -49,11 +49,11 @@ public class Intake {
     }
 
     /**
-     * Gets the speed of the outer (CANSparkMax) motor
+     * Gets the speed of velocity of the CANSpark motor according tot he encoder
      * @return speed
      */
     public double getOuterMotorSpeed() {
-        return outerMotor.get();
+        return outerMotor.getEncoder().getVelocity();
     }
 
     /**
@@ -70,5 +70,9 @@ public class Intake {
      */
     public double getMotorTemperature() {
         return outerMotor.getMotorTemperature();
+    }
+
+    public double getMotorAmperage() {
+        return outerMotor.getOutputCurrent();
     }
 }
