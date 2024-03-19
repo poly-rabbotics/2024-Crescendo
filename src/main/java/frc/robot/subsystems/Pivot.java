@@ -21,7 +21,7 @@ public class Pivot {
     private static final double D_0 = 0.0003;
 
     private static final Angle CLIMBING_ANGLE = new Angle().setDegrees(105);
-    private static final Angle GROUND_INTAKE_ANGLE = new Angle().setDegrees(-60);
+    private static final Angle GROUND_INTAKE_ANGLE = new Angle().setDegrees(-61.5);
     private static final Angle SPEAKER_SHOOTING_ANGLE = new Angle().setDegrees(45);
     private static final Angle AMP_SCORING_ANGLE = new Angle().setDegrees(85);
     

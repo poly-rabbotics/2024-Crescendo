@@ -7,47 +7,12 @@ package frc.robot.systems;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.XboxController;
-
 /**
  * Manages the recording, playback, and wrapping of controller input.
  */
 public class Controls {
     private static final double DEFAULT_CURVE_EXPONENT = 3;
     private static final double DEFAULT_PLATEAU = 0.15;
-
-    public static final int CONTROLLER_PORT_DRIVE = 0;
-    public static final int CONTROLLER_PORT_MECHS = 1;
-    public static final int CONTROLLER_PORT_PANEL = 2;
-    public static final int CONTROLLER_PORT_SWITCHES = 3;
-
-    private static final Controls instance = new Controls();
-
-    private final GenericHID[] controllers;
-
-    private Controls() {
-        controllers = new GenericHID[] {
-            new XboxController(CONTROLLER_PORT_DRIVE),
-            new XboxController(CONTROLLER_PORT_MECHS),
-            new Joystick(CONTROLLER_PORT_PANEL),
-            new Joystick(CONTROLLER_PORT_SWITCHES)
-        };
-    }
-
-    /**
-     * gets a controller by port. returns null if no controller is found.
-     */
-    public static GenericHID getControllerByPort(int port) {
-        for (GenericHID controller : instance.controllers) {
-            if (controller.getPort() == port) {
-                return controller;
-            }
-        }
-
-        return null;
-    }
 
     /**
      * Default one dimensional curve.

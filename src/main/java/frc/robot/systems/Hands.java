@@ -80,6 +80,14 @@ public class Hands extends SmartPrintable {
     }
 
     /**
+     * Identical to init but doesn't zero the loader position
+     */
+    public static void teleopInit() {
+        shooter.init();
+        pivot.init();
+    }
+
+    /**
      * Run all subsystems in teleop mode
      * @param intakeIn
      * @param intakeOut
@@ -180,7 +188,7 @@ public class Hands extends SmartPrintable {
     public static void autoRun() {
         if(shooter.getShooterState().equals(ShooterState.IDLE) && pivot.getPosition() < 0 && !pivot.getProxSensorTripped()) {
             shooter.setControlMode(ControlMode.MANUAL);
-            shooter.setManualInput(-0.1);
+            shooter.setManualInput(-0.2);
             intake.set(Intake.INTAKE_SPEED);
         } else {
             shooter.setControlMode(ControlMode.POSITION);
@@ -226,10 +234,11 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putBoolean("Loader at target", loader.getAtSetpoint());
 
         //Intake stuff
-        SmartDashboard.putNumber("Inner Intake Speed", intake.getInnerMotorSpeed());
-        SmartDashboard.putNumber("Outer Intake Speed", intake.getOuterMotorSpeed());
+        SmartDashboard.putNumber("Intake Inner Speed", intake.getInnerMotorSpeed());
+        SmartDashboard.putNumber("Intake Outer Speed", intake.getOuterMotorSpeed());
         SmartDashboard.putNumber("Intake temperature", intake.getMotorTemperature());
         SmartDashboard.putNumber("Intake speed", intake.getSpeed());
+        SmartDashboard.putNumber("Intake amp pull", INNER_INTAKE_MOTOR_PWM_CHANNEL);
 
         //Pivot stuff
         SmartDashboard.putNumber("Pivot Position", pivot.getPosition());
@@ -244,6 +253,5 @@ public class Hands extends SmartPrintable {
         SmartDashboard.putNumber("Linear Actuator Position", linearActuator.getPosition());
         SmartDashboard.putNumber("Linear Actuator PID Output", linearActuator.getPIDOutput());
         SmartDashboard.putNumber("Linear Actuator Motor Temp", linearActuator.getMotorTemperature());
-
     }
 }

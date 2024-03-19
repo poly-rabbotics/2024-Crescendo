@@ -31,10 +31,10 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends LoggedRobot {
-    private static final XboxController controllerOne = (XboxController)Controls.getControllerByPort(0);
-    private static final XboxController controllerTwo = (XboxController)Controls.getControllerByPort(1);
-    private static final Joystick controlPanel = (Joystick)Controls.getControllerByPort(2);
-    private static final Joystick switchPanel = (Joystick)Controls.getControllerByPort(3);
+    private static final XboxController controllerOne = new XboxController(0);
+    private static final XboxController controllerTwo = new XboxController(1);
+    private static final Joystick controlPanel = new Joystick(2);
+    private static final Joystick switchPanel = new Joystick(3);
     AutonomousProcedure procedure;
 
     /**
@@ -100,7 +100,20 @@ public class Robot extends LoggedRobot {
                     switchPanel.getRawButton(4)
                 );
             
-            //var pose = AutonomousManager.getStartingPos(4);
+                
+            if (switchPanel.getRawButton(6)) {
+                SwerveDrive.setTrajectoryCoefficiants(1.0, -1.0);
+            } else {
+                SwerveDrive.setTrajectoryCoefficiants(1.0, 1.0);
+            }
+
+            pose = new Pose2d(
+                pose.getX() * SwerveDrive.getTrajectoryCoefficiantX(),
+                pose.getY() * SwerveDrive.getTrajectoryCoefficiantY(),
+                SwerveDrive.getTrajectoryCoefficiantY() < 0.0
+                    ? new Rotation2d(Angle.TAU - pose.getRotation().getRadians())
+                    : pose.getRotation()
+            );
 
             Pigeon.setFeildOrientation(new Angle().setRadians(pose.getRotation().getRadians()));
             SwerveDrive.setOdometry(pose);
@@ -117,6 +130,8 @@ public class Robot extends LoggedRobot {
     @Override
     public void autonomousInit() {
         SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
+
+
         AutonomousManager.reset();
         Hands.init();
         Climb.init();
@@ -140,7 +155,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void teleopInit() {
         SwerveDrive.setMode(SwerveMode.HEADLESS);
-        Hands.init();
+        Hands.teleopInit();
         Climb.init();
     }
 

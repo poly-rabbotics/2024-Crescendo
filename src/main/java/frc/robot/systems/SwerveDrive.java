@@ -143,6 +143,9 @@ public class SwerveDrive extends SmartPrintable {
     private double translationSpeedY = 0.0;
     private double rotationSpeed = 0.0;
 
+    private double trajectoryCoefficiantX = 1.0;
+    private double trajectoryCoefficiantY = 1.0;
+
     private SwerveDrive() {
         super();
         
@@ -651,6 +654,9 @@ public class SwerveDrive extends SmartPrintable {
         Logger.recordOutput("Swerve Chassis Speeds Calculated Vx", instance.chassisSpeedsCalculated.vxMetersPerSecond);
         Logger.recordOutput("Swerve Chassis Speeds Calculated Vy", instance.chassisSpeedsCalculated.vyMetersPerSecond);
         Logger.recordOutput("Swerve Chassis Speeds Calculated Tau", instance.chassisSpeedsCalculated.omegaRadiansPerSecond);
+
+        Logger.recordOutput("Swerve Trajectory Coefficiant X", instance.trajectoryCoefficiantX);
+        Logger.recordOutput("Swerve Trajectory Coefficiant Y", instance.trajectoryCoefficiantY);
     }
 
     /**
@@ -806,7 +812,20 @@ public class SwerveDrive extends SmartPrintable {
      * Sets the path position for the `SIDEWALK_WALK` mode.
      */
     public static void setTargetPathPosition(PathPosition setPathPosition) {
-        instance.setPathPosition = setPathPosition;
+        PathPosition pose = new PathPosition(
+            new Pose2d(
+                setPathPosition.pose.getX() * instance.trajectoryCoefficiantX, 
+                setPathPosition.pose.getY() * instance.trajectoryCoefficiantY, 
+                instance.trajectoryCoefficiantY < 0.0
+                    ? new Rotation2d(Angle.TAU - setPathPosition.pose.getRotation().getRadians())
+                    : setPathPosition.pose.getRotation()
+            ),
+            setPathPosition.timeSeconds
+        );
+
+        
+
+        instance.setPathPosition = pose;
     }
 
     public static boolean withinPositionTolerance() {
@@ -821,6 +840,19 @@ public class SwerveDrive extends SmartPrintable {
         return Math.abs(getOdometryPose().getX() - instance.setPathPosition.pose.getX()) < TOLERANCE_X
             && Math.abs(getOdometryPose().getY() - instance.setPathPosition.pose.getY()) < TOLERANCE_Y
             && Math.abs(measuredAngle - setAngle) < TOLERANCE_THETA;
+    }
+
+    public static void setTrajectoryCoefficiants(double x, double y) {
+        instance.trajectoryCoefficiantX = x;
+        instance.trajectoryCoefficiantY = y;
+    }
+
+    public static double getTrajectoryCoefficiantX() {
+        return instance.trajectoryCoefficiantX;
+    }
+
+    public static double getTrajectoryCoefficiantY() {
+        return instance.trajectoryCoefficiantY;
     }
 
     /**

@@ -6,8 +6,8 @@ import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 
 public class Intake {
 
-    public static final double INTAKE_SPEED = -0.7;
-    public static final double OUTTAKE_SPEED = 0.7;
+    public static final double INTAKE_SPEED = -1;
+    public static final double OUTTAKE_SPEED = 1;
 
     private final CANSparkMax outerMotor;
     private final VictorSP innerMotor;
@@ -29,7 +29,7 @@ public class Intake {
      */
     public void run() {
         outerMotor.set(speed);
-        innerMotor.set(-speed * 1.4);
+        innerMotor.set(-speed);
     }
 
     /**
