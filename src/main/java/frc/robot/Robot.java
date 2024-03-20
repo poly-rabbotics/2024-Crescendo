@@ -241,29 +241,14 @@ public class Robot extends LoggedRobot {
             controlPanel.getRawButton(1),        // Ground Intake
             controlPanel.getRawButton(3),        // Speaker Shooting
             controlPanel.getRawButton(4),        // Dynamic Shooting
-            controlPanel.getRawButton(2)         // Amp Scoring
+            controlPanel.getRawButton(2),         // Amp Scoring
+            switchPanel.getRawButton(5)          // Auto ramp enabled
         );
 
         Climb.run(
             controllerTwo.getRawAxis(1), 
             controllerTwo.getRawAxis(5)
         );
-
-
-        /* Hands.run(
-            controllerTwo.getLeftBumper() || controllerOne.getAButton(),        // Intake
-            controllerTwo.getRightBumper(),        // Outtake
-            controllerTwo.getLeftTriggerAxis() > 0.3,        // Ramp Up
-            controllerTwo.getAButtonPressed(),        // Fire
-            controllerTwo.getLeftStickButton(),        // Linear Actuator
-            controllerTwo.getLeftY(),                   // Manual Shooter input
-            controllerTwo.getLeftX(),                   // Manual Pivot input
-            false,        // Source Intake
-            false,        // Ground Intake
-            controllerTwo.getXButton(),        // Speaker Shooting
-            controllerTwo.getBButton(),        // Dynamic Shooting
-            controllerTwo.getYButton()         // Amp Scoring
-        ); */
     }
 
     @Override

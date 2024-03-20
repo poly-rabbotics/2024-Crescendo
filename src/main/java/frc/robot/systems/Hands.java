@@ -102,7 +102,7 @@ public class Hands extends SmartPrintable {
      * @param dynamicShooting
      * @param ampScoring
      */
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring) {
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring, boolean autoRamp) {
 
         /* PIVOT */
         //Update pivot control mode
@@ -140,10 +140,18 @@ public class Hands extends SmartPrintable {
         }
 
         //Set shooter state
-        if(shoot) {
-            shooter.set(ShooterState.RUNNING);
+        if(autoRamp && pivot.getProxSensorTripped()) {
+            if(pivot.getSetpoint().equals(Setpoint.STATIC_SHOOTING) || pivot.getSetpoint().equals(Setpoint.DYNAMIC_SHOOTING) || pivot.getSetpoint().equals(Setpoint.GROUND_INTAKE) || shoot) {
+                shooter.set(ShooterState.RUNNING);
+            } else {
+                shooter.set(ShooterState.IDLE);
+            }
         } else {
-            shooter.set(ShooterState.IDLE);
+            if(shoot) {
+                shooter.set(ShooterState.RUNNING);
+            } else {
+                shooter.set(ShooterState.IDLE);
+            }
         }
 
         //Set shooter manual input
