@@ -131,11 +131,13 @@ public class SwerveModule extends SmartPrintable {
         rotationMotor.setInverted(true);
         rotationMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
         rotationMotor.setSmartCurrentLimit(30);
+        rotationMotor.enableVoltageCompensation(12.0);
         
         movementMotor = new CANSparkMax(movementMotorID, CANSparkMax.MotorType.kBrushless);
         movementMotor.setInverted(false);
         movementMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         movementMotor.setSmartCurrentLimit(40);
+        movementMotor.enableVoltageCompensation(12.0);
 
         angularEncoder = new CANcoder(canCoderID);
         angularEncoder.getConfigurator().apply(new CANcoderConfiguration());
