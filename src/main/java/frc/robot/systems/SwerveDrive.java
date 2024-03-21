@@ -84,11 +84,11 @@ public class SwerveDrive extends SmartPrintable {
         //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.45;
     private static final double TRAJECTORY_STRAFE_X_PID_I = 0.004;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.035;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.45;
     private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.004;
     private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.035;
 
@@ -829,8 +829,8 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     public static boolean withinPositionTolerance() {
-        final double TOLERANCE_X = 0.2;
-        final double TOLERANCE_Y = 0.2;
+        final double TOLERANCE_X = 0.3;
+        final double TOLERANCE_Y = 0.3;
         final double TOLERANCE_THETA = 0.1;
 
         // makes sure angle are within [0, tau)

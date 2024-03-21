@@ -1,6 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 package frc.robot.systems;
 
+import java.util.function.Function;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -153,7 +155,7 @@ public class AutonomousManager {
                 .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
                 .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
-            // START SOURCE SIDE
+            // START SOURCE SIDE - DINE AND DASH
             startingPositions[5] = new Pose2d(0.0, 0.0, new Rotation2d(2.237));
             procedures[5] = new AutonomousProcedure("Dine and Dash")
                 .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
@@ -180,8 +182,9 @@ public class AutonomousManager {
                     }
 
                     return StepStatus.Running;
-                });
+            });
             
+            // START AMP SIDE - 2 1/2 NOTE DINE AND DASH
             startingPositions[6] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
             procedures[6] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
                 .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
@@ -189,51 +192,17 @@ public class AutonomousManager {
                 .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
                 .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
                 .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait((prevState) -> {
-                    var pose = new Pose2d(1.0, 0.1, new Rotation2d(0.0));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-
-                    return StepStatus.Running;
-                })
-                .wait((prevState) -> {
-                    var pose = new Pose2d(1.85, 0.1, new Rotation2d(0.0));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-
-                    return StepStatus.Running;
-                })
-                .wait((prevState) -> {
-                    var pose = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-
-                    return StepStatus.Running;
-                })
+                .wait(makeDriveStep(new Pose2d(1.0, 0.1, new Rotation2d(0.0))))
+                .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(2.35, 0, new Rotation2d(0.0)))))
+                .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237))))
                 .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
                 .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
                 .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
                 .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
                 .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait((prevState) -> {
-                    var pose = new Pose2d(7.2, -0.14, new Rotation2d(Math.PI));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+                .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(0))))
+                .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(Math.PI))));
 
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-
-                    return StepStatus.Running;
-                });
     }
 
     public static void reset() {
@@ -311,5 +280,17 @@ public class AutonomousManager {
     public static void log(boolean... switches) {
         Logger.recordOutput("Auto Manager Selection", getSwitchSelection(switches));
         Logger.recordOutput("Auto Manager Modes Length", instance.procedures.length);
+    }
+
+    private static Function<StepStatus, StepStatus> makeDriveStep(Pose2d pose) {
+        return (prevState) -> {
+            SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+
+            if (SwerveDrive.withinPositionTolerance()) {
+                return StepStatus.Done;
+            }
+
+            return StepStatus.Running;
+        };
     }
 }
