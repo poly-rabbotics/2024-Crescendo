@@ -148,4 +148,8 @@ public class Shooter {
     public double getManualInput() {
         return manualInput;
     }
+
+    public boolean getAtVelocity() {
+        return getVelocity() >= VELOCITY * 0.75;
+    }
 }

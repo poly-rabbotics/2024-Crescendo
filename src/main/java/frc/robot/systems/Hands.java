@@ -154,6 +154,10 @@ public class Hands extends SmartPrintable {
             }
         }
 
+        if (shooter.getAtVelocity()) {
+            loader.fire();
+        }
+
         //Set shooter manual input
         shooter.setManualInput(manualShooter);
 
@@ -168,7 +172,7 @@ public class Hands extends SmartPrintable {
         /* INTAKE */
         if(intakeIn) {
             intake.set(Intake.INTAKE_SPEED);
-            shooter.setManualInput(-0.1);
+            shooter.setManualInput(-0.4);
         } else if(intakeOut) {
             intake.set(Intake.OUTTAKE_SPEED);
             shooter.setManualInput(0.1);
