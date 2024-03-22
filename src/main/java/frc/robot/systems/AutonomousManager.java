@@ -27,9 +27,9 @@ public class AutonomousManager {
         startingPositions[0] = new Pose2d(0.0, 0.0, new Rotation2d(0));
         procedures[0] = new AutonomousProcedure("Unit Procedure");
 
-        /* MODE 1 // SPEAKER SCORE ONLY */
-        startingPositions[1] = new Pose2d(0.0, 0.0, new Rotation2d(0));
-        procedures[1] = new AutonomousProcedure("Speaker Score")
+        // MODE 1 - SPEAKER SCORE ONLY
+        startingPositions[1] = new Pose2d(0.0, 0.0, new Rotation2d(Math.PI));
+        procedures[1] = new AutonomousProcedure("Speaker 1 Note")
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
@@ -47,7 +47,7 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0)))
             .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))); */
 
-        // START CENTER SPEAKER
+        // START CENTER SPEAKER - 2 NOTE
         startingPositions[3] = new Pose2d(0.0, 0.0, new Rotation2d(Math.PI));
         procedures[3] = new AutonomousProcedure("Speaker Score -> Leave -> Intake -> Move Back -> Speaker Score")
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
@@ -55,53 +55,17 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
             .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
             .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-            .wait((prevState) -> {
-                var pose = new Pose2d(1.25, 0.0, new Rotation2d(0.0));
-                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                if (SwerveDrive.withinPositionTolerance()) {
-                    return StepStatus.Done;
-                }
-                
-                return StepStatus.Running;
-            })
-            .wait((prevState) -> {
-                var pose = new Pose2d(1.75, 0.0, new Rotation2d(0.0));
-                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                if (SwerveDrive.withinPositionTolerance()) {
-                    return StepStatus.Done;
-                }
-                
-                return StepStatus.Running;
-            })
-            .wait((prevState) -> {
-                var pose = new Pose2d(1.25, 0.0, new Rotation2d(Math.PI));
-                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                if (SwerveDrive.withinPositionTolerance()) {
-                    return StepStatus.Done;
-                }
-                
-                return StepStatus.Running;
-            })
-            .wait((prevState) -> {
-                var pose = new Pose2d(0.0, 0.0, new Rotation2d(Math.PI));
-                SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-
-                if (SwerveDrive.withinPositionTolerance()) {
-                    return StepStatus.Done;
-                }
-                
-                return StepStatus.Running;
-            })
+            .wait(makeDriveStep(new Pose2d(1.25, 0.0, new Rotation2d(0.0))))
+            .wait(makeDriveStep(new Pose2d(1.75, 0.0, new Rotation2d(0.0))))
+            .wait(makeDriveStep(new Pose2d(1.25, 0.0, new Rotation2d(Math.PI))))
+            .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(Math.PI))))
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
             .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
             .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
         
-        // START SOURCE SIDE SPEAKER
+        // START SOURCE SIDE - 2 NOTE
         startingPositions[4] = new Pose2d(0.0, 0.0, new Rotation2d(2.366));
         procedures[4] = new AutonomousProcedure("Speaker Score -> Leave -> Intake -> Move Back -> Speaker Score")
                 .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
@@ -109,99 +73,94 @@ public class AutonomousManager {
                 .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
                 .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
                 .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait((prevState) -> {
-                    var pose = new Pose2d(1.75, -0.15, new Rotation2d(0.0));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-    
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-                    
-                    return StepStatus.Running;
-                })
-                .wait(AutonomousProcedure.timeoutAt(1.75, (prevState) -> {
-                    var pose = new Pose2d(2.25, -0.15, new Rotation2d(0.0));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-    
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-                    
-                    return StepStatus.Running;
-                }))
-                .wait((prevState) -> {
-                    var pose = new Pose2d(1.5, -0.15, new Rotation2d(Math.PI));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-    
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-                    
-                    return StepStatus.Running;
-                })
-                .wait((prevState) -> {
-                    var pose = new Pose2d(0.0, 0.0, new Rotation2d(2.366));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
-    
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
-                    
-                    return StepStatus.Running;
-                })
+                .wait(makeDriveStep(new Pose2d(1.75, -0.15, new Rotation2d(0.0))))
+                .wait(makeDriveStep(new Pose2d(2.25, -0.15, new Rotation2d(0.0))))
+                .wait(makeDriveStep(new Pose2d(1.5, -0.15, new Rotation2d(Math.PI))))
+                .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(2.366))))
                 .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
                 .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
                 .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
                 .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
                 .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
-            // START SOURCE SIDE - DINE AND DASH
-            startingPositions[5] = new Pose2d(0.0, 0.0, new Rotation2d(2.237));
-            procedures[5] = new AutonomousProcedure("Dine and Dash")
-                .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-                .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
-                .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-                .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-                .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> {
-                    var pose = new Pose2d(0.0, -2.25, new Rotation2d(2.237));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+        // START AMP SIDE - 2 NOTE
+        startingPositions[5] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[5] = new AutonomousProcedure("Amp 2 Note")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(1.0, 0.1, new Rotation2d(0.0))))
+            .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(2.35, 0, new Rotation2d(0.0)))))
+            .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237))))
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
 
-                    return StepStatus.Running;
-                }))
-                .wait((prevState) -> {
-                    var pose = new Pose2d(7.2, -2.25, new Rotation2d(Math.PI));
-                    SwerveDrive.setTargetPathPosition(new PathPosition(pose, 0.0));
+        // START SOURCE SIDE - 1 NOTE DINE AND DASH
+        startingPositions[6] = new Pose2d(0.0, 0.0, new Rotation2d(2.237));
+        procedures[6] = new AutonomousProcedure("Source Dine and Dash")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(0.0, -2.25, new Rotation2d(2.237))))
+            .wait(makeDriveStep(new Pose2d(7.2, -2.25, new Rotation2d(Math.PI))));
 
-                    if (SwerveDrive.withinPositionTolerance()) {
-                        return StepStatus.Done;
-                    }
+        // START AMP SIDE - 1 1/2 NOTE DINE AND DASH
+        startingPositions[7] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[7] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(7.8, -0.1, new Rotation2d(0))))
+            .wait(makeDriveStep(new Pose2d(7.8, -0.1, new Rotation2d(Math.PI))));
 
-                    return StepStatus.Running;
-            });
-            
-            // START AMP SIDE - 2 1/2 NOTE DINE AND DASH
-            startingPositions[6] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
-            procedures[6] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
-                .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-                .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
-                .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-                .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-                .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait(makeDriveStep(new Pose2d(1.0, 0.1, new Rotation2d(0.0))))
-                .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(2.35, 0, new Rotation2d(0.0)))))
-                .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237))))
-                .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-                .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
-                .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-                .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-                .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-                .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(0))))
-                .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(Math.PI))));
+        //START SOURCE SIDE - 2 (1/2?) NOTE DINE AND DASH
+        startingPositions[8] = new Pose2d(0.0, 0.0, new Rotation2d(2.237));
+        procedures[8] = new AutonomousProcedure("Source 2 Note -> Dine and Dash")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(1.75, -0.15, new Rotation2d(0.0))))
+            .wait(makeDriveStep(new Pose2d(2.25, -0.15, new Rotation2d(0.0))))
+            .wait(makeDriveStep(new Pose2d(1.5, -0.15, new Rotation2d(Math.PI))))
+            .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(2.366))))
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(0.0, -2.25, new Rotation2d(2.237))))
+            .wait(makeDriveStep(new Pose2d(7.2, -2.25, new Rotation2d(Math.PI))));
+        
+        // START AMP SIDE - 2 1/2 NOTE DINE AND DASH
+        startingPositions[8] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[8] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(1.0, 0.1, new Rotation2d(0.0))))
+            .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(2.35, 0, new Rotation2d(0.0)))))
+            .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237))))
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(0))))
+            .wait(makeDriveStep(new Pose2d(7.8, -0.14, new Rotation2d(Math.PI))));
 
     }
 
