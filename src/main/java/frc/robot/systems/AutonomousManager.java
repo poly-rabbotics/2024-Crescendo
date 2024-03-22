@@ -144,8 +144,8 @@ public class AutonomousManager {
             .wait(makeDriveStep(new Pose2d(7.2, -2.25, new Rotation2d(Math.PI))));
         
         // START AMP SIDE - 2 1/2 NOTE DINE AND DASH
-        startingPositions[8] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
-        procedures[8] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
+        startingPositions[9] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[9] = new AutonomousProcedure("Amp 2 Note -> Dine and Dash")
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
