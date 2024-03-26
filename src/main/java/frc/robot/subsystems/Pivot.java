@@ -32,6 +32,7 @@ public class Pivot {
     private double manualInput = 0;
 
     private DigitalInput proxSensor;
+    private DigitalInput displaySensor;
 
     private final CANSparkMax pivotMotor;
     private final PIDController pidController;
@@ -42,6 +43,8 @@ public class Pivot {
         absoluteEncoder = pivotMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
         proxSensor = new DigitalInput(0);
+        displaySensor = new DigitalInput(1);
+
         pivotMotor.setIdleMode(IdleMode.kBrake);
         
         pidController = new PIDController(
@@ -204,5 +207,9 @@ public class Pivot {
      */
     public boolean getProxSensorTripped() {
         return !proxSensor.get();
+    }
+
+    public boolean getDisplaySensorTripped() {
+        return !displaySensor.get();
     }
 }

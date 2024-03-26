@@ -35,7 +35,7 @@ public class LEDLights {
         } else if (DriverStation.isAutonomous()) {
             setPattern = new FadeIn(new Color(0.0, 1.0, 0.0), 2.0);
         } else {
-            if (Hands.pivot.getProxSensorTripped()) {
+            if (Hands.pivot.getDisplaySensorTripped()) {
                 // Strobe rainbow, or 
                 // *clears throat*
 	            // EPIC GAMER LIGHTS GO BRRRRR
