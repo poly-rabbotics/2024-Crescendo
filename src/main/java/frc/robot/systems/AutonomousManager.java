@@ -33,7 +33,7 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait((prevState) -> Hands.shooter.set(ShooterState.RUNNING))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))   
             .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
         /* MODE 2 // DRIVE TO AMP AND SCORE */
@@ -110,17 +110,9 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(0.0, -2.25, new Rotation2d(2.237)))))
             .wait(makeDriveStep(new Pose2d(7.2, -2.25, new Rotation2d(Math.PI))));
             
-        // Amp side speaker two note then dine and dash
+        // Amp side speaker - shoot preload then dine and dash
         startingPositions[7] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
         procedures[7] = new AutonomousProcedure("Amp Side Preload -> Dine and Dash")
-            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
-            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
-            .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(1.0, 0.4, new Rotation2d(0.0)))))
-            .wait(AutonomousProcedure.timeoutAt(2.25, makeDriveStep(new Pose2d(3.5, 0.4, new Rotation2d(0.0)))))
-            .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237)))))
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
