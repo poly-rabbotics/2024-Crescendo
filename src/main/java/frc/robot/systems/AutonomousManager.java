@@ -96,7 +96,7 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(2.25, makeDriveStep(new Pose2d(3.5, 0.4, new Rotation2d(0.0)))))
             .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237)))))
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()));
         
         // Source side - shoot preload, then dine and dash
