@@ -854,8 +854,8 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     public static boolean withinPositionTolerance() {
-        final double TOLERANCE_X = 0.2;
-        final double TOLERANCE_Y = 0.2;
+        final double TOLERANCE_X = 0.3;
+        final double TOLERANCE_Y = 0.3;
         final double TOLERANCE_THETA = 0.1;
 
         // makes sure angle are within [0, tau)
