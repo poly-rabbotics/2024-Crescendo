@@ -84,11 +84,11 @@ public class SwerveDrive extends SmartPrintable {
         //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.6;
     private static final double TRAJECTORY_STRAFE_X_PID_I = 0.004;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.035;
 
-    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.4;
+    private static final double TRAJECTORY_STRAFE_Y_PID_P = 0.6;
     private static final double TRAJECTORY_STRAFE_Y_PID_I = 0.004;
     private static final double TRAJECTORY_STRAFE_Y_PID_D = 0.035;
 
@@ -142,6 +142,7 @@ public class SwerveDrive extends SmartPrintable {
     private double translationSpeedX = 0.0;
     private double translationSpeedY = 0.0;
     private double rotationSpeed = 0.0;
+    private double ampChargeSpeed = 0.0;
 
     private double trajectoryCoefficiantX = 1.0;
     private double trajectoryCoefficiantY = 1.0;
@@ -583,6 +584,26 @@ public class SwerveDrive extends SmartPrintable {
                 break;
             }
 
+            case AMP_LINE_UP: {
+                instance.translationSpeedX = Math.abs(instance.ampChargeSpeed) > 0.1 
+                    ? 0.0
+                    : Aimbot.ampLineUpX() * -getTrajectoryCoefficiantY();
+                instance.translationSpeedY = instance.ampChargeSpeed * getTrajectoryCoefficiantY();
+                instance.setAngle = new Angle().setDegrees(-90.0 * getTrajectoryCoefficiantY());
+
+                moduleStates = instance.kinematics.toSwerveModuleStates(
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        instance.translationSpeedX,
+                        instance.translationSpeedY,
+                        -instance.setAngleController.calculate(
+                            Pigeon.getYaw().radians(),
+                            instance.setAngle.radians()
+                        ), 
+                        new Rotation2d(Pigeon.getYaw().radians())
+                    )
+                );
+            }
+
             // This branch should never be reached as the enum used should never
             // have more than the above possible values.
             default: assert false;
@@ -720,6 +741,10 @@ public class SwerveDrive extends SmartPrintable {
             instance.positions, 
             new Pose2d(0.0, 0.0, new Rotation2d(0.0))
         );
+    }
+
+    public static void setAmpChargeSpeed(double speed) {
+        instance.ampChargeSpeed = speed;
     }
 
     /**

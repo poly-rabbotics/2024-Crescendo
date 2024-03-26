@@ -82,7 +82,7 @@ public class Shooter {
 
         shooterState = state;
         
-        if(getVelocity() >= RAMPING_THRESHOLD)
+        if(getVelocity() >= RAMPING_THRESHOLD * 0.9) // EIGHTY PERCENT TOLERATED
             status = StepStatus.Done;
         else
             status = StepStatus.Running;

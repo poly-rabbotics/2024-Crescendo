@@ -22,6 +22,8 @@ public class Aimbot extends SmartPrintable {
     private static final PIDController turnPID = new PIDController(TURN_P, TURN_I, TURN_D);
     private static final PIDController movePID = new PIDController(MOVE_P, MOVE_I, MOVE_D);
 
+    private static final PIDController AMP_STRAFE_PID = new PIDController(0.012, 0.0, 0.0);
+
     private static Aimbot instance = new Aimbot();
 
     private double turnCalculation = 0.0;
@@ -30,6 +32,7 @@ public class Aimbot extends SmartPrintable {
     
     private Aimbot() {
         SmartPrinter.register(this);
+        AMP_STRAFE_PID.setTolerance(2.5);
     }
     
     public static Angle calculateShooterAngle() {
@@ -44,6 +47,16 @@ public class Aimbot extends SmartPrintable {
         }
 
         return new Angle().setDegrees(a * x * x + b * x + c);
+    }
+
+    public static double ampLineUpX() {
+        var measurement = Limelight.targetYawOffset();
+
+        if (measurement == null) {
+            return 0.0;
+        }
+
+        return AMP_STRAFE_PID.calculate(measurement.degrees(), -9.0);
     }
 
     /**

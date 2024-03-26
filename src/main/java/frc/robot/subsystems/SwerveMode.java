@@ -49,4 +49,9 @@ public enum SwerveMode {
      * Like `TRAJECTORY_FOLLOW` but for `SidewalkPaver`.
      */
     SIDEWALK_WALK,
+
+    /**
+     * Lines up to amp
+     */
+    AMP_LINE_UP,
 }

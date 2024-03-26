@@ -31,6 +31,7 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends LoggedRobot {
+    private static AccelerationBasedOdometry accelOdometry = new AccelerationBasedOdometry(new Pose2d());
     private static final XboxController controllerOne = new XboxController(0);
     private static final XboxController controllerTwo = new XboxController(1);
     private static final Joystick controlPanel = new Joystick(2);
@@ -88,6 +89,8 @@ public class Robot extends LoggedRobot {
 
         SwerveDrive.updateOdometry();
         SwerveDrive.recordStates();
+
+        accelOdometry.update(Pigeon.getAccelerationX(), Pigeon.getAccelerationY(), Pigeon.getYaw());
         
         if (controllerOne.getBackButtonReleased()) {
             // USE SWITCHES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -117,7 +120,10 @@ public class Robot extends LoggedRobot {
 
             Pigeon.setFeildOrientation(new Angle().setRadians(pose.getRotation().getRadians()));
             SwerveDrive.setOdometry(pose);
+            accelOdometry = new AccelerationBasedOdometry(new Pose2d());
         }
+
+        Logger.recordOutput("Acceleration Based Odometry", accelOdometry.getPosition());
 
         AutonomousManager.log(
             switchPanel.getRawButton(1),
@@ -216,8 +222,7 @@ public class Robot extends LoggedRobot {
             Controls.cardinalLock((x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 2.0),
             controllerOne.getRightBumper() && controllerOne.getXButton()
         ); // Half translation speed.
-        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT_ROTATION, controllerOne.getLeftTriggerAxis() > 0.5);
-        SwerveDrive.conditionalTempMode(SwerveMode.AIMBOT, controllerOne.getRightTriggerAxis() > 0.5);
+        SwerveDrive.conditionalTempMode(SwerveMode.AMP_LINE_UP, controllerOne.getLeftTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.conditionalTempMode(SwerveMode.RELATIVE, controllerOne.getYButton());
         SwerveDrive.run(
@@ -225,6 +230,7 @@ public class Robot extends LoggedRobot {
             -controllerOne.getLeftX(),
             controllerOne.getRightX()
         );
+        SwerveDrive.setAmpChargeSpeed(Math.pow(controllerOne.getRightTriggerAxis(), 3.0) * 0.6);
 
         double rumble = SwerveDrive.getAveragePercentRatedCurrent();
         controllerOne.setRumble(RumbleType.kBothRumble, rumble);
