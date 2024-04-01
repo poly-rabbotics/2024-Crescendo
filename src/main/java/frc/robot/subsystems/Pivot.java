@@ -22,7 +22,7 @@ public class Pivot {
 
     private static final Angle CLIMBING_ANGLE = new Angle().setDegrees(105);
     private static final Angle GROUND_INTAKE_ANGLE = new Angle().setDegrees(-61.5);
-    private static final Angle SPEAKER_SHOOTING_ANGLE = new Angle().setDegrees(45);
+    private static final Angle SPEAKER_SHOOTING_ANGLE = new Angle().setDegrees(47);
     private static final Angle AMP_SCORING_ANGLE = new Angle().setDegrees(85);
     
     private Setpoint setpoint = Setpoint.GROUND_INTAKE;
@@ -78,8 +78,6 @@ public class Pivot {
         } else {
             pivotMotor.set(getManualInput());
         }
-
-        pivotMotor.set(speed);
     }
 
     /**

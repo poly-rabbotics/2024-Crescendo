@@ -9,7 +9,7 @@ import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 public class LinearActuator {
     private static final double ACTUATION_DISTANCE = 26.5;
 
-    private static final double P = 2.65;
+    private static final double P = 3.75;
     private static final double I = 0;
     private static final double D = 0;
 

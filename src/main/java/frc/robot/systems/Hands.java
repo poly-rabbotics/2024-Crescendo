@@ -49,7 +49,7 @@ public class Hands extends SmartPrintable {
 
     private static final int PIVOT_MOTOR_ID = 13;
 
-    private static final double MANUAL_DEADZONE = 0.3;
+    private static final double MANUAL_DEADZONE = 0.1;
 
     public static LinearActuator linearActuator;
     public static LinearServo linearServo;
@@ -77,6 +77,7 @@ public class Hands extends SmartPrintable {
         loader.init();
         shooter.init();
         pivot.init();
+        linearActuator.init();
     }
 
     /**
@@ -85,6 +86,7 @@ public class Hands extends SmartPrintable {
     public static void teleopInit() {
         shooter.init();
         pivot.init();
+        linearActuator.init();
     }
 
     /**
@@ -102,7 +104,7 @@ public class Hands extends SmartPrintable {
      * @param dynamicShooting
      * @param ampScoring
      */
-    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring, boolean autoRamp) {
+    public static void run(boolean intakeIn, boolean intakeOut, boolean shoot, boolean runLoader, boolean actuatorPressed, double manualShooter, double manualPivot, boolean climbing, boolean groundIntake, boolean speakerShooting, boolean dynamicShooting, boolean ampScoring, boolean autoFire) {
 
         /* PIVOT */
         //Update pivot control mode
@@ -140,21 +142,13 @@ public class Hands extends SmartPrintable {
         }
 
         //Set shooter state
-        if(autoRamp && pivot.getProxSensorTripped()) {
-            if(pivot.getSetpoint().equals(Setpoint.STATIC_SHOOTING) || pivot.getSetpoint().equals(Setpoint.DYNAMIC_SHOOTING) || pivot.getSetpoint().equals(Setpoint.GROUND_INTAKE) || shoot) {
-                shooter.set(ShooterState.RUNNING);
-            } else {
-                shooter.set(ShooterState.IDLE);
-            }
+        if(shoot) {
+            shooter.set(ShooterState.RUNNING);
         } else {
-            if(shoot) {
-                shooter.set(ShooterState.RUNNING);
-            } else {
-                shooter.set(ShooterState.IDLE);
-            }
+            shooter.set(ShooterState.IDLE);
         }
 
-        if (shooter.getAtVelocity()) {
+        if (shooter.getAtVelocity() && autoFire) {
             loader.fire();
         }
 

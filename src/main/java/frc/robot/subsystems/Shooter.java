@@ -12,7 +12,7 @@ import frc.robot.systems.Hands.ControlMode;
 public class Shooter {
 
     private static final int RAMPING_THRESHOLD = 97; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
-    private static final double VELOCITY = 120; //Velocity in RPM
+    private static final double VELOCITY = 100; //Velocity in RPM
     
     private static final double P_0 = 0.65;
     private static final double I_0 = 0.01;
@@ -82,7 +82,7 @@ public class Shooter {
 
         shooterState = state;
         
-        if(getVelocity() >= RAMPING_THRESHOLD * 0.9) // EIGHTY PERCENT TOLERATED
+        if(getVelocity() >= RAMPING_THRESHOLD)
             status = StepStatus.Done;
         else
             status = StepStatus.Running;
@@ -150,6 +150,6 @@ public class Shooter {
     }
 
     public boolean getAtVelocity() {
-        return getVelocity() >= VELOCITY * 0.75;
+        return getVelocity() >= VELOCITY;
     }
 }
