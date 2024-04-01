@@ -44,12 +44,17 @@ import frc.robot.subsystems.PathPosition;
  * Manages the swerve drive train.
  */
 public class SwerveDrive extends SmartPrintable {
+    // CAN IDs of drive motors and encoders.
     private static final int MODULE_MOVEMENT_CAN_IDS[] = { 1,   2,   3,   4  };
     private static final int MODULE_ROTATION_CAN_IDS[] = { 5,   6,   7,   8  };
     private static final int MODULE_CANCODER_CAN_IDS[] = { 9,   10,  11,  12 };
     
+    // Side length of the drive. Assumes a square drive.
     private static final double CHASSIS_SIDE_LENGTH = 0.58;
 
+    // Offsets of each absolute encoder (in this case CANCoders) from zero, where we take an angle
+    // of zero to be forward. By adding an offset to the corosponding encoder's reported angle, we
+    // should be given the actual angle of the swerve module's wheel.
     private static final Angle MODULE_CANCODER_OFFSETS[] = {
         new Angle().setDegrees(75.498046875), 
         new Angle().setDegrees(-222.802734375), 
@@ -57,14 +62,7 @@ public class SwerveDrive extends SmartPrintable {
         new Angle().setDegrees(57.216796875)  
     };
 
-    // Wyvern
-    /* private static final Angle MODULE_CANCODER_OFFSETS[] = {
-        new Angle().setDegrees(-252.24607237 + 90.0), 
-        new Angle().setDegrees(-224.033203125 + 270.0), 
-        new Angle().setDegrees(-11.425719246268272 + 270.0), 
-        new Angle().setDegrees(-179.56050113588573 + 90.0) 
-    }; */
-
+    // Positions for each wheel in "Rock Mode".
     private static final Angle MODULE_ROCK_MODE_POSITIONS[] = { 
         new Angle().setRadians( -Angle.TAU / 8  ), 
         new Angle().setRadians(  Angle.TAU / 8  ), 
@@ -72,19 +70,18 @@ public class SwerveDrive extends SmartPrintable {
         new Angle().setRadians(  Angle.TAU / 8  ) 
     };
 
+    // The physical positions of the drive's modules from the drive's center, in meters. The drive's
+    // center need not be the robot's center.
     private static final Translation2d MODULE_PHYSICAL_POSITIONS[] = {
         new Translation2d( -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2),
         new Translation2d( -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2),
         new Translation2d(  CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2),
         new Translation2d(  CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2),
-
-        //new Translation2d(   CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  ),
-        //new Translation2d(   CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
-        //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,   CHASSIS_SIDE_LENGTH / 2  ),
-        //new Translation2d(  -CHASSIS_SIDE_LENGTH / 2,  -CHASSIS_SIDE_LENGTH / 2  )
     };
 
-    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.6;
+    // PID parameter constants for following autonomous trajectories. These are used to follow a
+    // setpoint given as a two dimensional point and a rotation.
+    private static final double TRAJECTORY_STRAFE_X_PID_P = 0.4;
     private static final double TRAJECTORY_STRAFE_X_PID_I = 0.004;
     private static final double TRAJECTORY_STRAFE_X_PID_D = 0.035;
 
@@ -96,6 +93,9 @@ public class SwerveDrive extends SmartPrintable {
     private static final double TRAJECTORY_ROTATE_PID_I = 0.0;
     private static final double TRAJECTORY_ROTATE_PID_D = 0.0;
 
+    // Set angle constants. Use in teleop for "snap angles" available to the driver, or any other
+    // controls function in teleop in which the driver may determine a desired angle, rather than
+    // controlling the speed ot rotation itself.
     private static final double SET_ANGLE_PID_P = 1.0;
     private static final double SET_ANGLE_PID_I = 0.0;
     private static final double SET_ANGLE_PID_D = 0.0;
@@ -103,12 +103,22 @@ public class SwerveDrive extends SmartPrintable {
     // Singleton instance.
     private static final SwerveDrive instance = new SwerveDrive();
 
-    // Internally mutable state objects
+    // Module objects. Stores the module objects themselves which allow us to interface with them.
     private final SwerveModule modules[] = new SwerveModule[MODULE_MOVEMENT_CAN_IDS.length];
+
+    // Positions of the modules, are used for things like odometry.
     private final SwerveModulePosition positions[] = new SwerveModulePosition[MODULE_MOVEMENT_CAN_IDS.length];
+
+    // Kinematics takes our desired drive state and produces states for each module.
     private final SwerveDriveKinematics kinematics;
+
+    // Odometry keeps track of our position on the field.
     private final SwerveDriveOdometry odometry;
 
+    // PID controllers for autonomous trajectory following. Despite being an autonomous ability,
+    // these controllers could be used in teleop, as the drive mode that uses them is always
+    // available. Keep this in mind if auto-alignment to a target is desired and we have an accurate
+    // source of odometry data.
     private final PIDController trajectoryStrafeXController
         = new PIDController(TRAJECTORY_STRAFE_X_PID_P, TRAJECTORY_STRAFE_X_PID_I, TRAJECTORY_STRAFE_X_PID_D);
     private final PIDController trajectoryStrafeYController
@@ -116,40 +126,67 @@ public class SwerveDrive extends SmartPrintable {
     private final PIDController trajectoryRotateController
         = new PIDController(TRAJECTORY_ROTATE_PID_P, TRAJECTORY_ROTATE_PID_I, TRAJECTORY_ROTATE_PID_D);
 
+    // Controller for set angles, may be used on command by the driver while retaining full 
+    // translation control. This controller is still available to the whole class, and so may be 
+    // employed elsewhere.
     private final PIDController setAngleController
         = new PIDController(SET_ANGLE_PID_P, SET_ANGLE_PID_I, SET_ANGLE_PID_D);
 
-    // Fully mutable state objects
+    // These are for using pathweaver, which uses a time to determine the objective point.
     private StatusedTimer trajectoryTimer = new StatusedTimer();
     private Trajectory autonomousTrajectory = new Trajectory();
+
+    // For sidewalk paver, which simply sets the current point through an autonomous procedure.
     private PathPosition setPathPosition = null;
     
+    // Control curves for teleop run methods. The translation curve is two dimensional since both 
+    // axes of the controller should be taken in context, rotation is simply one dimensional. The
+    // intactive curves of either are for tracking what curve to return to when setting temporary
+    // curves, which are used for hold-button functions rather than toggle-button ones. This allows
+    // a curve to only be active when holdling a button, for example, a button to reduce speed may
+    // be a hold-button.
     private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
     private BiFunction<Double, Double, Double> inactiveTransationCurve = null;
     private Function<Double, Double> rotationCurve = Controls::defaultCurve;
     private Function<Double, Double> inactiveRotationCurve = null;
 
+    // Drive mode fields. Inactive mode works the same as an inactive curve, and tracks the drive
+    // mode to return to when setting temporary modes. The display mode is used only for display,
+    // and is useful when displaying aspects of the drive on something like LED lights.
     private SwerveMode mode = SwerveMode.HEADLESS;
     private SwerveMode inactiveMode = null;
     private SwerveMode displayMode = SwerveMode.HEADLESS;
 
+    // Drive state objects. Module states represent the state of each module as independent items,
+    // they are used as input to each modules and allow us to control them within code. The two 
+    // chassis state objects are for the desired state of the drive and the state we measure via the
+    // encoders on each modules. Chassis states may be displayed with the "swerve" widget in 
+    // AdvantageScope, which is very helpful when debugging drive related issues.
     private SwerveModuleState[] moduleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
     private ChassisSpeeds chassisSpeedsOutput = new ChassisSpeeds();
     private ChassisSpeeds chassisSpeedsCalculated = new ChassisSpeeds();
 
+    // Target angle of the drive. This can be set from elsewhere in code via a setter method and can
+    // allow the driver to control the angle of the drive, rather than rotation speed.
+    // NOTE: See set angle controller and relevant constants above.
     private Angle setAngle = new Angle().setRadians(0.0);
 
+    // Translation speeds along the X and Y axes as well as rotation speed. These are set by drive
+    // modes and can be accessed elsewhere in code. They are used to form ChassisSpeeds objects.
     private double translationSpeedX = 0.0;
     private double translationSpeedY = 0.0;
     private double rotationSpeed = 0.0;
     private double ampChargeSpeed = 0.0;
 
+    // Coefficiants for modifying trajectory following. Allows for the scaling and inverting of
+    // either axis.
     private double trajectoryCoefficiantX = 1.0;
     private double trajectoryCoefficiantY = 1.0;
 
     private SwerveDrive() {
         super();
         
+        // Create swerve modules using device CAN IDs, encoder offsets, and physical positions.
         for (int i = 0; i < MODULE_MOVEMENT_CAN_IDS.length; i++) {
             modules[i] = new SwerveModule(
                 MODULE_MOVEMENT_CAN_IDS[i], 
@@ -160,10 +197,15 @@ public class SwerveDrive extends SmartPrintable {
             );
         }
 
+        // Populate the modules positions for later.
         for (int i = 0; i < modules.length; i++) {
             positions[i] = modules[i].getPosition();
         }
 
+        // Create the kinematics object. From now on all interfacin with kinematics must be done
+        // with modules in the same order. We've already set up all our module related objects in
+        // arrays of length four in the same order, which goes front right, back right, back left,
+        // front left.
         kinematics = new SwerveDriveKinematics(
             MODULE_PHYSICAL_POSITIONS[0],
             MODULE_PHYSICAL_POSITIONS[1],
@@ -171,12 +213,17 @@ public class SwerveDrive extends SmartPrintable {
             MODULE_PHYSICAL_POSITIONS[3]
         );
 
+        // Odometry will be interfaced with in the same order as kinematics are now. It also
+        // requires the angle of our gyro and the positions we recorder earlier.
         odometry = new SwerveDriveOdometry(
             kinematics, 
             new Rotation2d(Pigeon.getYaw().radians()), 
             positions
         );
 
+        // Enable continuous input and set tolerance on the rotation controllers. Continuous input
+        // between zero and tau will make the controller recognize that it works on a circle, and
+        // that a position at zero or any multiple of tau are the same position.
         trajectoryRotateController.enableContinuousInput(0.0, Angle.TAU);
         trajectoryRotateController.setTolerance(0.1);
         setAngleController.enableContinuousInput(0.0, Angle.TAU);
@@ -184,8 +231,7 @@ public class SwerveDrive extends SmartPrintable {
     }
 
     /**
-     * Sets the current mode of the swerve drive. This changes the behavior of
-     * setMovementVector.
+     * Sets the current mode of the swerve drive. This may change the way run methods work.
      * @param mode The mode in which to operate.
      */
     public static void setMode(SwerveMode mode) {
@@ -360,7 +406,7 @@ public class SwerveDrive extends SmartPrintable {
 
     /**
      * Runs with a static speed of zero for all inputs, meant to be used for
-     * trajectory following.
+     * trajectory following in autonomous.
      */
     public static void run() {
         runUncurved(0.0, 0.0, 0.0);
