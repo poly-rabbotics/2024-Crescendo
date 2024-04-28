@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
+import frc.robot.systems.Hands;
 
 public class Intake {
 
@@ -37,7 +38,7 @@ public class Intake {
      * @param speed
      */
     public void set(double speed) {
-        this.speed = speed;
+        this.speed = Hands.clamp(speed, -0.7, 0.7);
     }
 
     /**

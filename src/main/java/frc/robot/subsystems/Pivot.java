@@ -74,6 +74,10 @@ public class Pivot {
 
         if(controlMode == ControlMode.POSITION) {
             speed = pidController.calculate(getPosition());
+            
+            //SAFE MODE
+            speed = Hands.clamp(speed, -0.4, 0.4);
+
             pivotMotor.set(speed);
         } else {
             pivotMotor.set(getManualInput());

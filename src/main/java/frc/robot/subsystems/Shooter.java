@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 
 import frc.robot.subsystems.AutonomousProcedure.StepStatus;
 import frc.robot.systems.Hands.ShooterState;
+import frc.robot.systems.Hands;
 import frc.robot.systems.Hands.ControlMode;
 
 //TODO: CONVERT TO WPILIB PID LOOP
@@ -14,7 +15,7 @@ public class Shooter {
     private static final int RAMPING_THRESHOLD = 97; //Threshold where state goes from RAMPING to READY (when i implement it) in percent(?)
     private static final double VELOCITY = 100; //Velocity in RPM
     
-    private static final double P_0 = 0.65;
+    private static final double P_0 = 0.3;
     private static final double I_0 = 0.01;
     private static final double D_0 = 0;
     private static final double S_0 = 0.05;
@@ -98,7 +99,7 @@ public class Shooter {
      * @param input
      */
     public void setManualInput(double input) {
-        manualInput = input;
+        manualInput = Hands.clamp(input, -0.7, 0.7);
     }
 
     /**
