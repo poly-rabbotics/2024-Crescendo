@@ -77,6 +77,9 @@ public class Robot extends LoggedRobot {
         LEDLights.setBitArrangements(bitArrangements);
 
         Hands.init();
+
+        // For safety at Bixby:
+        SwerveDrive.setPropulsionLimit(0.333);
     }
     
     @Override

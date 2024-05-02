@@ -926,6 +926,12 @@ public class SwerveDrive extends SmartPrintable {
         return instance.trajectoryCoefficiantY;
     }
 
+    public static void setPropulsionLimit(double limit) {
+        for (SwerveModule module : instance.modules) {
+            module.setPropulsionLimit(limit);
+        }
+    }
+
     /**
      * Print data to smart dashboard.
      */

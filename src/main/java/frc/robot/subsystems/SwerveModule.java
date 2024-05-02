@@ -55,6 +55,7 @@ public class SwerveModule extends SmartPrintable {
     // (see some IEEE standard or something) and so this is how rock mode is 
     // checked.
     private double rockPos = Double.NaN;
+    private double propulsionLimit = 1.0;
 
     private enum RelativePosition {
         FRONT_RIGHT (  1.0,  1.0 ),
@@ -107,11 +108,13 @@ public class SwerveModule extends SmartPrintable {
     public void run() {
         SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(getAngle().radians()));
         double rotationSpeed = rotationController.calculate(getAngle().radians(), state.angle.getRadians() % Angle.TAU);
-        double propulsionSpeed = Double.isNaN(rockPos)
+        double propulsionVelocity = Double.isNaN(rockPos)
             ? state.speedMetersPerSecond
             : rockController.calculate(getDistanceTraveled(), rockPos);
-    
-        movementMotor.set(propulsionSpeed);
+        double magnitude = Math.min(Math.abs(propulsionVelocity), Math.abs(propulsionLimit));
+        double sign = Math.signum(propulsionVelocity);
+        
+        movementMotor.set(magnitude * sign);
         rotationMotor.set(rotationSpeed);
     }
     
@@ -296,6 +299,13 @@ public class SwerveModule extends SmartPrintable {
      */
     public SwerveModulePosition getPosition() {
         return position;
+    }
+
+    /**
+     * Sets the maximum speed of the propulsion motor.
+     */
+    public void setPropulsionLimit(double limit) {
+        propulsionLimit = limit;
     }
 
     /**
