@@ -79,7 +79,7 @@ public class Robot extends LoggedRobot {
         Hands.init();
 
         // For safety at Bixby:
-        SwerveDrive.setPropulsionLimit(0.333);
+        SwerveDrive.setSpeedLimit(0.33);
     }
     
     @Override

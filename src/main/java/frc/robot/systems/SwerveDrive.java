@@ -183,6 +183,8 @@ public class SwerveDrive extends SmartPrintable {
     private double trajectoryCoefficiantX = 1.0;
     private double trajectoryCoefficiantY = 1.0;
 
+    private double speedLimit = 1.0;
+
     private SwerveDrive() {
         super();
         
@@ -461,9 +463,10 @@ public class SwerveDrive extends SmartPrintable {
      * @param rotation Rate of turn. -1.0 - 1.0
      */
     public static void runUncurved(double translationX, double translationY, double rotation) {
-        instance.translationSpeedX = translationX;
-        instance.translationSpeedY = translationY;
-        instance.rotationSpeed = rotation;
+        double magnitude = Math.sqrt(instance.speedLimit * instance.speedLimit * 2);
+        instance.translationSpeedX = translationX * magnitude;
+        instance.translationSpeedY = translationY * magnitude;
+        instance.rotationSpeed = rotation * magnitude;
 
         SwerveModuleState[] moduleStates = new SwerveModuleState[instance.modules.length];
         boolean holdPos = false;
@@ -683,6 +686,10 @@ public class SwerveDrive extends SmartPrintable {
             instance.rotationCurve = instance.inactiveRotationCurve;
             instance.inactiveRotationCurve = null;
         }
+    }
+
+    public static void setSpeedLimit(double limit) {
+        instance.speedLimit = limit;
     }
 
     /**
@@ -924,12 +931,6 @@ public class SwerveDrive extends SmartPrintable {
 
     public static double getTrajectoryCoefficiantY() {
         return instance.trajectoryCoefficiantY;
-    }
-
-    public static void setPropulsionLimit(double limit) {
-        for (SwerveModule module : instance.modules) {
-            module.setPropulsionLimit(limit);
-        }
     }
 
     /**
