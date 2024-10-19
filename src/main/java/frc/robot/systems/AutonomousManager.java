@@ -36,16 +36,13 @@ public class AutonomousManager {
             .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))   
             .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
-        /* MODE 2 // DRIVE TO AMP AND SCORE */
-        /* startingPositions[2] = new Pose2d(0.0, 0.0, new Rotation2d(0));
-        procedures[2] = new AutonomousProcedure("")
-            .wait((prevState) -> StepStatus.Running) //SWERVE DRIVING PART
-            .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.AMP_SCORING)))
-            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.5)))
-            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0.0)))
-            .wait(AutonomousProcedure.timeoutAt(0.3, (prevState) -> StepStatus.Running))
-            .wait(AutonomousProcedure.timeoutAt(1, (prevState) -> Hands.linearActuator.setPosition(0)))
-            .wait(AutonomousProcedure.timeoutAt(2, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))); */
+        startingPositions[2] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[2] = new AutonomousProcedure("Speaker 1 Note (Amp Side)")
+            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+            .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
+            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
         // Scores preload, gets front row note and scores it
         // assumes starting center speaker, facing speaker.

@@ -166,7 +166,7 @@ public class Hands extends SmartPrintable {
         /* INTAKE */
         if(intakeIn) {
             intake.set(Intake.INTAKE_SPEED);
-            shooter.setManualInput(-0.4);
+            shooter.setManualInput(-0.35);
         } else if(intakeOut) {
             intake.set(Intake.OUTTAKE_SPEED);
             shooter.setManualInput(0.1);
