@@ -28,16 +28,16 @@ public class AutonomousManager {
         procedures[0] = new AutonomousProcedure("Unit Procedure");
 
         // Scores speaker with preload, assumes facing speaker from center.
-        startingPositions[1] = new Pose2d(0.0, 0.0, new Rotation2d(Math.PI));
-        procedures[1] = new AutonomousProcedure("Speaker 1 Note")
-            .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
-            .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
-            .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))   
-            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
+        //startingPositions[1] = new Pose2d(0.0, 0.0, new Rotation2d(Math.PI));
+        //procedures[1] = new AutonomousProcedure("Speaker 1 Note")
+        //    .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
+        //    .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
+        //    .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
+        //    .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))   
+        //    .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE));
 
-        startingPositions[2] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
-        procedures[2] = new AutonomousProcedure("Speaker 1 Note (Amp Side)")
+        startingPositions[1] = new Pose2d(0.0, 0.0, new Rotation2d(-2.237));
+        procedures[1] = new AutonomousProcedure("Speaker 1 Note (Amp Side)")
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
@@ -128,7 +128,7 @@ public class AutonomousManager {
             .wait(makeDriveStep(new Pose2d(1.75, -0.15, new Rotation2d(0.0))))
             .wait(AutonomousProcedure.timeoutAt(1.75, makeDriveStep(new Pose2d(2.25, -0.15, new Rotation2d(0.0)))))
             .wait(makeDriveStep(new Pose2d(1.5, -0.15, new Rotation2d(Math.PI))))
-            .wait(makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(2.366))))
+            .wait(AutonomousProcedure.timeoutAt(4.0, makeDriveStep(new Pose2d(-0.2, 0.0, new Rotation2d(2.366)))))
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt(2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
@@ -143,8 +143,8 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(1.5, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt( 2.5, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.loader.fire()))
-            .wait((prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE))
-            .wait((prevState) -> Hands.shooter.set(ShooterState.IDLE))
+            .wait(AutonomousProcedure.timeoutAt(0.5, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE)))
+            .wait(AutonomousProcedure.timeoutAt(0.5, (prevState) -> Hands.shooter.set(ShooterState.IDLE)))
             .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(1.0, 0.25, new Rotation2d(0.0)))))
             .wait(AutonomousProcedure.timeoutAt(2.25, makeDriveStep(new Pose2d(3.5, 0.25, new Rotation2d(0.0)))))
             .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(0.0, 0.0, new Rotation2d(-2.237)))))
@@ -171,9 +171,9 @@ public class AutonomousManager {
             .wait(AutonomousProcedure.timeoutAt(0.65, (prevState) -> Hands.loader.fire()))
             .wait(AutonomousProcedure.timeoutAt(0.01, (prevState) -> Hands.pivot.set(Setpoint.GROUND_INTAKE)))
             .wait(AutonomousProcedure.timeoutAt(0.01, (prevState) -> Hands.shooter.set(ShooterState.IDLE)))
-            .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(1.8, 1.85, new Rotation2d(Math.PI)))))
+            .wait(AutonomousProcedure.timeoutAt(1.5, makeDriveStep(new Pose2d(1.8, 2.2, new Rotation2d(Math.PI)))))
             .wait(AutonomousProcedure.timeoutAt(1.0, makeDriveStep(new Pose2d(4.0, -0.5, new Rotation2d(Math.PI)))))
-            .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(0.25, -0.5, new Rotation2d(Math.PI)))))
+            .wait(AutonomousProcedure.timeoutAt(2.0, makeDriveStep(new Pose2d(-0.2, -0.5, new Rotation2d(Math.PI)))))
             .wait(AutonomousProcedure.timeoutAt(1.0, (prevState) -> Hands.pivot.set(Setpoint.STATIC_SHOOTING)))
             .wait(AutonomousProcedure.timeoutAt(2.0, (prevState) -> Hands.shooter.set(ShooterState.RUNNING)))
             .wait(AutonomousProcedure.timeoutAt(0.65, (prevState) -> Hands.loader.fire()))

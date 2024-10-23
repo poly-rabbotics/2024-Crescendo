@@ -191,10 +191,10 @@ public class Robot extends LoggedRobot {
         // Invert turn on right stick.
         if (controllerOne.getRightStickButtonReleased()){       
             if (!invertedTurn) {
-                SwerveDrive.setRotationCurve((x) -> Controls.defaultCurve(-x));
+                SwerveDrive.setRotationCurve((x) -> Controls.turnCurveRohan(-x));
                 invertedTurn = true;
             } else {
-                SwerveDrive.setRotationCurve(Controls::defaultCurve);
+                SwerveDrive.setRotationCurve(Controls::turnCurveRohan);
                 invertedTurn = false;
             }
         }
