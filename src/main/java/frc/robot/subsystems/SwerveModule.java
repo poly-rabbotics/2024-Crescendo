@@ -4,24 +4,22 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import frc.robot.SmartPrintable;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 
 /** 
  * Class for managing and manipulating a swerve module. 
  */
-public class SwerveModule extends SmartPrintable {
+public class SwerveModule {
     private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                    // Enc counts to radians.
     private static final double CONVERSION_FACTOR_MOVEMENT = (1.0 / 6.75) * 0.1 * 8.0637 * 0.39333835;  // Rotations to meters.
     private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
@@ -70,22 +68,9 @@ public class SwerveModule extends SmartPrintable {
             front = Math.signum(y) > 0.0;
         }
 
-        public String asString() {
-            String str = "";
-            
-            if (front) {
-                str += "Front ";
-            } else {
-                str += "Back ";
-            }
-
-            if (right) {
-                str += "Right";
-            } else {
-                str += "Left";
-            }
-
-            return str;
+        @Override
+        public String toString() {
+            return (front ? "Front  " : "Back ") + (right ? "Right" : "Left");
         }
 
         public static RelativePosition fromTranslation(Translation2d translation) {
@@ -303,17 +288,5 @@ public class SwerveModule extends SmartPrintable {
      */
     public void zeroPositions() {
         movementEncoder.setPosition(0.0);
-    }
-
-    @Override
-    public void print() {
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position mod 360", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU % Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off", Math.toDegrees(angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position + off mod 360", Math.toDegrees((angularEncoder.getPosition().getValue() * Angle.TAU + canCoderOffset.radians()) % Angle.TAU));
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Position (Distance) ", movementEncoder.getPosition());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Speed", movementMotor.get());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Movement Velocity", movementEncoder.getVelocity());
-        SmartDashboard.putNumber("Module " + physicalPosition.asString() + "(ids: " + movementMotor.getDeviceId() + ", " + rotationMotor.getDeviceId() + ", " + angularEncoder.getDeviceID() + ") Desired Velocity", desiredState.speedMetersPerSecond);
     }
 }

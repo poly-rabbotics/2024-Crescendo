@@ -30,9 +30,6 @@ import edu.wpi.first.math.trajectory.Trajectory.State;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import frc.robot.SmartPrintable;
 
 import frc.robot.subsystems.Angle;
 import frc.robot.subsystems.StatusedTimer;
@@ -43,7 +40,7 @@ import frc.robot.subsystems.PathPosition;
 /*
  * Manages the swerve drive train.
  */
-public class SwerveDrive extends SmartPrintable {
+public class SwerveDrive {
     // CAN IDs of drive motors and encoders.
     private static final int MODULE_MOVEMENT_CAN_IDS[] = { 1,   2,   3,   4  };
     private static final int MODULE_ROTATION_CAN_IDS[] = { 5,   6,   7,   8  };
@@ -100,44 +97,41 @@ public class SwerveDrive extends SmartPrintable {
     private static final double SET_ANGLE_PID_I = 0.0;
     private static final double SET_ANGLE_PID_D = 0.0;
 
-    // Singleton instance.
-    private static final SwerveDrive instance = new SwerveDrive();
-
     // Module objects. Stores the module objects themselves which allow us to interface with them.
-    private final SwerveModule modules[] = new SwerveModule[MODULE_MOVEMENT_CAN_IDS.length];
+    private static final SwerveModule modules[] = new SwerveModule[MODULE_MOVEMENT_CAN_IDS.length];
 
     // Positions of the modules, are used for things like odometry.
-    private final SwerveModulePosition positions[] = new SwerveModulePosition[MODULE_MOVEMENT_CAN_IDS.length];
+    private static final SwerveModulePosition positions[] = new SwerveModulePosition[MODULE_MOVEMENT_CAN_IDS.length];
 
     // Kinematics takes our desired drive state and produces states for each module.
-    private final SwerveDriveKinematics kinematics;
+    private static final SwerveDriveKinematics kinematics;
 
     // Odometry keeps track of our position on the field.
-    private final SwerveDriveOdometry odometry;
+    private static final SwerveDriveOdometry odometry;
 
     // PID controllers for autonomous trajectory following. Despite being an autonomous ability,
     // these controllers could be used in teleop, as the drive mode that uses them is always
     // available. Keep this in mind if auto-alignment to a target is desired and we have an accurate
     // source of odometry data.
-    private final PIDController trajectoryStrafeXController
+    private static final PIDController trajectoryStrafeXController
         = new PIDController(TRAJECTORY_STRAFE_X_PID_P, TRAJECTORY_STRAFE_X_PID_I, TRAJECTORY_STRAFE_X_PID_D);
-    private final PIDController trajectoryStrafeYController
+    private static final PIDController trajectoryStrafeYController
         = new PIDController(TRAJECTORY_STRAFE_Y_PID_P, TRAJECTORY_STRAFE_Y_PID_I, TRAJECTORY_STRAFE_Y_PID_D);
-    private final PIDController trajectoryRotateController
+    private static final PIDController trajectoryRotateController
         = new PIDController(TRAJECTORY_ROTATE_PID_P, TRAJECTORY_ROTATE_PID_I, TRAJECTORY_ROTATE_PID_D);
 
     // Controller for set angles, may be used on command by the driver while retaining full 
     // translation control. This controller is still available to the whole class, and so may be 
     // employed elsewhere.
-    private final PIDController setAngleController
+    private static final PIDController setAngleController
         = new PIDController(SET_ANGLE_PID_P, SET_ANGLE_PID_I, SET_ANGLE_PID_D);
 
     // These are for using pathweaver, which uses a time to determine the objective point.
-    private StatusedTimer trajectoryTimer = new StatusedTimer();
-    private Trajectory autonomousTrajectory = new Trajectory();
+    private static StatusedTimer trajectoryTimer = new StatusedTimer();
+    private static Trajectory autonomousTrajectory = new Trajectory();
 
     // For sidewalk paver, which simply sets the current point through an autonomous procedure.
-    private PathPosition setPathPosition = null;
+    private static PathPosition setPathPosition = null;
     
     // Control curves for teleop run methods. The translation curve is two dimensional since both 
     // axes of the controller should be taken in context, rotation is simply one dimensional. The
@@ -145,47 +139,45 @@ public class SwerveDrive extends SmartPrintable {
     // curves, which are used for hold-button functions rather than toggle-button ones. This allows
     // a curve to only be active when holdling a button, for example, a button to reduce speed may
     // be a hold-button.
-    private BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
-    private BiFunction<Double, Double, Double> inactiveTransationCurve = null;
-    private Function<Double, Double> rotationCurve = Controls::defaultCurve;
-    private Function<Double, Double> inactiveRotationCurve = null;
+    private static BiFunction<Double, Double, Double> translationCurve = Controls::defaultCurveTwoDimensional;
+    private static BiFunction<Double, Double, Double> inactiveTransationCurve = null;
+    private static Function<Double, Double> rotationCurve = Controls::defaultCurve;
+    private static Function<Double, Double> inactiveRotationCurve = null;
 
     // Drive mode fields. Inactive mode works the same as an inactive curve, and tracks the drive
     // mode to return to when setting temporary modes. The display mode is used only for display,
     // and is useful when displaying aspects of the drive on something like LED lights.
-    private SwerveMode mode = SwerveMode.HEADLESS;
-    private SwerveMode inactiveMode = null;
-    private SwerveMode displayMode = SwerveMode.HEADLESS;
+    private static SwerveMode mode = SwerveMode.HEADLESS;
+    private static SwerveMode inactiveMode = null;
+    private static SwerveMode displayMode = SwerveMode.HEADLESS;
 
     // Drive state objects. Module states represent the state of each module as independent items,
     // they are used as input to each modules and allow us to control them within code. The two 
     // chassis state objects are for the desired state of the drive and the state we measure via the
     // encoders on each modules. Chassis states may be displayed with the "swerve" widget in 
     // AdvantageScope, which is very helpful when debugging drive related issues.
-    private SwerveModuleState[] moduleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
-    private ChassisSpeeds chassisSpeedsOutput = new ChassisSpeeds();
-    private ChassisSpeeds chassisSpeedsCalculated = new ChassisSpeeds();
+    private static SwerveModuleState[] moduleStates = { new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState() };
+    private static ChassisSpeeds chassisSpeedsOutput = new ChassisSpeeds();
+    private static ChassisSpeeds chassisSpeedsCalculated = new ChassisSpeeds();
 
     // Target angle of the drive. This can be set from elsewhere in code via a setter method and can
     // allow the driver to control the angle of the drive, rather than rotation speed.
     // NOTE: See set angle controller and relevant constants above.
-    private Angle setAngle = new Angle().setRadians(0.0);
+    private static Angle setAngle = new Angle().setRadians(0.0);
 
     // Translation speeds along the X and Y axes as well as rotation speed. These are set by drive
     // modes and can be accessed elsewhere in code. They are used to form ChassisSpeeds objects.
-    private double translationSpeedX = 0.0;
-    private double translationSpeedY = 0.0;
-    private double rotationSpeed = 0.0;
-    private double ampChargeSpeed = 0.0;
+    private static double translationSpeedX = 0.0;
+    private static double translationSpeedY = 0.0;
+    private static double rotationSpeed = 0.0;
+    private static double ampChargeSpeed = 0.0;
 
     // Coefficiants for modifying trajectory following. Allows for the scaling and inverting of
     // either axis.
-    private double trajectoryCoefficiantX = 1.0;
-    private double trajectoryCoefficiantY = 1.0;
+    private static double trajectoryCoefficiantX = 1.0;
+    private static double trajectoryCoefficiantY = 1.0;
 
-    private SwerveDrive() {
-        super();
-        
+    static {
         // Create swerve modules using device CAN IDs, encoder offsets, and physical positions.
         for (int i = 0; i < MODULE_MOVEMENT_CAN_IDS.length; i++) {
             modules[i] = new SwerveModule(
@@ -235,14 +227,14 @@ public class SwerveDrive extends SmartPrintable {
      * @param mode The mode in which to operate.
      */
     public static void setMode(SwerveMode mode) {
-        instance.mode = mode;
+        SwerveDrive.mode = mode;
     }
 
     /**
      * Get the current swerve mode.
      */
     public static SwerveMode getMode() {
-        return instance.mode;
+        return mode;
     }
 
     /**
@@ -252,7 +244,7 @@ public class SwerveDrive extends SmartPrintable {
      * finishes, making it ideal for display purposes (e.i. LED lights).
      */
     public static SwerveMode getDisplayMode() {
-        return instance.displayMode;
+        return displayMode;
     }
 
     /**
@@ -267,13 +259,13 @@ public class SwerveDrive extends SmartPrintable {
      * running will not be effected
      */
     public static void tempMode(SwerveMode mode) {
-        if (instance.inactiveMode != null) {
-            instance.mode = mode;
+        if (inactiveMode != null) {
+            SwerveDrive.mode = mode;
             return;
         }
 
-        instance.inactiveMode = instance.mode;
-        instance.mode = mode;
+        inactiveMode = mode;
+        SwerveDrive.mode = mode;
     }
 
     /**
@@ -294,7 +286,7 @@ public class SwerveDrive extends SmartPrintable {
      * the robot.
      */
     public static double getTranslationSpeedX() {
-        return instance.translationSpeedX;
+        return translationSpeedX;
     }
 
     /**
@@ -303,14 +295,14 @@ public class SwerveDrive extends SmartPrintable {
      * the robot.
      */
     public static double getTranslationSpeedY() {
-        return instance.translationSpeedY;
+        return translationSpeedY;
     }
 
     /**
      * Gets the rotation speed of the robot.
      */
     public static double getRotationSpeed() {
-        return instance.rotationSpeed;
+        return rotationSpeed;
     }
 
     /**
@@ -320,14 +312,14 @@ public class SwerveDrive extends SmartPrintable {
      * the curved direction.
      */
     public static void setTranslationCurve(BiFunction<Double, Double, Double> curve) {
-        instance.translationCurve = curve;
+        translationCurve = curve;
     }
 
     /**
      * Gets the current curve used for directional inputs.
      */
     public static BiFunction<Double, Double, Double> getTranslationCurve() {
-        return instance.translationCurve;
+        return translationCurve;
     }
 
     /**
@@ -338,13 +330,13 @@ public class SwerveDrive extends SmartPrintable {
      * the curved direction.
      */
     public static void tempTranslationCurve(BiFunction<Double, Double, Double> curve) {
-        if (instance.inactiveTransationCurve != null) {
-            instance.translationCurve = curve;
+        if (inactiveTransationCurve != null) {
+            translationCurve = curve;
             return;
         }
 
-        instance.inactiveTransationCurve = instance.translationCurve;
-        instance.translationCurve = curve;
+        inactiveTransationCurve = translationCurve;
+        translationCurve = curve;
     }
 
     /**
@@ -366,14 +358,14 @@ public class SwerveDrive extends SmartPrintable {
      * @param curve The Function to use for proccessing the curve.
      */
     public static void setRotationCurve(Function<Double, Double> curve) {
-        instance.rotationCurve = curve;
+        rotationCurve = curve;
     }
 
     /**
      * Gets the Function currently used for turning.
      */
     public static Function<Double, Double> getRotationCurve() {
-        return instance.rotationCurve;
+        return rotationCurve;
     }
 
     /**
@@ -381,13 +373,13 @@ public class SwerveDrive extends SmartPrintable {
      * @param curve The Function to use for proccessing the curve.
      */
     public static void tempRotationCurve(Function<Double, Double> curve) {
-        if (instance.inactiveRotationCurve != null) {
-            instance.rotationCurve = curve;
+        if (inactiveRotationCurve != null) {
+            rotationCurve = curve;
             return;
         }
 
-        instance.inactiveRotationCurve = instance.rotationCurve;
-        instance.rotationCurve = curve;
+        inactiveRotationCurve = rotationCurve;
+        rotationCurve = curve;
     }
 
     /**
@@ -446,9 +438,9 @@ public class SwerveDrive extends SmartPrintable {
      * @param lowSense The angle to move in low sensitivity in degrees, -1 for no movement.
      */
     public static void run(double translationX, double translationY, double rotation) {
-        var x = instance.translationCurve.apply(translationX, translationY);
-        var y = instance.translationCurve.apply(translationY, translationX);
-        rotation = instance.rotationCurve.apply(rotation);
+        var x = translationCurve.apply(translationX, translationY);
+        var y = translationCurve.apply(translationY, translationX);
+        rotation = rotationCurve.apply(rotation);
         runUncurved(x, y, rotation);
     }
     
@@ -461,20 +453,20 @@ public class SwerveDrive extends SmartPrintable {
      * @param rotation Rate of turn. -1.0 - 1.0
      */
     public static void runUncurved(double translationX, double translationY, double rotation) {
-        instance.translationSpeedX = translationX;
-        instance.translationSpeedY = translationY;
-        instance.rotationSpeed = rotation;
+        translationSpeedX = translationX;
+        translationSpeedY = translationY;
+        rotationSpeed = rotation;
 
-        SwerveModuleState[] moduleStates = new SwerveModuleState[instance.modules.length];
+        SwerveModuleState[] moduleStates = new SwerveModuleState[modules.length];
         boolean holdPos = false;
 
-        switch (instance.mode) {
+        switch (mode) {
             case HEADLESS: {
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        instance.rotationSpeed, 
+                        translationSpeedX,
+                        translationSpeedY,
+                        rotationSpeed, 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
                 );
@@ -482,22 +474,21 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case RELATIVE: {
-                moduleStates = instance.kinematics.toSwerveModuleStates(
-                        ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        instance.rotationSpeed, 
-                        new Rotation2d(0.0)
+                moduleStates = kinematics.toSwerveModuleStates(
+                    new ChassisSpeeds(
+                        translationSpeedX,
+                        translationSpeedY,
+                        rotationSpeed
                     )
                 ); 
                 break;
             }
 
             case ROCK: {
-                assert moduleStates.length == instance.modules.length;
+                assert moduleStates.length == modules.length;
                 holdPos = true;
 
-                for (int i = 0; i < instance.modules.length; i++) {
+                for (int i = 0; i < modules.length; i++) {
                     moduleStates[i] = new SwerveModuleState(
                         0.0,
                         new Rotation2d(
@@ -510,13 +501,13 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case SET_ANGLE: {
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        -instance.setAngleController.calculate(
+                        translationSpeedX,
+                        translationSpeedY,
+                        -setAngleController.calculate(
                             Pigeon.getYaw().radians(),
-                            instance.setAngle.radians()
+                            setAngle.radians()
                         ), 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
@@ -525,10 +516,10 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case AIMBOT_ROTATION: {
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
+                        translationSpeedX,
+                        translationSpeedY,
                         Aimbot.calculateTurn(), 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
@@ -537,9 +528,9 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case AIMBOT: {
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     new ChassisSpeeds(
-                        instance.translationSpeedX,
+                        translationSpeedX,
                         Aimbot.isCentered()
                             ? Aimbot.calculateMovement()
                             : 0.0,
@@ -550,42 +541,42 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case TRAJECTORY_FOLLOW: {
-                if (instance.autonomousTrajectory == null || instance.autonomousTrajectory.getTotalTimeSeconds() + 0.35 < instance.trajectoryTimer.get()) {
-                    instance.translationSpeedX = 0.0;
-                    instance.translationSpeedY = 0.0;
-                    instance.rotationSpeed = 0.0;
+                if (autonomousTrajectory == null || autonomousTrajectory.getTotalTimeSeconds() + 0.35 < trajectoryTimer.get()) {
+                    translationSpeedX = 0.0;
+                    translationSpeedY = 0.0;
+                    rotationSpeed = 0.0;
 
-                    moduleStates = instance.kinematics.toSwerveModuleStates(
+                    moduleStates = kinematics.toSwerveModuleStates(
                         new ChassisSpeeds(0.0, 0.0, 0.0)
                     );
 
                     break;
                 }
 
-                State state = instance.autonomousTrajectory.sample(instance.trajectoryTimer.get());
+                State state = autonomousTrajectory.sample(trajectoryTimer.get());
                 Pose2d setPosition = state.poseMeters;
-                Pose2d position = instance.odometry.getPoseMeters();
+                Pose2d position = odometry.getPoseMeters();
 
-                instance.translationSpeedX
-                    = instance.trajectoryStrafeXController.calculate(
+                translationSpeedX
+                    = trajectoryStrafeXController.calculate(
                         position.getY(), 
                         setPosition.getY()
                     );
-                instance.translationSpeedY
-                    = instance.trajectoryStrafeYController.calculate(
+                translationSpeedY
+                    = trajectoryStrafeYController.calculate(
                         position.getX(),
                         -setPosition.getX()
                     );
-                instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
+                rotationSpeed = -trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
                 );
 
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        instance.rotationSpeed, 
+                        translationSpeedX,
+                        translationSpeedY,
+                        rotationSpeed, 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
                 );
@@ -594,10 +585,10 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case SIDEWALK_WALK: {
-                if (instance.setPathPosition == null) {
+                if (setPathPosition == null) {
                     // Break early if we have no path.
 
-                    moduleStates = instance.kinematics.toSwerveModuleStates(
+                    moduleStates = kinematics.toSwerveModuleStates(
                         ChassisSpeeds.fromFieldRelativeSpeeds(0, 0, 0, 
                             new Rotation2d(Pigeon.getYaw().radians())
                         )
@@ -606,23 +597,23 @@ public class SwerveDrive extends SmartPrintable {
                     break;
                 }
 
-                Pose2d setPosition = instance.setPathPosition.pose;
-                Pose2d position = instance.odometry.getPoseMeters();
+                Pose2d setPosition = setPathPosition.pose;
+                Pose2d position = odometry.getPoseMeters();
 
-                instance.translationSpeedX
-                    = instance.trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
-                instance.translationSpeedY
-                    = instance.trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
-                instance.rotationSpeed = -instance.trajectoryRotateController.calculate(
+                translationSpeedX
+                    = trajectoryStrafeXController.calculate(position.getX(), setPosition.getX());
+                translationSpeedY
+                    = trajectoryStrafeYController.calculate(position.getY(), setPosition.getY());
+                rotationSpeed = -trajectoryRotateController.calculate(
                     position.getRotation().getRadians(),
                     setPosition.getRotation().getRadians()
                 );
 
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        instance.rotationSpeed, 
+                        translationSpeedX,
+                        translationSpeedY,
+                        rotationSpeed, 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
                 );
@@ -631,19 +622,19 @@ public class SwerveDrive extends SmartPrintable {
             }
 
             case AMP_LINE_UP: {
-                instance.translationSpeedX = Math.abs(instance.ampChargeSpeed) > 0.1 
+                translationSpeedX = Math.abs(ampChargeSpeed) > 0.1 
                     ? 0.0
                     : Aimbot.ampLineUpX() * -getTrajectoryCoefficiantY();
-                instance.translationSpeedY = instance.ampChargeSpeed * getTrajectoryCoefficiantY();
-                instance.setAngle = new Angle().setDegrees(-90.0 * getTrajectoryCoefficiantY());
+                translationSpeedY = ampChargeSpeed * getTrajectoryCoefficiantY();
+                setAngle = new Angle().setDegrees(-90.0 * getTrajectoryCoefficiantY());
 
-                moduleStates = instance.kinematics.toSwerveModuleStates(
+                moduleStates = kinematics.toSwerveModuleStates(
                     ChassisSpeeds.fromFieldRelativeSpeeds(
-                        instance.translationSpeedX,
-                        instance.translationSpeedY,
-                        -instance.setAngleController.calculate(
+                        translationSpeedX,
+                        translationSpeedY,
+                        -setAngleController.calculate(
                             Pigeon.getYaw().radians(),
-                            instance.setAngle.radians()
+                            setAngle.radians()
                         ), 
                         new Rotation2d(Pigeon.getYaw().radians())
                     )
@@ -655,33 +646,33 @@ public class SwerveDrive extends SmartPrintable {
             default: assert false;
         }
 
-        for (int i = 0; i < instance.modules.length; i++) {
-            instance.modules[i].setDesiredState(moduleStates[i]);
-            instance.modules[i].setRockMode(holdPos);
-            instance.modules[i].run();
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].setDesiredState(moduleStates[i]);
+            modules[i].setRockMode(holdPos);
+            modules[i].run();
         }
 
         // Record module states
 
-        instance.moduleStates = moduleStates;
+        SwerveDrive.moduleStates = moduleStates;
         
         // Reset temporary states
         
-        instance.displayMode = instance.mode;
+        displayMode = mode;
         
-        if (instance.inactiveMode != null) {
-            instance.mode = instance.inactiveMode;
-            instance.inactiveMode = null;
+        if (inactiveMode != null) {
+            mode = inactiveMode;
+            inactiveMode = null;
         }
         
-        if (instance.inactiveTransationCurve != null) {
-            instance.translationCurve = instance.inactiveTransationCurve;
-            instance.inactiveTransationCurve = null;
+        if (inactiveTransationCurve != null) {
+            translationCurve = inactiveTransationCurve;
+            inactiveTransationCurve = null;
         }
 
-        if (instance.inactiveRotationCurve != null) {
-            instance.rotationCurve = instance.inactiveRotationCurve;
-            instance.inactiveRotationCurve = null;
+        if (inactiveRotationCurve != null) {
+            rotationCurve = inactiveRotationCurve;
+            inactiveRotationCurve = null;
         }
     }
 
@@ -689,17 +680,17 @@ public class SwerveDrive extends SmartPrintable {
      * Record states for logging and displays like AdvantageKit.
      */
     public static void recordStates() {
-        SwerveModuleState[] measuredState = new SwerveModuleState[instance.modules.length];
+        SwerveModuleState[] measuredState = new SwerveModuleState[modules.length];
 
-        for (int i = 0; i < instance.modules.length; i++) {
-            measuredState[i] = instance.modules[i].getActualState();
+        for (int i = 0; i < modules.length; i++) {
+            measuredState[i] = modules[i].getActualState();
         }
 
         Logger.recordOutput("Swerve Module States Measured", measuredState);
-        Logger.recordOutput("Swerve Module States", instance.moduleStates);
+        Logger.recordOutput("Swerve Module States", moduleStates);
 
-        if (instance.setPathPosition != null) {
-            Logger.recordOutput("Swerve Drive Target Pose", instance.setPathPosition.pose);
+        if (setPathPosition != null) {
+            Logger.recordOutput("Swerve Drive Target Pose", setPathPosition.pose);
         } else {
             Logger.recordOutput("Swerve Drive Target Pose", new Pose2d());
         }
@@ -715,48 +706,48 @@ public class SwerveDrive extends SmartPrintable {
         Logger.recordOutput("Swerve Drive Mode", getMode());
         Logger.recordOutput("Swerve Display Mode", getDisplayMode());
 
-        Logger.recordOutput("Swerve Chassis Speeds Output Vx", instance.chassisSpeedsOutput.vxMetersPerSecond);
-        Logger.recordOutput("Swerve Chassis Speeds Output Vy", instance.chassisSpeedsOutput.vyMetersPerSecond);
-        Logger.recordOutput("Swerve Chassis Speeds Output Tau", instance.chassisSpeedsOutput.omegaRadiansPerSecond);
-        Logger.recordOutput("Swerve Chassis Speeds Calculated Vx", instance.chassisSpeedsCalculated.vxMetersPerSecond);
-        Logger.recordOutput("Swerve Chassis Speeds Calculated Vy", instance.chassisSpeedsCalculated.vyMetersPerSecond);
-        Logger.recordOutput("Swerve Chassis Speeds Calculated Tau", instance.chassisSpeedsCalculated.omegaRadiansPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Output Vx", chassisSpeedsOutput.vxMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Output Vy", chassisSpeedsOutput.vyMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Output Tau", chassisSpeedsOutput.omegaRadiansPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Vx", chassisSpeedsCalculated.vxMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Vy", chassisSpeedsCalculated.vyMetersPerSecond);
+        Logger.recordOutput("Swerve Chassis Speeds Calculated Tau", chassisSpeedsCalculated.omegaRadiansPerSecond);
 
-        Logger.recordOutput("Swerve Trajectory Coefficiant X", instance.trajectoryCoefficiantX);
-        Logger.recordOutput("Swerve Trajectory Coefficiant Y", instance.trajectoryCoefficiantY);
+        Logger.recordOutput("Swerve Trajectory Coefficiant X", trajectoryCoefficiantX);
+        Logger.recordOutput("Swerve Trajectory Coefficiant Y", trajectoryCoefficiantY);
     }
 
     /**
      * Updates module positions and drive odometry.
      */
     public static void updateOdometry() {
-        for (int i = 0; i < instance.modules.length; i++) {
-            instance.modules[i].updatePosition();
-            instance.positions[i] = instance.modules[i].getPosition();
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].updatePosition();
+            positions[i] = modules[i].getPosition();
         }
 
-        instance.chassisSpeedsOutput = instance.kinematics.toChassisSpeeds(
-            instance.modules[0].getDesiredState(),
-            instance.modules[1].getDesiredState(),
-            instance.modules[2].getDesiredState(),
-            instance.modules[3].getDesiredState()
+        chassisSpeedsOutput = kinematics.toChassisSpeeds(
+            modules[0].getDesiredState(),
+            modules[1].getDesiredState(),
+            modules[2].getDesiredState(),
+            modules[3].getDesiredState()
         );
 
-        instance.chassisSpeedsCalculated = instance.kinematics.toChassisSpeeds(
-            instance.modules[0].getActualState(),
-            instance.modules[1].getActualState(),
-            instance.modules[2].getActualState(),
-            instance.modules[3].getActualState()
+        chassisSpeedsCalculated = kinematics.toChassisSpeeds(
+            modules[0].getActualState(),
+            modules[1].getActualState(),
+            modules[2].getActualState(),
+            modules[3].getActualState()
         );
 
-        instance.odometry.update(new Rotation2d(Pigeon.getYaw().radians()), instance.positions);
+        odometry.update(new Rotation2d(Pigeon.getYaw().radians()), positions);
     }
     
     /**
      * Gets current odometry position.
      */
     public static Pose2d getOdometryPose() {
-        return instance.odometry.getPoseMeters();
+        return odometry.getPoseMeters();
     }
 
     /**
@@ -766,9 +757,9 @@ public class SwerveDrive extends SmartPrintable {
     public static void setOdometry(Pose2d pose) {
         //zeroPositions();
 
-        instance.odometry.resetPosition(
+        odometry.resetPosition(
             new Rotation2d(Pigeon.getYaw().radians()),
-            instance.positions,
+            positions,
             pose
         );
     }
@@ -777,20 +768,20 @@ public class SwerveDrive extends SmartPrintable {
      * Zeros all movement encoder positions.
      */
     public static void zeroPositions() {
-        for (int i = 0; i < instance.modules.length; i++) {
-            instance.modules[i].zeroPositions();
-            instance.positions[i] = instance.modules[i].getPosition();
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].zeroPositions();
+            positions[i] = modules[i].getPosition();
         }
 
-        instance.odometry.resetPosition(
+        odometry.resetPosition(
             new Rotation2d(Pigeon.getYaw().radians()), 
-            instance.positions, 
+            positions, 
             new Pose2d(0.0, 0.0, new Rotation2d(0.0))
         );
     }
 
     public static void setAmpChargeSpeed(double speed) {
-        instance.ampChargeSpeed = speed;
+        ampChargeSpeed = speed;
     }
 
     /**
@@ -799,12 +790,12 @@ public class SwerveDrive extends SmartPrintable {
     public static double getAverageMotorTemp() {
         double tempSum = 0.0;
 
-        for (SwerveModule module : instance.modules) {
-        	tempSum += module.getRotationMotorTemp();
+        for (SwerveModule module : modules) {
+            tempSum += module.getRotationMotorTemp();
             tempSum += module.getMovementMotorTemp();
         }
 
-        return tempSum / (instance.modules.length * 2.0);
+        return tempSum / (modules.length * 2.0);
     }
 
     /**
@@ -813,7 +804,7 @@ public class SwerveDrive extends SmartPrintable {
     public static double getAppliedCurrent() {
         double current = 0.0;
 
-        for (SwerveModule module : instance.modules) {
+        for (SwerveModule module : modules) {
         	current += module.getAppliedCurrent();
         }
 
@@ -827,11 +818,11 @@ public class SwerveDrive extends SmartPrintable {
     public static double getAveragePercentRatedCurrent() {
         double percentSum = 0.0;
 
-        for (SwerveModule module : instance.modules) {
-        	percentSum += module.getPercentRatedCurrent();
+        for (SwerveModule module : modules) {
+            percentSum += module.getPercentRatedCurrent();
         }
 
-        return percentSum / (double)instance.modules.length;
+        return percentSum / (double)modules.length;
     }
 
     /**
@@ -842,18 +833,18 @@ public class SwerveDrive extends SmartPrintable {
     public static void grabPathweaverFile(String filePath) {
         try {
             Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("output/" + filePath);
-            instance.autonomousTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+            autonomousTrajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
             
-            Pose2d initialPosition = instance.autonomousTrajectory.getInitialPose();
+            Pose2d initialPosition = autonomousTrajectory.getInitialPose();
             initialPosition = new Pose2d(
                 -initialPosition.getX(),
                 initialPosition.getY(),
                 initialPosition.getRotation()
             );
 
-            instance.odometry.resetPosition(
+            odometry.resetPosition(
                 new Rotation2d(Pigeon.getYaw().radians()),
-                instance.positions,
+                positions,
                 initialPosition
             );
         } catch (IOException e) {
@@ -868,15 +859,15 @@ public class SwerveDrive extends SmartPrintable {
      * Starts the trajectory timer at zero time elapsed.
      */
     public static void startTrajectoryTimer() {
-        instance.trajectoryTimer.reset();
-        instance.trajectoryTimer.start();
+        trajectoryTimer.reset();
+        trajectoryTimer.start();
     }
 
     /**
      * Sets the set angle for `SET_ANGLE` drive mode.
      */
     public static void setTargetAngle(Angle angle) {
-        instance.setAngle = angle;
+        setAngle = angle;
     }
 
     /**
@@ -885,18 +876,16 @@ public class SwerveDrive extends SmartPrintable {
     public static void setTargetPathPosition(PathPosition setPathPosition) {
         PathPosition pose = new PathPosition(
             new Pose2d(
-                setPathPosition.pose.getX() * instance.trajectoryCoefficiantX, 
-                setPathPosition.pose.getY() * instance.trajectoryCoefficiantY, 
-                instance.trajectoryCoefficiantY < 0.0
+                setPathPosition.pose.getX() * trajectoryCoefficiantX, 
+                setPathPosition.pose.getY() * trajectoryCoefficiantY, 
+                trajectoryCoefficiantY < 0.0
                     ? new Rotation2d(Angle.TAU - setPathPosition.pose.getRotation().getRadians())
                     : setPathPosition.pose.getRotation()
             ),
             setPathPosition.timeSeconds
         );
 
-        
-
-        instance.setPathPosition = pose;
+        setPathPosition = pose;
     }
 
     public static boolean withinPositionTolerance() {
@@ -906,70 +895,23 @@ public class SwerveDrive extends SmartPrintable {
 
         // makes sure angle are within [0, tau)
         double measuredAngle = (getOdometryPose().getRotation().getRadians() % Angle.TAU + Angle.TAU) % Angle.TAU;
-        double setAngle = (instance.setPathPosition.pose.getRotation().getRadians() % Angle.TAU + Angle.TAU) % Angle.TAU;
+        double setAngle = (setPathPosition.pose.getRotation().getRadians() % Angle.TAU + Angle.TAU) % Angle.TAU;
 
-        return Math.abs(getOdometryPose().getX() - instance.setPathPosition.pose.getX()) < TOLERANCE_X
-            && Math.abs(getOdometryPose().getY() - instance.setPathPosition.pose.getY()) < TOLERANCE_Y
+        return Math.abs(getOdometryPose().getX() - setPathPosition.pose.getX()) < TOLERANCE_X
+            && Math.abs(getOdometryPose().getY() - setPathPosition.pose.getY()) < TOLERANCE_Y
             && Math.abs(measuredAngle - setAngle) < TOLERANCE_THETA;
     }
 
     public static void setTrajectoryCoefficiants(double x, double y) {
-        instance.trajectoryCoefficiantX = x;
-        instance.trajectoryCoefficiantY = y;
+        trajectoryCoefficiantX = x;
+        trajectoryCoefficiantY = y;
     }
 
     public static double getTrajectoryCoefficiantX() {
-        return instance.trajectoryCoefficiantX;
+        return trajectoryCoefficiantX;
     }
 
     public static double getTrajectoryCoefficiantY() {
-        return instance.trajectoryCoefficiantY;
-    }
-
-    /**
-     * Print data to smart dashboard.
-     */
-    @Override
-    public void print() {
-        SmartDashboard.putString("Swerve Drive Mode", getMode().toString());
-        SmartDashboard.putString("Swerve Drive Odometry", 
-            "(" + ((double)(long)(odometry.getPoseMeters().getX() * 100)) / 100 + ", "
-            + ((double)(long)(odometry.getPoseMeters().getY() * 100)) / 100 + ") "
-            + ((double)(long)(odometry.getPoseMeters().getRotation().getDegrees() * 100)) / 100 + " degrees"
-        );
-        SmartDashboard.putNumber("Swerve Drive Average Motor Tempurature (Celsius)", getAverageMotorTemp());
-        SmartDashboard.putNumber("Swerve Drive Total Current Pull (Amps)", getAppliedCurrent());
-        SmartDashboard.putNumber("Swerve Drive Translation Speed X", translationSpeedX);
-        SmartDashboard.putNumber("Swerve Drive Translation Speed Y", translationSpeedY);
-        SmartDashboard.putNumber("Swerve Drive Rotation Speed", rotationSpeed);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Vx", chassisSpeedsOutput.vxMetersPerSecond);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Vy", chassisSpeedsOutput.vyMetersPerSecond);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Output Tau", chassisSpeedsOutput.omegaRadiansPerSecond);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vx", chassisSpeedsCalculated.vxMetersPerSecond);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Vy", chassisSpeedsCalculated.vyMetersPerSecond);
-        SmartDashboard.putNumber("Swerve Drive Chassis Speeds Calculated Tau", chassisSpeedsCalculated.omegaRadiansPerSecond);
-
-        SmartDashboard.putString("Swerve Drive Trajectory", autonomousTrajectory.toString());
-        SmartDashboard.putNumber("Swerve Trajectory Timer Time", trajectoryTimer.get());
-
-        try {
-            var state = autonomousTrajectory.sample(trajectoryTimer.get());
-
-            SmartDashboard.putString("Swerve Drive Trajectory Current State", state.toString());
-            SmartDashboard.putNumber("Swerve Drive Trajectory Position X", state.poseMeters.getX());
-            SmartDashboard.putNumber("Swerve Drive Trajectory Position Y", state.poseMeters.getY());
-            SmartDashboard.putNumber("Swerve Drive Trajectory Rotation Degrees", state.poseMeters.getRotation().getDegrees());
-            SmartDashboard.putNumber("Swerve Drive Trajectory Time", state.timeSeconds);
-            SmartDashboard.putBoolean("Swerve Drive Trajectory Time Finished", instance.autonomousTrajectory.getTotalTimeSeconds() < instance.trajectoryTimer.get());
-        } catch (Exception e) {
-            SmartDashboard.putString("Swerve Drive Trajectory Current State", "No State");
-	    }
-
-        if (setPathPosition != null) {
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose X", setPathPosition.pose.getX());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Y", setPathPosition.pose.getY());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Rotation Degrees", setPathPosition.pose.getRotation().getDegrees());
-            SmartDashboard.putNumber("Swerve Drive Sidewalk Paver Pose Discrete Time", setPathPosition.timeSeconds);
-        }
+        return trajectoryCoefficiantY;
     }
 }
