@@ -1,7 +1,5 @@
 package frc.robot.patterns;
 
-import java.sql.Time;
-
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.subsystems.LightPattern;

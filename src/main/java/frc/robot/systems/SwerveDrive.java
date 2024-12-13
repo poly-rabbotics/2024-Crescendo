@@ -170,7 +170,6 @@ public class SwerveDrive {
     private static double translationSpeedX = 0.0;
     private static double translationSpeedY = 0.0;
     private static double rotationSpeed = 0.0;
-    private static double ampChargeSpeed = 0.0;
 
     // Coefficiants for modifying trajectory following. Allows for the scaling and inverting of
     // either axis.
@@ -184,8 +183,7 @@ public class SwerveDrive {
                 MODULE_MOVEMENT_CAN_IDS[i], 
                 MODULE_ROTATION_CAN_IDS[i], 
                 MODULE_CANCODER_CAN_IDS[i], 
-                MODULE_CANCODER_OFFSETS[i], 
-                MODULE_PHYSICAL_POSITIONS[i]
+                MODULE_CANCODER_OFFSETS[i]
             );
         }
 
@@ -515,31 +513,6 @@ public class SwerveDrive {
                 break;
             }
 
-            case AIMBOT_ROTATION: {
-                moduleStates = kinematics.toSwerveModuleStates(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        translationSpeedX,
-                        translationSpeedY,
-                        Aimbot.calculateTurn(), 
-                        new Rotation2d(Pigeon.getYaw().radians())
-                    )
-                );
-                break;
-            }
-
-            case AIMBOT: {
-                moduleStates = kinematics.toSwerveModuleStates(
-                    new ChassisSpeeds(
-                        translationSpeedX,
-                        Aimbot.isCentered()
-                            ? Aimbot.calculateMovement()
-                            : 0.0,
-                        Aimbot.calculateTurn()
-                    )
-                );
-                break;
-            }
-
             case TRAJECTORY_FOLLOW: {
                 if (autonomousTrajectory == null || autonomousTrajectory.getTotalTimeSeconds() + 0.35 < trajectoryTimer.get()) {
                     translationSpeedX = 0.0;
@@ -621,26 +594,6 @@ public class SwerveDrive {
                 break;
             }
 
-            case AMP_LINE_UP: {
-                translationSpeedX = Math.abs(ampChargeSpeed) > 0.1 
-                    ? 0.0
-                    : Aimbot.ampLineUpX() * -getTrajectoryCoefficiantY();
-                translationSpeedY = ampChargeSpeed * getTrajectoryCoefficiantY();
-                setAngle = new Angle().setDegrees(-90.0 * getTrajectoryCoefficiantY());
-
-                moduleStates = kinematics.toSwerveModuleStates(
-                    ChassisSpeeds.fromFieldRelativeSpeeds(
-                        translationSpeedX,
-                        translationSpeedY,
-                        -setAngleController.calculate(
-                            Pigeon.getYaw().radians(),
-                            setAngle.radians()
-                        ), 
-                        new Rotation2d(Pigeon.getYaw().radians())
-                    )
-                );
-            }
-
             // This branch should never be reached as the enum used should never
             // have more than the above possible values.
             default: assert false;
@@ -696,7 +649,6 @@ public class SwerveDrive {
         }
 
         Logger.recordOutput("Swerve Odometry", getOdometryPose());
-        Logger.recordOutput("Swerve Applied Current (amps)", getAppliedCurrent());
         Logger.recordOutput("Swerve Average Motor Tempurature (celsius)", getAverageMotorTemp());
 
         Logger.recordOutput("Swerve Speed Rotation", getRotationSpeed());
@@ -780,10 +732,6 @@ public class SwerveDrive {
         );
     }
 
-    public static void setAmpChargeSpeed(double speed) {
-        ampChargeSpeed = speed;
-    }
-
     /**
      * Gets the average tempurature of all motors on the drive in celsius.
      */
@@ -796,33 +744,6 @@ public class SwerveDrive {
         }
 
         return tempSum / (modules.length * 2.0);
-    }
-
-    /**
-     * Gets the sum of all applied currents in amps of all motors on the drive.
-     */
-    public static double getAppliedCurrent() {
-        double current = 0.0;
-
-        for (SwerveModule module : modules) {
-        	current += module.getAppliedCurrent();
-        }
-
-        return current;
-    }
-
-    /**
-     * Gets the average percent usage of each module's motor controller 
-     * current pull.
-     */
-    public static double getAveragePercentRatedCurrent() {
-        double percentSum = 0.0;
-
-        for (SwerveModule module : modules) {
-            percentSum += module.getPercentRatedCurrent();
-        }
-
-        return percentSum / (double)modules.length;
     }
 
     /**

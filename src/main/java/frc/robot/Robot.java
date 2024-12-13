@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 
 import org.littletonrobotics.junction.LogFileUtil;
@@ -31,12 +30,12 @@ import frc.robot.systems.*;
  * project.
  */
 public class Robot extends LoggedRobot {
-    private static AccelerationBasedOdometry accelOdometry = new AccelerationBasedOdometry(new Pose2d());
     private static final XboxController controllerOne = new XboxController(0);
     private static final XboxController controllerTwo = new XboxController(1);
     private static final Joystick controlPanel = new Joystick(2);
     private static final Joystick switchPanel = new Joystick(3);
-    AutonomousProcedure procedure;
+    private static AutonomousProcedure procedure;
+    private static boolean invertedTurn = false;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -45,7 +44,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void robotInit() {
         //https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/docs/INSTALLATION.md#new-projects
-        Logger.recordMetadata("ProjectName", "7042 Mantis");
+        Logger.recordMetadata("ProjectName", "7042 Prototype");
 
         if (isReal()) {
             // Log for real robot runs
@@ -67,33 +66,17 @@ public class Robot extends LoggedRobot {
         DriverStation.startDataLog(DataLogManager.getLog());
 
         Pigeon.setFeildZero();
-
-        Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_SPEAKERS);
-
-        Hands.init();
-        
-        ColorUtils.BitArrangement[] bitArrangements = new ColorUtils.BitArrangement[16];
-        for(int i = 0; i < bitArrangements.length; i++) { bitArrangements[i] = ColorUtils.BitArrangement.GRB; }
-        LEDLights.setBitArrangements(bitArrangements);
-
-        Hands.init();
     }
     
     @Override
     public void robotPeriodic() {
-        SmartPrinter.print();
-        LEDLights.run();
-
         Pigeon.update();
         Pigeon.recordState();
 
         SwerveDrive.updateOdometry();
         SwerveDrive.recordStates();
 
-        accelOdometry.update(Pigeon.getAccelerationX(), Pigeon.getAccelerationY(), Pigeon.getYaw());
-        
         if (controllerOne.getBackButtonReleased()) {
-            // USE SWITCHES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             var pose = DriverStation.isTeleop() 
                 ? new Pose2d(0.0, 0.0, new Rotation2d(0.0))
                 : AutonomousManager.getStartingPosSwitches(
@@ -120,10 +103,7 @@ public class Robot extends LoggedRobot {
 
             Pigeon.setFeildOrientation(new Angle().setRadians(pose.getRotation().getRadians()));
             SwerveDrive.setOdometry(pose);
-            accelOdometry = new AccelerationBasedOdometry(new Pose2d());
         }
-
-        Logger.recordOutput("Acceleration Based Odometry", accelOdometry.getPosition());
 
         AutonomousManager.log(
             switchPanel.getRawButton(1),
@@ -136,11 +116,7 @@ public class Robot extends LoggedRobot {
     @Override
     public void autonomousInit() {
         SwerveDrive.setMode(SwerveMode.SIDEWALK_WALK);
-
-
         AutonomousManager.reset();
-        Hands.init();
-        Climb.init();
     }
 
     @Override
@@ -152,29 +128,16 @@ public class Robot extends LoggedRobot {
             switchPanel.getRawButton(4)
         ).run();
         
-        //AutonomousManager.getAutoProcedure(4).run();
-            
-        Hands.autoRun();
         SwerveDrive.run();
     }
 
     @Override
     public void teleopInit() {
         SwerveDrive.setMode(SwerveMode.HEADLESS);
-        Hands.teleopInit();
-        Climb.init();
     }
-
-    static boolean invertedTurn = false;
 
     @Override
     public void teleopPeriodic() {
-        if (controllerOne.getLeftBumper()) {
-            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS_ZOOM);
-        } else {
-            Limelight.setPipeline(Limelight.LIMELIGHT_PIPELINE_APRILTAGS);
-        }
-
         if (controllerOne.getStartButtonReleased()) {
             Pigeon.setFeildZero();
         }
@@ -222,38 +185,12 @@ public class Robot extends LoggedRobot {
             Controls.cardinalLock((x, y) -> Controls.defaultCurveTwoDimensional(x, y) / 2.0),
             controllerOne.getRightBumper() && controllerOne.getXButton()
         ); // Half translation speed.
-        SwerveDrive.conditionalTempMode(SwerveMode.AMP_LINE_UP, controllerOne.getLeftTriggerAxis() > 0.5);
         SwerveDrive.conditionalTempMode(SwerveMode.ROCK, controllerOne.getBButton());
         SwerveDrive.conditionalTempMode(SwerveMode.RELATIVE, controllerOne.getYButton());
         SwerveDrive.run(
             -controllerOne.getLeftY(),
             -controllerOne.getLeftX(),
             controllerOne.getRightX()
-        );
-        SwerveDrive.setAmpChargeSpeed(Math.pow(controllerOne.getRightTriggerAxis(), 3.0) * 0.6);
-
-        double rumble = SwerveDrive.getAveragePercentRatedCurrent();
-        controllerOne.setRumble(RumbleType.kBothRumble, rumble);
-
-        Hands.run(
-            controlPanel.getRawButton(6) || controllerOne.getAButton(),        // Intake
-            controlPanel.getRawButton(7),        // Outtake
-            controlPanel.getRawButton(10),        // Ramp Up
-            controlPanel.getRawButton(11),        // Fire
-            controlPanel.getRawButton(8),        // Linear Actuator
-            0,           // Manual Shooter input
-            -controlPanel.getRawAxis(1) * 0.3,            // Manual Pivot input
-            controlPanel.getRawButton(5),        // Climbing
-            controlPanel.getRawButton(1),        // Ground Intake
-            controlPanel.getRawButton(3),        // Speaker Shooting
-            controlPanel.getRawButton(4),        // Dynamic Shooting
-            controlPanel.getRawButton(2),         // Amp Scoring
-            switchPanel.getRawButton(5)          // Auto ramp enabled
-        );
-
-        Climb.run(
-            controllerTwo.getRawAxis(1), 
-            controllerTwo.getRawAxis(5)
         );
     }
 

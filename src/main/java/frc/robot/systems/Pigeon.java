@@ -11,15 +11,12 @@ import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-import frc.robot.SmartPrintable;
 import frc.robot.subsystems.Angle;
 
 /*
  * Manages the robot's pigeon.
  */
-public class Pigeon extends SmartPrintable {
+public class Pigeon {
     private static final int PIGEON_CAN_ID = 0;
     private static final Pigeon instance = new Pigeon(PIGEON_CAN_ID);
 
@@ -130,19 +127,6 @@ public class Pigeon extends SmartPrintable {
         Logger.recordOutput("Pigeon Acceleration Z (g)", getAccelerationZ());
     }
     
-    @Override
-    public void print() {
-        SmartDashboard.putString("Pigeon Yaw", getYaw().toString());
-        SmartDashboard.putString("Pigeon Pitch", getPitch().toString());
-        SmartDashboard.putString("Pigeon Roll", getRoll().toString());
-
-        OrientationalChange change = getChangePerSecond();
-
-        SmartDashboard.putString("Pigeon Yaw/Sec", change.yawPerSecond.toString());
-        SmartDashboard.putString("Pigeon Pitch/Sec", change.pitchPerSecond.toString());
-        SmartDashboard.putString("Pigeon Roll/Sec", change.rollPerSecond.toString());
-    }
-
     /**
      * Represents the change per second in orientation as gathered and 
      * calculated from the Pigeon.

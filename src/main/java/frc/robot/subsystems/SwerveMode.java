@@ -29,17 +29,6 @@ public enum SwerveMode {
     SET_ANGLE,
 
     /**
-     * Uses rotation or the drive, but not translation, to aim for the driver.
-     */
-    AIMBOT_ROTATION,
-
-    /**
-     * Uses functions of the `Aimbot` class to both center the target and then
-     * aproach it using swerve, taking over both the y-axis and turning.
-     */
-    AIMBOT,
-
-    /**
      * Follows a set trajectory, as loaded previously from a JSON file, which
      * should have been exported from PathWeaver.
      */
@@ -49,9 +38,4 @@ public enum SwerveMode {
      * Like `TRAJECTORY_FOLLOW` but for `SidewalkPaver`.
      */
     SIDEWALK_WALK,
-
-    /**
-     * Lines up to amp
-     */
-    AMP_LINE_UP,
 }

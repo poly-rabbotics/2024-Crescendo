@@ -3,13 +3,8 @@ package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.SmartPrintable;
-
-public class AutonomousProcedure extends SmartPrintable implements Runnable {
+public class AutonomousProcedure implements Runnable {
     private ArrayList<ProcedureStep> procedureSteps = new ArrayList<ProcedureStep>();
-    private int procedureStep = 0;
-    private String name = null;
 
     // This exists only for nested procedures and is used to inject the
     // completion of the prior step from before the nested procedure, ensuring
@@ -18,14 +13,9 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
     private StepStatus startingStepStatus = StepStatus.Done;
     private StepStatus lastStepStatus = StepStatus.Waiting;
 
-    public AutonomousProcedure(String name) {
-        this.name = name;
-    }
-
     public void reset() {
         lastStepStatus = StepStatus.Waiting;
         startingStepStatus = StepStatus.Done;
-        procedureStep = 0;
     }
 
     /**
@@ -89,11 +79,6 @@ public class AutonomousProcedure extends SmartPrintable implements Runnable {
         }
 
         lastStepStatus = prevState;
-    }
-
-    @Override
-    public void print() {
-        SmartDashboard.putNumber("Autonomous Procedure (" + name + ") step number", procedureStep);
     }
 
     /**

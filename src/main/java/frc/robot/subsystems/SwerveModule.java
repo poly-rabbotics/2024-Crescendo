@@ -6,23 +6,25 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 
 /** 
  * Class for managing and manipulating a swerve module. 
  */
 public class SwerveModule {
-    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7);                    // Enc counts to radians.
-    private static final double CONVERSION_FACTOR_MOVEMENT = (1.0 / 6.75) * 0.1 * 8.0637 * 0.39333835;  // Rotations to meters.
-    private static final double CAN_SPARK_MAX_RATED_AMPS = 60.0;
+    private static final double CONVERSION_FACTOR_ROTATION = Math.toRadians(150 / 7); // TODO: Verify.
+    private static final double CONVERSION_FACTOR_MOVEMENT = 1.0 / 6.75;              // Rotations to meters.
 
     private static final double PID_P = 0.5;
     private static final double PID_I = 0.1;
@@ -32,17 +34,13 @@ public class SwerveModule {
     private static final double ROCK_PID_I = 0.0;
     private static final double ROCK_PID_D = 0.0;
 
-    private final CANSparkMax rotationMotor;  // The motor responsible for rotating the module.
-    private final CANSparkMax movementMotor;  // The motor responsible for creating movement in the module.
-    private final CANcoder angularEncoder;    // Cancoder responsible for tracking the angle of the module.
-
-    private final RelativeEncoder rotationEncoder; // Relative encoder for tracking rotational movement.
-    private final RelativeEncoder movementEncoder; // Relative encoder for tracking translational movement.
+    private final TalonFX rotationMotor;   // The motor responsible for rotating the module.
+    private final TalonFX movementMotor;   // The motor responsible for creating movement in the module.
+    private final CANcoder angularEncoder; // Cancoder responsible for tracking the angle of the module.
 
     private final PIDController rotationController;
     private final PIDController rockController;
 
-    private final RelativePosition physicalPosition;
     private final Angle canCoderOffset;
 
     private SwerveModuleState desiredState;
@@ -53,41 +51,6 @@ public class SwerveModule {
     // (see some IEEE standard or something) and so this is how rock mode is 
     // checked.
     private double rockPos = Double.NaN;
-
-    private enum RelativePosition {
-        FRONT_RIGHT (  1.0,  1.0 ),
-        FRONT_LEFT  ( -1.0,  1.0 ),
-        BACK_LEFT   ( -1.0, -1.0 ),
-        BACK_RIGHT  (  1.0, -1.0 );
-
-        private boolean front = true;
-        private boolean right = true;
-
-        RelativePosition(double x, double y) {
-            right = Math.signum(x) > 0.0;
-            front = Math.signum(y) > 0.0;
-        }
-
-        @Override
-        public String toString() {
-            return (front ? "Front  " : "Back ") + (right ? "Right" : "Left");
-        }
-
-        public static RelativePosition fromTranslation(Translation2d translation) {
-            var x_sign = Math.signum(translation.getX()) > 0.0;
-            var y_sign = Math.signum(translation.getY()) > 0.0;
-
-            if (x_sign && y_sign) {
-                return FRONT_RIGHT;
-            } else if (x_sign) {
-                return BACK_RIGHT;
-            } else if (y_sign) {
-                return FRONT_LEFT;
-            } 
-                
-            return BACK_LEFT;
-        }
-    }
 
     public void run() {
         SwerveModuleState state = SwerveModuleState.optimize(desiredState, new Rotation2d(getAngle().radians()));
@@ -104,51 +67,65 @@ public class SwerveModule {
         int movementMotorID, 
         int rotationalMotorID, 
         int canCoderID, 
-        Angle canCoderOffset, 
-        Translation2d physicalPosition
+        Angle canCoderOffset
     ) {
-        super();
-        
-        this.physicalPosition = RelativePosition.fromTranslation(physicalPosition);
         this.canCoderOffset = canCoderOffset.clone();
 
         angularEncoder = new CANcoder(canCoderID);
         angularEncoder.getConfigurator().apply(new CANcoderConfiguration());
 
-        rotationMotor = new CANSparkMax(rotationalMotorID, CANSparkMax.MotorType.kBrushless);
-        rotationMotor.setInverted(true);
-        rotationMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        rotationMotor.setSmartCurrentLimit(30);
-        rotationMotor.enableVoltageCompensation(12.0);
-        // rotationMotor.getPIDController().setPositionPIDWrappingEnabled(true);
-        // rotationMotor.getPIDController().setPositionPIDWrappingMaxInput(Angle.TAU);
-        // rotationMotor.getPIDController().setP(PID_P);
-        // rotationMotor.getPIDController().setI(PID_I);
-        // rotationMotor.getPIDController().setD(PID_D);
-        
-        movementMotor = new CANSparkMax(movementMotorID, CANSparkMax.MotorType.kBrushless);
-        movementMotor.setInverted(false);
-        movementMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        movementMotor.setSmartCurrentLimit(40);
-        movementMotor.enableVoltageCompensation(12.0);
+        // Rotation Motor
+        rotationMotor = new TalonFX(rotationalMotorID);
+        TalonFXConfigurator rotationConfigurator = rotationMotor.getConfigurator();
 
-        rotationEncoder = rotationMotor.getEncoder();
-        rotationEncoder.setPosition(angularEncoder.getPosition().getValue() * Angle.TAU);
-        rotationEncoder.setPositionConversionFactor(CONVERSION_FACTOR_ROTATION);
+        rotationConfigurator.apply(
+            new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+        );
 
-        movementEncoder = movementMotor.getEncoder();
-        movementEncoder.setPosition(0.0);
-        movementEncoder.setPositionConversionFactor(CONVERSION_FACTOR_MOVEMENT);
+        rotationConfigurator.apply(
+            new CurrentLimitsConfigs()
+                .withSupplyCurrentLimit(30.0)
+                .withSupplyCurrentLimitEnable(true)
+        );
+
+        rotationConfigurator.apply(
+            new FeedbackConfigs()
+                .withFeedbackRemoteSensorID(canCoderID)
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.RemoteCANcoder)
+                .withSensorToMechanismRatio(CONVERSION_FACTOR_ROTATION)
+        );
 
         rotationController = new PIDController(PID_P, PID_I, PID_D);
         rotationController.enableContinuousInput(0.0, Angle.TAU);
         rotationController.setTolerance(0.01);
 
+        // Movement Motor
+        movementMotor = new TalonFX(movementMotorID);
+        TalonFXConfigurator movementConfigurator = movementMotor.getConfigurator();
+
+        movementConfigurator.apply(
+            new MotorOutputConfigs()
+                .withInverted(InvertedValue.CounterClockwise_Positive)
+        );
+
+        movementConfigurator.apply(
+            new CurrentLimitsConfigs()
+                .withSupplyCurrentLimit(40.0)
+                .withSupplyCurrentLimitEnable(true)
+        );
+
+        movementConfigurator.apply(
+            new FeedbackConfigs()
+                .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+                .withSensorToMechanismRatio(CONVERSION_FACTOR_MOVEMENT)
+        );
+        
         rockController = new PIDController(ROCK_PID_P, ROCK_PID_I, ROCK_PID_D);
         rockController.setTolerance(1);
 
         position = new SwerveModulePosition(
-            movementEncoder.getPosition(), 
+            movementMotor.getPosition().getValueAsDouble(), 
             new Rotation2d(getAngle().radians())
         );
 
@@ -161,12 +138,12 @@ public class SwerveModule {
      */
     public void updatePosition() {
         actualState = new SwerveModuleState(
-            movementEncoder.getVelocity(),
+            movementMotor.getVelocity().getValueAsDouble(),
             new Rotation2d(getAngle().radians())
         );
         
         position = new SwerveModulePosition(
-            movementEncoder.getPosition(), 
+            movementMotor.getPosition().getValueAsDouble(), 
             new Rotation2d(getAngle().radians())
         );
     }
@@ -223,7 +200,7 @@ public class SwerveModule {
      * interupt odometry).
      */
     public double getDistanceTraveled() {
-        return movementEncoder.getPosition();
+        return movementMotor.getPosition().getValueAsDouble();
     }
 
     public Angle getAngle() {
@@ -237,43 +214,14 @@ public class SwerveModule {
      * Gets the reported tempurature of the rotation motor in celsius.
      */
     public double getRotationMotorTemp() {
-        return rotationMotor.getMotorTemperature();
+        return rotationMotor.getDeviceTemp().getValue();
     }
 
     /**
      * Gets the reported tempurature of the movement motor in celsius.
      */
     public double getMovementMotorTemp() {
-        return movementMotor.getMotorTemperature();
-    }
-
-    /**
-     * Gets the power being outputted by the rotation motor's controller in amps.
-     */
-    public double getRotationMotorCurrent() {
-        return rotationMotor.getOutputCurrent();
-    }
-
-    /**
-     * Gets the power being outputted by the movement motor's controller in amps.
-     */
-    public double getMovementMotorCurrent() {
-        return movementMotor.getOutputCurrent();
-    }
-
-    /**
-     * Gets the sum of all motor's current in amps.
-     */
-    public double getAppliedCurrent() {
-        return getRotationMotorCurrent() + getMovementMotorCurrent();
-    }
-
-    /**
-     * Gets the percentage of the maximum rated amperage of the motor 
-     * controllers currently being hit by the module.
-     */
-    public double getPercentRatedCurrent() {
-        return getAppliedCurrent() / (2.0 * CAN_SPARK_MAX_RATED_AMPS);
+        return movementMotor.getDeviceTemp().getValue();
     }
 
     /**
@@ -287,6 +235,6 @@ public class SwerveModule {
      * Sets movement position to zero, will mess up odometry.
      */
     public void zeroPositions() {
-        movementEncoder.setPosition(0.0);
+        angularEncoder.setPosition(0.0);
     }
 }
