@@ -76,6 +76,9 @@ public class Robot extends LoggedRobot {
         SwerveDrive.updateOdometry();
         SwerveDrive.recordStates();
 
+        PosEstimator.update();
+        Logger.recordOutput("Estimated Position", PosEstimator.getPosEstimate());
+
         if (controllerOne.getBackButtonReleased()) {
             var pose = DriverStation.isTeleop() 
                 ? new Pose2d(0.0, 0.0, new Rotation2d(0.0))

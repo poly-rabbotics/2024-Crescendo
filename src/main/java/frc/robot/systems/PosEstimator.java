@@ -28,7 +28,7 @@ public class PosEstimator {
      * value given by photon vision. This value will also be the value given until as a position
      * and will only be updated upon a call to `PosEstimator.update()`.
      */
-    private static Pose3d referencePosition;
+    private static Pose3d referencePosition = new Pose3d();
 
     /**
      * Returns the last updated position value. If `PosEstimator.update()` has not been called since
